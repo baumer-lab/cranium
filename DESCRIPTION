@@ -6,8 +6,7 @@ Description: What the package does (one paragraph).
 Imports:
   dplyr,
   mosaic,
-  rhdf5,
-  tidyr
+  rhdf5
 Depends: 
   R (>= 3.2.3), 
   broom,

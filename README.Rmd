@@ -1,14 +1,24 @@
+---
+title: "cranium"
+author: Ben Baumer
+date: April 11, 2017
+output:
+  md_document:
+    variant: markdown_github
+---
+
 An R package to quantify radial bridge images
 
-Installation
-------------
+## Installation
 
-``` r
+```{r, eval=FALSE}
 install.packages("devtools")
 devtools::install_github("beanumber/cranium")
 ```
 
-``` r
+## 
+
+```{r, eval=FALSE}
 file <- "~/Data/barresi/AT_1_Probabilities.h5"
 library(tidyverse)
 tidy_brain <- file %>%

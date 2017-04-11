@@ -6,6 +6,21 @@
 \usage{
 \method{image}{brain}(x, z = NULL, ...)
 }
+\arguments{
+\item{x}{locations of grid lines at which the values in \code{z} are
+    measured.  These must be finite, non-missing and in (strictly)
+    ascending order.  By default, equally
+    spaced values from 0 to 1 are used.  If \code{x} is a \code{list},
+    its components \code{x$x} and \code{x$y} are used for \code{x}
+    and \code{y}, respectively. If the list has component \code{z} this
+    is used for \code{z}.}
+
+\item{z}{slice of the 3D image to display}
+
+\item{...}{\link{graphical parameters} for \code{\link{plot}} may also be
+    passed as arguments to this function, as can the plot aspect ratio
+    \code{asp} and \code{axes} (see \code{\link{plot.window}}).}
+}
 \description{
 Print a slice of a 3D image
 }

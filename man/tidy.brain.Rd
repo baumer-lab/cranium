@@ -6,16 +6,23 @@
 \usage{
 \method{tidy}{brain}(x, ...)
 }
+\arguments{
+\item{x}{An object to be converted into a tidy data.frame}
+
+\item{...}{extra arguments}
+}
 \description{
 Tidy 3D brain image data
 }
 \examples{
 file <- "~/Data/barresi/AT_1_Probabilities.h5"
+\dontrun{
 if (require(dplyr)) {
   tidy_brain <- file \%>\%
     read_h5() \%>\%
     tidy()
   class(tidy_brain)
   glimpse(tidy_brain)
+}
 }
 }

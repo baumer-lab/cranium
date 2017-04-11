@@ -21,10 +21,12 @@ Plot a 3B image of a brain
 }
 \examples{
 file <- "~/Data/barresi/AT_1_Probabilities.h5"
+\dontrun{
 if (require(dplyr)) {
   tidy_brain <- file \%>\%
     read_h5() \%>\%
     tidy()
   plot3d(tidy_brain)
+}
 }
 }

@@ -29,17 +29,20 @@ read_h5 <- function(file, name = NULL, ...) {
 }
 
 #' Tidy 3D brain image data
+#' @inheritParams broom::tidy
 #' @importFrom dplyr %>% mutate_ select_ as.tbl
 #' @importFrom broom tidy
 #' @export
 #' @examples
 #' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
 #' if (require(dplyr)) {
 #'   tidy_brain <- file %>%
 #'     read_h5() %>%
 #'     tidy()
 #'   class(tidy_brain)
 #'   glimpse(tidy_brain)
+#' }
 #' }
 
 tidy.brain <- function(x, ...) {
@@ -55,6 +58,8 @@ tidy.brain <- function(x, ...) {
 }
 
 #' Print a slice of a 3D image
+#' @inheritParams graphics::image
+#' @param z slice of the 3D image to display
 #' @export
 #' @examples
 #' file <- "~/Data/barresi/AT_1_Probabilities.h5"
@@ -78,11 +83,13 @@ image.brain <- function(x, z = NULL, ...) {
 #' @export
 #' @examples
 #' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
 #' if (require(dplyr)) {
 #'   tidy_brain <- file %>%
 #'     read_h5() %>%
 #'     tidy()
 #'   plot3d(tidy_brain)
+#' }
 #' }
 
 plot3d.tbl_brain <- function(x, threshold = 0.9, ...) {
