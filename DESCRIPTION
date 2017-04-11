@@ -1,0 +1,18 @@
+Package: cranium
+Title: Quantifying Radial Bridge Structures
+Version: 0.0.0.9000
+Authors@R: person("Benjamin", "Baumer", email = "ben.baumer@gmail.com", role = c("aut", "cre"))
+Description: What the package does (one paragraph).
+Imports:
+  dplyr,
+  mosaic,
+  rhdf5,
+  tidyr
+Depends: 
+  R (>= 3.2.3), 
+  broom,
+  rgl
+License: GPL
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
