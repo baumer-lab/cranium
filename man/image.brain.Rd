@@ -2,7 +2,7 @@
 % Please edit documentation in R/radial_bridge.R
 \name{image.brain}
 \alias{image.brain}
-\title{Print a slice of a 3D image}
+\title{Plot a slice of a 3D image}
 \usage{
 \method{image}{brain}(x, z = NULL, ...)
 }
@@ -22,7 +22,7 @@
     \code{asp} and \code{axes} (see \code{\link{plot.window}}).}
 }
 \description{
-Print a slice of a 3D image
+Plot a slice of a 3D image
 }
 \examples{
 file <- "~/Data/barresi/AT_1_Probabilities.h5"

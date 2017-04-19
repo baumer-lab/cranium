@@ -57,9 +57,10 @@ tidy.brain <- function(x, ...) {
   return(res)
 }
 
-#' Print a slice of a 3D image
+#' Plot a slice of a 3D image
 #' @inheritParams graphics::image
 #' @param z slice of the 3D image to display
+#' @importFrom graphics image
 #' @export
 #' @examples
 #' file <- "~/Data/barresi/AT_1_Probabilities.h5"
@@ -72,10 +73,45 @@ image.brain <- function(x, z = NULL, ...) {
   if (is.null(z)) {
     z <- floor(dim(x)[3] / 2)
   }
-  image(x[,,z])
+  graphics::image(x[,,z])
 }
 
-#' Plot a 3B image of a brain
+#' Plot a 2D projection of a 3D image
+#' @inheritParams plot3d.tbl_brain
+#' @param plane a character vector of length 2 indicating the
+#' plane to project to (x, y, z)
+#' @importFrom dplyr group_by_ summarize_
+#' @importFrom ggplot2 aes aes_string geom_smooth geom_point
+#' ggplot scale_color_continuous
+#' @export
+#' @examples
+#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
+#' tbl_brain <- read_h5(file) %>%
+#'   tidy()
+#' plot2d(tbl_brain, plane = c("x", "z"))
+#' plot2d(tbl_brain, plane = c("x", "y"))
+#' plot2d(tbl_brain, plane = c("y", "z"))
+#' }
+
+plot2d <- function(x, threshold = 0.99,
+                   plane = c("x", "z"), ...) UseMethod("plot2d")
+
+#' @export
+#' @rdname plot2d
+plot2d.tbl_brain <- function(x, threshold = 0.99, plane = c("x", "z"), ...) {
+  gg_data <- x %>%
+    filter_(~Freq >= threshold) %>%
+    group_by_(.dots = plane) %>%
+    summarize_(avg_freq = ~mean(Freq))
+  ggplot(gg_data, aes_string(x = plane[1], y = plane[2]), ...) +
+    geom_point(aes(color = avg_freq)) +
+    geom_smooth(method = "lm") +
+    scale_color_continuous(limits = c(0, 1))
+}
+
+
+#' Plot a 3D image of a brain
 #' @inheritParams rgl::plot3d
 #' @param threshold value below which points will not be plotted
 #' @importFrom rgl plot3d
@@ -92,12 +128,14 @@ image.brain <- function(x, z = NULL, ...) {
 #' }
 #' }
 
-plot3d.tbl_brain <- function(x, threshold = 0.9, ...) {
+plot3d.tbl_brain <- function(x, threshold = 0.99, ...) {
   xyz <- x %>%
     mutate_(gray_val = ~gray(1 - Freq)) %>%
     filter_(~Freq >= threshold)
-  if (nrow(xyz) > 250000) {
-    warning(paste("You are about to plot", nrow(xyz),
+  n <- nrow(xyz)
+  message(paste0("Will now plot", n, "points..."))
+  if (n > 250000) {
+    warning(paste("You are about to plot", n,
                   "points. Consider increasing the threshold parameter from", threshold))
   }
   rgl::plot3d(xyz, type = "p", alpha = xyz$Freq,
@@ -107,18 +145,34 @@ plot3d.tbl_brain <- function(x, threshold = 0.9, ...) {
   plot3d_model(xyz)
 }
 
+#' @rdname plot3d.tbl_brain
+#' @export
+#' @examples
+#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
+#' brain <- read_h5(file)
+#' plot3d(brain)
+#' }
+
+
+plot3d.brain <- function(x, threshold = 0.99, ...) {
+  tidy_brain <- tidy(x)
+  plot3d(tidy_brain, threshold, ...)
+}
+
 #' @importFrom mosaic makeFun
+#' @importFrom stats lm coef
 
 plot3d_model <- function(xyz, ...) {
   # quadratic plane
-  mod1 <- lm(z ~ x + y + I(x^2), data = xyz)
+  mod1 <- stats::lm(z ~ x + y + I(x^2), data = xyz)
   bent_plane <- mosaic::makeFun(mod1)
   plot3d(bent_plane, alpha = 0.5, col = "dodgerblue",
          xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
          add = TRUE)
 
   # flat plane
-  mod2 <- lm(y ~ x + z, data = xyz)
+  mod2 <- stats::lm(y ~ x + z, data = xyz)
   flat_plane <- mosaic::makeFun(mod2)
   plot3d(flat_plane, alpha = 0.5, col = "dodgerblue",
          xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
