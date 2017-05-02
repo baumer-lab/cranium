@@ -2,25 +2,31 @@
 % Please edit documentation in R/radial_bridge.R
 \name{plot2d}
 \alias{plot2d}
+\alias{plot2d.brain}
 \alias{plot2d.tbl_brain}
+\alias{plot2d_plane}
 \title{Plot a 2D projection of a 3D image}
 \usage{
-plot2d(x, threshold = 0.99, plane = c("x", "z"), ...)
+plot2d(x, show_max = FALSE, ...)
 
-\method{plot2d}{tbl_brain}(x, threshold = 0.99, plane = c("x", "z"), ...)
+\method{plot2d}{brain}(x, show_max = FALSE, ...)
+
+\method{plot2d}{tbl_brain}(x, show_max = FALSE, ...)
+
+plot2d_plane(x, plane = c("x", "z"), show_max = FALSE, ...)
 }
 \arguments{
 \item{x}{vectors of points to be plotted. Any reasonable way of defining the
     coordinates is acceptable.  See the function \code{\link[grDevices]{xyz.coords}}
     for details.}
 
-\item{threshold}{value below which points will not be plotted}
-
-\item{plane}{a character vector of length 2 indicating the
-plane to project to (x, y, z)}
+\item{show_max}{Plot the maximum frequency or the average?}
 
 \item{...}{additional parameters which will be passed to \code{\link{par3d}}, \code{\link{material3d}}
   or \code{decorate3d}.}
+
+\item{plane}{a character vector of length 2 indicating the
+plane to project to (x, y, z)}
 }
 \description{
 Plot a 2D projection of a 3D image
@@ -28,10 +34,12 @@ Plot a 2D projection of a 3D image
 \examples{
 file <- "~/Data/barresi/AT_1_Probabilities.h5"
 \dontrun{
-tbl_brain <- read_h5(file) \%>\%
+tidy_brain <- read_h5(file) \%>\%
   tidy()
-plot2d(tbl_brain, plane = c("x", "z"))
-plot2d(tbl_brain, plane = c("x", "y"))
-plot2d(tbl_brain, plane = c("y", "z"))
+plot2d(tidy_brain, plane = c("x", "z"))
+plot2d(tidy_brain, plane = c("x", "y"))
+plot2d(tidy_brain, plane = c("y", "z"), show_max = TRUE)
+
+plot2d(tidy_brain)
 }
 }

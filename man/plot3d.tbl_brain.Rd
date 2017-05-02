@@ -5,16 +5,14 @@
 \alias{plot3d.brain}
 \title{Plot a 3D image of a brain}
 \usage{
-\method{plot3d}{tbl_brain}(x, threshold = 0.99, ...)
+\method{plot3d}{tbl_brain}(x, ...)
 
-\method{plot3d}{brain}(x, threshold = 0.99, ...)
+\method{plot3d}{brain}(x, ...)
 }
 \arguments{
 \item{x}{vectors of points to be plotted. Any reasonable way of defining the
     coordinates is acceptable.  See the function \code{\link[grDevices]{xyz.coords}}
     for details.}
-
-\item{threshold}{value below which points will not be plotted}
 
 \item{...}{additional parameters which will be passed to \code{\link{par3d}}, \code{\link{material3d}}
   or \code{decorate3d}.}

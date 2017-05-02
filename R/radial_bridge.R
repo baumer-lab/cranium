@@ -14,7 +14,7 @@
 
 read_h5 <- function(file, name = NULL, ...) {
   objs <- rhdf5::h5ls(file) %>%
-    filter_(~otype == "H5I_DATASET")
+    dplyr::filter_(~otype == "H5I_DATASET")
   if (is.null(name)) {
     # take the first HDF5 dataset
     name <- objs$name[1]
@@ -30,7 +30,8 @@ read_h5 <- function(file, name = NULL, ...) {
 
 #' Tidy 3D brain image data
 #' @inheritParams broom::tidy
-#' @importFrom dplyr %>% mutate_ select_ as.tbl
+#' @importFrom dplyr %>% mutate_ select_
+#' @importFrom tibble as_tibble
 #' @importFrom broom tidy
 #' @export
 #' @examples
@@ -52,9 +53,34 @@ tidy.brain <- function(x, ...) {
             y = ~as.integer(Var2),
             z = ~as.integer(Var3)) %>%
     select_(~x, ~y, ~z, ~Freq) %>%
-    as.tbl()
+    tibble::as_tibble() %>%
+    clean(...)
   class(res) <- append("tbl_brain", class(res))
   return(res)
+}
+
+#' Filter a brain image by threshold
+#' @param x A \code{\link{tbl_brain}} object
+#' @param threshold value below which points will not be plotted
+#' @param ... currently ignored
+#' @export
+#' @examples
+#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
+#' if (require(dplyr)) {
+#'   tidy_brain <- file %>%
+#'     read_h5() %>%
+#'     tidy()
+#'   nrow(tidy_brain)
+#'   clean(tidy_brain) %>%
+#'     nrow()
+#' }
+#' }
+
+clean <- function(x, threshold = 0.99, ...) {
+  x %>%
+    mutate_(gray_val = ~gray(1 - Freq)) %>%
+    filter_(~Freq >= threshold)
 }
 
 #' Plot a slice of a 3D image
@@ -80,40 +106,75 @@ image.brain <- function(x, z = NULL, ...) {
 #' @inheritParams plot3d.tbl_brain
 #' @param plane a character vector of length 2 indicating the
 #' plane to project to (x, y, z)
+#' @param show_max Plot the maximum frequency or the average?
 #' @importFrom dplyr group_by_ summarize_
 #' @importFrom ggplot2 aes aes_string geom_smooth geom_point
-#' ggplot scale_color_continuous
+#' ggplot scale_color_continuous scale_x_continuous scale_y_continuous
 #' @export
 #' @examples
 #' file <- "~/Data/barresi/AT_1_Probabilities.h5"
 #' \dontrun{
-#' tbl_brain <- read_h5(file) %>%
+#' tidy_brain <- read_h5(file) %>%
 #'   tidy()
-#' plot2d(tbl_brain, plane = c("x", "z"))
-#' plot2d(tbl_brain, plane = c("x", "y"))
-#' plot2d(tbl_brain, plane = c("y", "z"))
+#' plot2d(tidy_brain, plane = c("x", "z"))
+#' plot2d(tidy_brain, plane = c("x", "y"))
+#' plot2d(tidy_brain, plane = c("y", "z"), show_max = TRUE)
+#'
+#' plot2d(tidy_brain)
 #' }
 
-plot2d <- function(x, threshold = 0.99,
-                   plane = c("x", "z"), ...) UseMethod("plot2d")
+plot2d <- function(x, show_max = FALSE, ...) UseMethod("plot2d")
 
 #' @export
 #' @rdname plot2d
-plot2d.tbl_brain <- function(x, threshold = 0.99, plane = c("x", "z"), ...) {
-  gg_data <- x %>%
-    filter_(~Freq >= threshold) %>%
-    group_by_(.dots = plane) %>%
-    summarize_(avg_freq = ~mean(Freq))
-  ggplot(gg_data, aes_string(x = plane[1], y = plane[2]), ...) +
-    geom_point(aes(color = avg_freq)) +
-    geom_smooth(method = "lm") +
-    scale_color_continuous(limits = c(0, 1))
+
+plot2d.brain <- function(x, show_max = FALSE, ...) {
+  tidy_brain <- tidy(x)
+  plot2d(tidy_brain, show_max = FALSE, ...)
 }
 
+#' @export
+#' @importFrom gridExtra grid.arrange
+#' @rdname plot2d
+plot2d.tbl_brain <- function(x, show_max = FALSE, ...) {
+  gridExtra::grid.arrange(
+    plot2d_plane(x, plane = c("x", "z"), show_max, ...),
+    plot2d_plane(x, plane = c("x", "y"), show_max, ...),
+    plot2d_plane(x, plane = c("y", "z"), show_max, ...),
+    nrow = 1
+  )
+}
+
+#' @export
+#' @importFrom lazyeval interp
+#' @rdname plot2d
+plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
+  depth <- setdiff(c("x", "y", "z"), plane)
+  gg_data <- x %>%
+    group_by_(.dots = plane) %>%
+    summarize_(N = ~n(),
+               avg_depth = lazyeval::interp(~mean(var), var = as.name(depth)),
+               max_depth = lazyeval::interp(~max(var), var = as.name(depth)))
+  if (show_max) {
+    plot_var <- "max_depth"
+  } else
+    plot_var <- "avg_depth"
+  labels <- data.frame(var = c("x", "y", "z"),
+                       label = c("Lateral (x)",
+                                 "Anterior/Posterior (y)",
+                                 "Dorsal/Ventral (z)")) %>%
+    filter_(~var %in% plane)
+  ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
+    geom_point(alpha = 0.2) +
+    geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red") +
+    geom_smooth(method = "lm", color = "red") +
+    scale_color_continuous(guide = FALSE) +
+    scale_x_continuous(filter_(labels, ~var == plane[1])$label) +
+    scale_y_continuous(filter_(labels, ~var == plane[2])$label)
+}
 
 #' Plot a 3D image of a brain
 #' @inheritParams rgl::plot3d
-#' @param threshold value below which points will not be plotted
 #' @importFrom rgl plot3d
 #' @importFrom dplyr %>% mutate_ filter_
 #' @export
@@ -128,21 +189,19 @@ plot2d.tbl_brain <- function(x, threshold = 0.99, plane = c("x", "z"), ...) {
 #' }
 #' }
 
-plot3d.tbl_brain <- function(x, threshold = 0.99, ...) {
-  xyz <- x %>%
-    mutate_(gray_val = ~gray(1 - Freq)) %>%
-    filter_(~Freq >= threshold)
-  n <- nrow(xyz)
-  message(paste0("Will now plot", n, "points..."))
+plot3d.tbl_brain <- function(x, ...) {
+  x_df <- as.data.frame(x)
+  n <- nrow(x_df)
+  message(paste("Will now plot", n, "points..."))
   if (n > 250000) {
     warning(paste("You are about to plot", n,
-                  "points. Consider increasing the threshold parameter from", threshold))
+                  "points. Consider increasing the threshold parameter."))
   }
-  rgl::plot3d(xyz, type = "p", alpha = xyz$Freq,
+  rgl::plot3d(x_df, type = "p", alpha = x_df$Freq,
 #         width = 900, height = 800,
          xlab = "x", ylab = "y", zlab = "z",
-         size = 2, col = xyz$gray_val, ...)
-  plot3d_model(xyz)
+         size = 2, col = x_df$gray_val, ...)
+  plot3d_model(x_df)
 }
 
 #' @rdname plot3d.tbl_brain
@@ -155,28 +214,53 @@ plot3d.tbl_brain <- function(x, threshold = 0.99, ...) {
 #' }
 
 
-plot3d.brain <- function(x, threshold = 0.99, ...) {
+plot3d.brain <- function(x, ...) {
   tidy_brain <- tidy(x)
-  plot3d(tidy_brain, threshold, ...)
+  return(plot3d(tidy_brain, ...))
 }
 
 #' @importFrom mosaic makeFun
 #' @importFrom stats lm coef
 
 plot3d_model <- function(xyz, ...) {
+  mod_list <- get_jawbone(xyz)
   # quadratic plane
-  mod1 <- stats::lm(z ~ x + y + I(x^2), data = xyz)
-  bent_plane <- mosaic::makeFun(mod1)
-  plot3d(bent_plane, alpha = 0.5, col = "dodgerblue",
+  plot3d(mod_list[[1]], alpha = 0.5, col = "dodgerblue",
          xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
          add = TRUE)
 
   # flat plane
-  mod2 <- stats::lm(y ~ x + z, data = xyz)
-  flat_plane <- mosaic::makeFun(mod2)
-  plot3d(flat_plane, alpha = 0.5, col = "dodgerblue",
+  plot3d(mod_list[[2]], alpha = 0.5, col = "green",
          xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
          add = TRUE)
+
+  # their intersection
+  t <- seq(0, max(xyz$x))
+  plot3d(mod_list[[3]](t), alpha = 0.5, col = "red", size = 5,
+         xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
+         add = TRUE)
+  return(mod_list)
+}
+
+#' Compute the jawbone model
+#' @param xyz a \code{\link{tbl_brain}}
+#' @param ... currently ignored
+#' @export
+#' @examples
+#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
+#' brain <- read_h5(file)
+#' jbone <- get_jawbone(tidy(brain))
+#' }
+
+get_jawbone <- function(xyz, ...) {
+  # quadratic plane
+  mod1 <- stats::lm(z ~ x + y + I(x^2), data = xyz)
+  bent_plane <- mosaic::makeFun(mod1)
+
+  # flat plane
+  mod2 <- stats::lm(y ~ x + z, data = xyz)
+  flat_plane <- mosaic::makeFun(mod2)
 
   # their intersection
   a <- coef(mod1)["I(x^2)"]
@@ -190,15 +274,60 @@ plot3d_model <- function(xyz, ...) {
   b_prime <- (e + b*f) / (1 - c*f)
   c_prime <- (d*f + g) / (1 - c*f)
   # make a parametric equation in terms of t
-  t <- seq(0, 1000)
-  xyz_rope <- cbind(x = t,
-                    y = a_prime*t^2 + b_prime*t + c_prime,
-                    z = (a + c*a_prime)*t^2 + (b + c*b_prime)*t + c*c_prime + d)
-  plot3d(xyz_rope, alpha = 0.5, col = "red", size = 5,
-         xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
-         add = TRUE)
+  f <- function(t) {
+    cbind(x = t,
+          y = a_prime*t^2 + b_prime*t + c_prime,
+          z = (a + c*a_prime)*t^2 + (b + c*b_prime)*t + c*c_prime + d)
+  }
+  return(list(bent_plane, flat_plane, f))
 }
 
+#' PCA
+#' @param x a \code{\link{tbl_brain}}
+#' @param ... arguments passed to \code{\link[stats]{prcomp}}
+#' @importFrom tibble as_tibble
+#' @importFrom dplyr rename_
+#' @export
+#' @examples
+#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
+#' if (require(dplyr)) {
+#'   tidy_brain <- file %>%
+#'     read_h5() %>%
+#'     tidy()
+#'   plot3d(tidy_brain)
+#'   tidy_flat <- reorient(tidy_brain)
+#'   plot3d(tidy_flat)
+#'
+#'   # compare before and after reorientation
+#'   plot2d(tidy_brain)
+#'   plot2d(tidy_flat)
+#'
+#'   # retrieve coefficients
+#'   coef(attr(tidy_flat, "quad_mod"))
+#' }
+#' }
 
+reorient <- function(x, ...) {
+  pca <- stats::prcomp(~ x + y + z, data = x, scale = FALSE, ...)
+  out <- pca$x %>%
+    tibble::as_tibble() %>%
+    dplyr::rename_(x = ~PC1, y = ~PC2, z = ~PC3)
+  # fit quadratic model in the xy-plane
+  mod <- stats::lm(y ~ x + I(x^2), data = out)
+  a <- coef(mod)["I(x^2)"]
+  b <- coef(mod)["x"]
+  c <- coef(mod)["(Intercept)"]
+  # translate to put vertex at origin
+  # https://en.wikipedia.org/wiki/Parabola#Parabola_as_graph_of_a_function
+  vertex <- c(-b / (2 * a), (4 * a * c - b^2) / (4 * a))
+  out <- out %>%
+    mutate_(x = ~x - vertex[1], y = ~y - vertex[2])
+  out[, c("Freq", "gray_val")] <- x[, c("Freq", "gray_val")]
+  class(out) <- append("tbl_brain", class(out))
+  # recompute model after translation
+  attr(out, "quad_mod") <- stats::lm(y ~ x + I(x^2), data = out)
+  return(out)
+}
 
 
