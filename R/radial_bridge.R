@@ -30,7 +30,7 @@ read_h5 <- function(file, name = NULL, ...) {
 
 #' Tidy 3D brain image data
 #' @inheritParams broom::tidy
-#' @param q quantile below which points will be discarded
+#' @param threshold probability below which points will be discarded
 #' @importFrom dplyr %>% mutate_ select_
 #' @importFrom tibble as_tibble
 #' @importFrom broom tidy
@@ -47,7 +47,7 @@ read_h5 <- function(file, name = NULL, ...) {
 #' }
 #' }
 
-tidy.brain <- function(x, n = 100000, ...) {
+tidy.brain <- function(x, threshold = 0.9, ...) {
   res <- x %>%
     as.data.frame.table() %>%
     mutate_(x = ~as.integer(Var1),
@@ -56,8 +56,8 @@ tidy.brain <- function(x, n = 100000, ...) {
     select_(~x, ~y, ~z, ~Freq) %>%
     tibble::as_tibble() %>%
     mutate_(gray_val = ~gray(1 - Freq)) %>%
-    filter_(~Freq > 0) %>%
-    filter_(~Freq > quantile(.$Freq, probs = pmax(0, 1 - (n / nrow(.)))))
+#    filter_(~Freq > 0) %>%
+    filter_(~Freq > threshold)
   class(res) <- append("tbl_brain", class(res))
   return(res)
 }
@@ -144,9 +144,10 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
                                  "Dorsal/Ventral (z)")) %>%
     filter_(~var %in% plane)
   ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
-    geom_point(alpha = 0.2) +
+    geom_point(alpha = 0.2, size = 0.5) +
     geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red") +
     geom_smooth(method = "lm", color = "red") +
+    annotate("text", x = 0, y = 0, label = "origin", size = 5) +
     scale_color_continuous(guide = FALSE) +
     scale_x_continuous(filter_(labels, ~var == plane[1])$label) +
     scale_y_continuous(filter_(labels, ~var == plane[2])$label)
@@ -300,8 +301,12 @@ reorient <- function(x, ...) {
   # translate to put vertex at origin
   # https://en.wikipedia.org/wiki/Parabola#Parabola_as_graph_of_a_function
   vertex <- c(-b / (2 * a), (4 * a * c - b^2) / (4 * a))
+  # translate to center z on commissure
+  z_mean <- out %>%
+    filter(abs(x) < 50) %>%
+    summarize(z_mean = mean(z))
   out <- out %>%
-    mutate_(x = ~x - vertex[1], y = ~y - vertex[2])
+    mutate_(x = ~x - vertex[1], y = ~y - vertex[2], z = ~z - z_mean$z_mean)
   out[, c("Freq", "gray_val")] <- x[, c("Freq", "gray_val")]
   class(out) <- append("tbl_brain", class(out))
   # recompute model after translation

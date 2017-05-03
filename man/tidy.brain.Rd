@@ -4,14 +4,14 @@
 \alias{tidy.brain}
 \title{Tidy 3D brain image data}
 \usage{
-\method{tidy}{brain}(x, n = 1e+05, ...)
+\method{tidy}{brain}(x, threshold = 0.9, ...)
 }
 \arguments{
 \item{x}{An object to be converted into a tidy data.frame}
 
-\item{...}{extra arguments}
+\item{threshold}{probability below which points will be discarded}
 
-\item{q}{quantile below which points will be discarded}
+\item{...}{extra arguments}
 }
 \description{
 Tidy 3D brain image data
