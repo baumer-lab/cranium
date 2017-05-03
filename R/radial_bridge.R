@@ -30,6 +30,7 @@ read_h5 <- function(file, name = NULL, ...) {
 
 #' Tidy 3D brain image data
 #' @inheritParams broom::tidy
+#' @param q quantile below which points will be discarded
 #' @importFrom dplyr %>% mutate_ select_
 #' @importFrom tibble as_tibble
 #' @importFrom broom tidy
@@ -46,7 +47,7 @@ read_h5 <- function(file, name = NULL, ...) {
 #' }
 #' }
 
-tidy.brain <- function(x, ...) {
+tidy.brain <- function(x, n = 100000, ...) {
   res <- x %>%
     as.data.frame.table() %>%
     mutate_(x = ~as.integer(Var1),
@@ -54,33 +55,11 @@ tidy.brain <- function(x, ...) {
             z = ~as.integer(Var3)) %>%
     select_(~x, ~y, ~z, ~Freq) %>%
     tibble::as_tibble() %>%
-    clean(...)
+    mutate_(gray_val = ~gray(1 - Freq)) %>%
+    filter_(~Freq > 0) %>%
+    filter_(~Freq > quantile(.$Freq, probs = pmax(0, 1 - (n / nrow(.)))))
   class(res) <- append("tbl_brain", class(res))
   return(res)
-}
-
-#' Filter a brain image by threshold
-#' @param x A \code{\link{tbl_brain}} object
-#' @param threshold value below which points will not be plotted
-#' @param ... currently ignored
-#' @export
-#' @examples
-#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
-#' \dontrun{
-#' if (require(dplyr)) {
-#'   tidy_brain <- file %>%
-#'     read_h5() %>%
-#'     tidy()
-#'   nrow(tidy_brain)
-#'   clean(tidy_brain) %>%
-#'     nrow()
-#' }
-#' }
-
-clean <- function(x, threshold = 0.99, ...) {
-  x %>%
-    mutate_(gray_val = ~gray(1 - Freq)) %>%
-    filter_(~Freq >= threshold)
 }
 
 #' Plot a slice of a 3D image
