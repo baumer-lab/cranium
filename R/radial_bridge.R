@@ -50,9 +50,9 @@ read_h5 <- function(file, name = NULL, ...) {
 tidy.brain <- function(x, threshold = 0.9, ...) {
   res <- x %>%
     as.data.frame.table() %>%
-    mutate_(x = ~as.integer(Var1),
-            y = ~as.integer(Var2),
-            z = ~as.integer(Var3)) %>%
+    mutate_(x = ~as.integer(Var1) * 0.13,
+            y = ~as.integer(Var2) * 0.13,
+            z = ~as.integer(Var3) * 0.21) %>%
     select_(~x, ~y, ~z, ~Freq) %>%
     tibble::as_tibble() %>%
     mutate_(gray_val = ~gray(1 - Freq)) %>%
@@ -139,10 +139,12 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   } else
     plot_var <- "avg_depth"
   labels <- data.frame(var = c("x", "y", "z"),
-                       label = c("Lateral (x)",
-                                 "Anterior/Posterior (y)",
-                                 "Dorsal/Ventral (z)")) %>%
+                       label = c("Lateral (x, microns)",
+                                 "Anterior/Posterior (y, microns)",
+                                 "Dorsal/Ventral (z, microns)")) %>%
     filter_(~var %in% plane)
+  titles <- data.frame(depth_var = c("x", "y", "z"),
+                       title = c("Side View", "Front View", "Top View"))
   ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
     geom_point(alpha = 0.2, size = 0.5) +
     geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red") +
@@ -150,7 +152,8 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
     annotate("text", x = 0, y = 0, label = "origin", size = 5) +
     scale_color_continuous(guide = FALSE) +
     scale_x_continuous(filter_(labels, ~var == plane[1])$label) +
-    scale_y_continuous(filter_(labels, ~var == plane[2])$label)
+    scale_y_continuous(filter_(labels, ~var == plane[2])$label) +
+    ggtitle(filter_(titles, ~depth_var == depth)$title)
 }
 
 #' Plot a 3D image of a brain
@@ -181,7 +184,7 @@ plot3d.tbl_brain <- function(x, ...) {
 #         width = 900, height = 800,
          xlab = "x", ylab = "y", zlab = "z",
          size = 2, col = x_df$gray_val, ...)
-  plot3d_model(x_df)
+#  plot3d_model(x_df)
 }
 
 #' @rdname plot3d.tbl_brain
@@ -303,8 +306,8 @@ reorient <- function(x, ...) {
   vertex <- c(-b / (2 * a), (4 * a * c - b^2) / (4 * a))
   # translate to center z on commissure
   z_mean <- out %>%
-    filter(abs(x) < 50) %>%
-    summarize(z_mean = mean(z))
+    filter_(~abs(x) < 50) %>%
+    summarize_(z_mean = ~mean(z))
   out <- out %>%
     mutate_(x = ~x - vertex[1], y = ~y - vertex[2], z = ~z - z_mean$z_mean)
   out[, c("Freq", "gray_val")] <- x[, c("Freq", "gray_val")]
