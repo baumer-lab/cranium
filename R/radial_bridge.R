@@ -91,14 +91,11 @@ image.brain <- function(x, z = NULL, ...) {
 #' ggplot scale_color_continuous scale_x_continuous scale_y_continuous
 #' @export
 #' @examples
-#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' file <- "~/Data/barresi/wildtype/AT/AT_1_Probabilities.h5"
 #' \dontrun{
 #' tidy_brain <- read_h5(file) %>%
 #'   tidy()
-#' plot2d(tidy_brain, plane = c("x", "z"))
-#' plot2d(tidy_brain, plane = c("x", "y"))
-#' plot2d(tidy_brain, plane = c("y", "z"), show_max = TRUE)
-#'
+#' plot2d(tidy_brain, show_max = TRUE)
 #' plot2d(tidy_brain)
 #' }
 
@@ -126,12 +123,13 @@ plot2d.tbl_brain <- function(x, show_max = FALSE, ...) {
 
 #' @export
 #' @importFrom lazyeval interp
+#' @importFrom ggplot2 annotate
 #' @rdname plot2d
 plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   depth <- setdiff(c("x", "y", "z"), plane)
   gg_data <- x %>%
     group_by_(.dots = plane) %>%
-    summarize_(N = ~n(),
+    summarize_(N = ~n(), min_freq = ~min(Freq),
                avg_depth = lazyeval::interp(~mean(var), var = as.name(depth)),
                max_depth = lazyeval::interp(~max(var), var = as.name(depth)))
   if (show_max) {
@@ -146,10 +144,11 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   titles <- data.frame(depth_var = c("x", "y", "z"),
                        title = c("Side View", "Front View", "Top View"))
   ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
-    geom_point(alpha = 0.2, size = 0.5) +
+    geom_point(alpha = 0.1, size = 0.5) +
     geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red") +
     geom_smooth(method = "lm", color = "red") +
     annotate("text", x = 0, y = 0, label = "origin", size = 5) +
+    annotate("text", x = 0, y = 0, label = paste0("min_prob: ", round(gg_data$min_freq, 2))) +
     scale_color_continuous(guide = FALSE) +
     scale_x_continuous(filter_(labels, ~var == plane[1])$label) +
     scale_y_continuous(filter_(labels, ~var == plane[2])$label) +

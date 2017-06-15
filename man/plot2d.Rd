@@ -32,14 +32,11 @@ plane to project to (x, y, z)}
 Plot a 2D projection of a 3D image
 }
 \examples{
-file <- "~/Data/barresi/AT_1_Probabilities.h5"
+file <- "~/Data/barresi/wildtype/AT/AT_1_Probabilities.h5"
 \dontrun{
 tidy_brain <- read_h5(file) \%>\%
   tidy()
-plot2d(tidy_brain, plane = c("x", "z"))
-plot2d(tidy_brain, plane = c("x", "y"))
-plot2d(tidy_brain, plane = c("y", "z"), show_max = TRUE)
-
+plot2d(tidy_brain, show_max = TRUE)
 plot2d(tidy_brain)
 }
 }
