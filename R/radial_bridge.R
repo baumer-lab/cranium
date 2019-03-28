@@ -2,7 +2,6 @@
 #' @param file path to the HDF5 file to be read
 #' @param name name of the attr
 #' @param ... parameters passed to \code{\link[rhdf5]{h5read}}
-#' @importFrom rhdf5 h5ls h5read
 #' @importFrom dplyr filter_ %>%
 #' @return an array of class \code{brain}
 #' @export
@@ -34,7 +33,7 @@ read_h5 <- function(file, name = NULL, ...) {
 #' @param threshold probability below which points will be discarded
 #' @importFrom dplyr %>% mutate_ select_
 #' @importFrom tibble as_tibble
-#' @importFrom broom tidy
+#' @importFrom generics tidy
 #' @export
 #' @examples
 #' file <- "~/Data/barresi/AT_1_Probabilities.h5"
@@ -125,7 +124,7 @@ plot2d.tbl_brain <- function(x, show_max = FALSE, ...) {
 
 #' @export
 #' @importFrom lazyeval interp
-#' @importFrom ggplot2 annotate
+#' @import ggplot2
 #' @rdname plot2d
 plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   depth <- setdiff(c("x", "y", "z"), plane)
@@ -159,7 +158,6 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
 
 #' Plot a 3D image of a brain
 #' @inheritParams rgl::plot3d
-#' @importFrom rgl plot3d
 #' @importFrom dplyr %>% mutate_ filter_
 #' @export
 #' @examples
@@ -319,6 +317,9 @@ reorient <- function(x, ...) {
 }
 
 #' Change to parabolic coordinates
+#' @param obj an object
+#' @param ... currently ignored
+#' @export
 #' @examples
 #'
 #' file <- "~/Data/barresi/AT_1_Probabilities.h5"
@@ -338,7 +339,7 @@ reorient <- function(x, ...) {
 change_coordinates <- function(obj, ...) {
   a <- coef(attr(obj, "quad_mod"))["I(x^2)"]
   integrand <- function(x, a) { sqrt(1 + (2*a*x)^2); }
-  alpha <- lapply(obj$x, integrate, f = integrand, lower = 0, a = a) %>%
+  alpha <- lapply(obj$x, stats::integrate, f = integrand, lower = 0, a = a) %>%
     unlist()
   obj$alpha <- alpha[seq(from = 1, to = length(alpha), by = 5)]
 

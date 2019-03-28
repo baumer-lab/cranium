@@ -5,17 +5,19 @@ Authors@R: person("Benjamin", "Baumer", email = "ben.baumer@gmail.com", role = c
 Description: What the package does (one paragraph).
 Imports:
   dplyr,
+  generics,
   ggplot2,
   gridExtra,
   lazyeval,
   mosaic,
+  rgl,
   rhdf5,
   tibble
 Depends: 
-  R (>= 3.2.3), 
-  broom,
-  rgl
+  R (>= 3.2.3)
 License: GPL
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
+Suggests: 
+    testthat

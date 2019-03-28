@@ -6,6 +6,11 @@
 \usage{
 change_coordinates(obj, ...)
 }
+\arguments{
+\item{obj}{an object}
+
+\item{...}{currently ignored}
+}
 \description{
 Change to parabolic coordinates
 }
