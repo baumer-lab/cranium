@@ -28,8 +28,9 @@ read_h5 <- function(file, name = NULL, ...) {
   return(x)
 }
 
+
 #' Tidy 3D brain image data
-#' @inheritParams broom::tidy
+#' @inheritParams broom::tidy.lm
 #' @param threshold probability below which points will be discarded
 #' @importFrom dplyr %>% mutate_ select_
 #' @importFrom tibble as_tibble
@@ -56,11 +57,12 @@ tidy.brain <- function(x, threshold = 0.9, ...) {
     select_(~x, ~y, ~z, ~Freq) %>%
     tibble::as_tibble() %>%
     mutate_(gray_val = ~gray(1 - Freq)) %>%
-#    filter_(~Freq > 0) %>%
+    #    filter_(~Freq > 0) %>%
     filter_(~Freq > threshold)
   class(res) <- append("tbl_brain", class(res))
   return(res)
 }
+
 
 #' Plot a slice of a 3D image
 #' @inheritParams graphics::image
@@ -180,10 +182,10 @@ plot3d.tbl_brain <- function(x, ...) {
                   "points. Consider increasing the threshold parameter."))
   }
   rgl::plot3d(x_df, type = "p", alpha = x_df$Freq,
-#         width = 900, height = 800,
-         xlab = "x", ylab = "y", zlab = "z",
-         size = 2, col = x_df$gray_val, ...)
-#  plot3d_model(x_df)
+              #         width = 900, height = 800,
+              xlab = "x", ylab = "y", zlab = "z",
+              size = 2, col = x_df$gray_val, ...)
+  #  plot3d_model(x_df)
 }
 
 #' @rdname plot3d.tbl_brain
@@ -316,4 +318,28 @@ reorient <- function(x, ...) {
   return(out)
 }
 
+#' Change to parabolic coordinates
+#' @examples
+#'
+#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
+#' if (require(dplyr)) {
+#'   tidy_brain <- file %>%
+#'     read_h5() %>%
+#'     tidy()
+#'   plot3d(tidy_brain)
+#'   tidy_flat <- reorient(tidy_brain)
+#'   plot3d(tidy_flat)
+#'   spherical <- change_coordinates(tidy_flat)
+#'   summary(spherical)
+#'   }
+#' }
 
+change_coordinates <- function(obj, ...) {
+  a <- coef(attr(obj, "quad_mod"))["I(x^2)"]
+  integrand <- function(x, a) { sqrt(1 + (2*a*x)^2); }
+  alpha <- lapply(obj$x, integrate, f = integrand, lower = 0, a = a) %>%
+    unlist()
+  obj$alpha <- alpha[seq(from = 1, to = length(alpha), by = 5)]
+
+}

@@ -7,11 +7,19 @@
 \method{tidy}{brain}(x, threshold = 0.9, ...)
 }
 \arguments{
-\item{x}{An object to be converted into a tidy data.frame}
+\item{x}{An \code{lm} object created by \code{\link[stats:lm]{stats::lm()}}.}
 
 \item{threshold}{probability below which points will be discarded}
 
-\item{...}{extra arguments}
+\item{...}{Additional arguments. Not used. Needed to match generic
+signature only. \strong{Cautionary note:} Misspelled arguments will be
+absorbed in \code{...}, where they will be ignored. If the misspelled
+argument has a default value, the default value will be used.
+For example, if you pass \code{conf.lvel = 0.9}, all computation will
+proceed using \code{conf.level = 0.95}. Additionally, if you pass
+\code{newdata = my_tibble} to an \code{\link[=augment]{augment()}} method that does not
+accept a \code{newdata} argument, it will use the default value for
+the \code{data} argument.}
 }
 \description{
 Tidy 3D brain image data
