@@ -119,16 +119,19 @@ plot2d.tbl_brain <- function(x, show_max = FALSE, ...) {
 }
 
 #' @export
-#' @importFrom lazyeval interp
+#' @importFrom rlang !!
 #' @import ggplot2
 #' @rdname plot2d
 plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   depth <- setdiff(c("x", "y", "z"), plane)
+  depth_var <- rlang::sym(depth)
+
   gg_data <- x %>%
     group_by(.dots = plane) %>%
     summarize(N = n(), min_freq = min(Freq),
-              avg_depth = lazyeval::interp(mean(var), var = as.name(depth)),
-              max_depth = lazyeval::interp(max(var), var = as.name(depth)))
+              avg_depth = mean(!! depth_var, na.rm = TRUE),
+              max_depth = max(!! depth_var, na.rm = TRUE))
+
   if (show_max) {
     plot_var <- "max_depth"
   } else

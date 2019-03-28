@@ -8,10 +8,10 @@ Imports:
   generics,
   ggplot2,
   gridExtra,
-  lazyeval,
   mosaic,
   rgl,
   rhdf5,
+  rlang,
   tibble
 Depends: 
   R (>= 3.2.3)
