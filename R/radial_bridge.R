@@ -2,7 +2,7 @@
 #' @param file path to the HDF5 file to be read
 #' @param name name of the attr
 #' @param ... parameters passed to \code{\link[rhdf5]{h5read}}
-#' @importFrom dplyr filter_ %>%
+#' @import dplyr
 #' @return an array of class \code{brain}
 #' @export
 #' @examples
@@ -13,7 +13,7 @@
 
 read_h5 <- function(file, name = NULL, ...) {
   objs <- rhdf5::h5ls(file) %>%
-    dplyr::filter_(~otype == "H5I_DATASET")
+    dplyr::filter(otype == "H5I_DATASET")
   if (is.null(name)) {
     # take the first HDF5 dataset
     name <- objs$name[1]
@@ -31,7 +31,6 @@ read_h5 <- function(file, name = NULL, ...) {
 #' Tidy 3D brain image data
 #' @inheritParams broom::tidy.lm
 #' @param threshold probability below which points will be discarded
-#' @importFrom dplyr %>% mutate_ select_
 #' @importFrom tibble as_tibble
 #' @importFrom generics tidy
 #' @export
@@ -50,14 +49,14 @@ read_h5 <- function(file, name = NULL, ...) {
 tidy.brain <- function(x, threshold = 0.9, ...) {
   res <- x %>%
     as.data.frame.table() %>%
-    mutate_(x = ~as.integer(Var1) * 0.13,
-            y = ~as.integer(Var2) * 0.13,
-            z = ~as.integer(Var3) * 0.21) %>%
-    select_(~x, ~y, ~z, ~Freq) %>%
+    mutate(x = as.integer(Var1) * 0.13,
+            y = as.integer(Var2) * 0.13,
+            z = as.integer(Var3) * 0.21) %>%
+    select(x, y, z, Freq) %>%
     tibble::as_tibble() %>%
-    mutate_(gray_val = ~gray(1 - Freq)) %>%
-    #    filter_(~Freq > 0) %>%
-    filter_(~Freq > threshold)
+    mutate(gray_val = gray(1 - Freq)) %>%
+    #    filter(Freq > 0) %>%
+    filter(Freq > threshold)
   class(res) <- append("tbl_brain", class(res))
   return(res)
 }
@@ -87,9 +86,6 @@ image.brain <- function(x, z = NULL, ...) {
 #' @param plane a character vector of length 2 indicating the
 #' plane to project to (x, y, z)
 #' @param show_max Plot the maximum frequency or the average?
-#' @importFrom dplyr group_by_ summarize_
-#' @importFrom ggplot2 aes aes_string geom_smooth geom_point
-#' ggplot scale_color_continuous scale_x_continuous scale_y_continuous
 #' @export
 #' @examples
 #' file <- "~/Data/barresi/wildtype/AT/AT_1_Probabilities.h5"
@@ -129,10 +125,10 @@ plot2d.tbl_brain <- function(x, show_max = FALSE, ...) {
 plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   depth <- setdiff(c("x", "y", "z"), plane)
   gg_data <- x %>%
-    group_by_(.dots = plane) %>%
-    summarize_(N = ~n(), min_freq = ~min(Freq),
-               avg_depth = lazyeval::interp(~mean(var), var = as.name(depth)),
-               max_depth = lazyeval::interp(~max(var), var = as.name(depth)))
+    group_by(.dots = plane) %>%
+    summarize(N = n(), min_freq = min(Freq),
+              avg_depth = lazyeval::interp(mean(var), var = as.name(depth)),
+              max_depth = lazyeval::interp(max(var), var = as.name(depth)))
   if (show_max) {
     plot_var <- "max_depth"
   } else
@@ -141,7 +137,7 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
                        label = c("Lateral (x, microns)",
                                  "Anterior/Posterior (y, microns)",
                                  "Dorsal/Ventral (z, microns)")) %>%
-    filter_(~var %in% plane)
+    filter(var %in% plane)
   titles <- data.frame(depth_var = c("x", "y", "z"),
                        title = c("Side View", "Front View", "Top View"))
   ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
@@ -151,14 +147,13 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
     annotate("text", x = 0, y = 0, label = "origin", size = 5) +
     annotate("text", x = 0, y = 0, label = paste0("min_prob: ", round(gg_data$min_freq, 2))) +
     scale_color_continuous(guide = FALSE) +
-    scale_x_continuous(filter_(labels, ~var == plane[1])$label) +
-    scale_y_continuous(filter_(labels, ~var == plane[2])$label) +
-    ggtitle(filter_(titles, ~depth_var == depth)$title)
+    scale_x_continuous(filter(labels, var == plane[1])$label) +
+    scale_y_continuous(filter(labels, var == plane[2])$label) +
+    ggtitle(filter(titles, depth_var == depth)$title)
 }
 
 #' Plot a 3D image of a brain
 #' @inheritParams rgl::plot3d
-#' @importFrom dplyr %>% mutate_ filter_
 #' @export
 #' @examples
 #' file <- "~/Data/barresi/AT_1_Probabilities.h5"
@@ -268,7 +263,6 @@ get_jawbone <- function(xyz, ...) {
 #' @param x a \code{\link{tbl_brain}}
 #' @param ... arguments passed to \code{\link[stats]{prcomp}}
 #' @importFrom tibble as_tibble
-#' @importFrom dplyr rename_
 #' @export
 #' @examples
 #' file <- "~/Data/barresi/AT_1_Probabilities.h5"
@@ -294,7 +288,7 @@ reorient <- function(x, ...) {
   pca <- stats::prcomp(~ x + y + z, data = x, scale = FALSE, ...)
   out <- pca$x %>%
     tibble::as_tibble() %>%
-    dplyr::rename_(x = ~PC1, y = ~PC2, z = ~PC3)
+    dplyr::rename(x = PC1, y = PC2, z = PC3)
   # fit quadratic model in the xy-plane
   mod <- stats::lm(y ~ x + I(x^2), data = out)
   a <- coef(mod)["I(x^2)"]
@@ -305,10 +299,10 @@ reorient <- function(x, ...) {
   vertex <- c(-b / (2 * a), (4 * a * c - b^2) / (4 * a))
   # translate to center z on commissure
   z_mean <- out %>%
-    filter_(~abs(x) < 50) %>%
-    summarize_(z_mean = ~mean(z))
+    filter(abs(x) < 50) %>%
+    summarize(z_mean = mean(z))
   out <- out %>%
-    mutate_(x = ~x - vertex[1], y = ~y - vertex[2], z = ~z - z_mean$z_mean)
+    mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
   out[, c("Freq", "gray_val")] <- x[, c("Freq", "gray_val")]
   class(out) <- append("tbl_brain", class(out))
   # recompute model after translation
