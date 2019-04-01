@@ -12,18 +12,22 @@
 #' dim(raw)
 
 read_h5 <- function(file, name = NULL, ...) {
-  objs <- rhdf5::h5ls(file) %>%
-    dplyr::filter(otype == "H5I_DATASET")
-  if (is.null(name)) {
-    # take the first HDF5 dataset
-    name <- objs$name[1]
+  if("hdf5" %in% (.packages())){
+    objs <- rhdf5::h5ls(file) %>%
+      dplyr::filter(otype == "H5I_DATASET")
+    if (is.null(name)) {
+      # take the first HDF5 dataset
+      name <- objs$name[1]
+    }
+    x <- rhdf5::h5read(file, name, ...)
+    if (length(dim(x)) > 3) {
+      # take the second image
+      x <- x[2,,,]
+    }
+    class(x) <- append("brain", class(x))
+    return(x)
   }
-  x <- rhdf5::h5read(file, name, ...)
-  if (length(dim(x)) > 3) {
-    # take the second image
-    x <- x[2,,,]
-  }
-  else {
+  if("hdf5r" %in% (.packages())){
     file.h5 <- H5File$new(file, mode="r")
     brain <- file.h5[["exported_data"]]
     x <- brain[2,,,]
