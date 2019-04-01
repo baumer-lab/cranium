@@ -23,6 +23,11 @@ read_h5 <- function(file, name = NULL, ...) {
     # take the second image
     x <- x[2,,,]
   }
+  else {
+    file.h5 <- H5File$new(file, mode="r")
+    brain <- file.h5[["exported_data"]]
+    x <- brain[2,,,]
+  }
   class(x) <- append("brain", class(x))
   return(x)
 }
