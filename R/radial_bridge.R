@@ -11,21 +11,6 @@
 #' class(raw)
 #' dim(raw)
 
-library(cranium)
-library(tidyverse)
-library(hdf5r)
-
-
-file <- "Wild_Type_1/AT_1/AT_wildtype_101_Probabilities.h5"
-
-file.h5 <- H5File$new(file, mode="r")
-
-brain <- file.h5[["exported_data"]]
-
-x <- brain[2,,,]
-
-##############################
-#function
 read_h5 <- function(file, name = NULL, ...) {
   if("hdf5" %in% (.packages())){
     objs <- rhdf5::h5ls(file) %>%
@@ -51,6 +36,24 @@ read_h5 <- function(file, name = NULL, ...) {
   return(x)
 }
 
+#' Tidy 3D brain image data
+#' @inheritParams broom::tidy.lm
+#' @param threshold probability below which points will be discarded
+#' @importFrom tibble as_tibble
+#' @importFrom generics tidy
+#' @export
+#' @examples
+#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
+#' if (require(dplyr)) {
+#'   tidy_brain <- file %>%
+#'     read_h5() %>%
+#'     tidy()
+#'   class(tidy_brain)
+#'   glimpse(tidy_brain)
+#' }
+#' }
+#' 
 tidy.brain <- function(x, threshold = 0.9, ...) {
   res <- x %>%
     as.data.frame.table() %>%
@@ -64,37 +67,6 @@ tidy.brain <- function(x, threshold = 0.9, ...) {
     filter(Freq > threshold)
   class(res) <- append("tbl_brain", class(res))
   return(res)
-}
-
-file <- "Wild_Type_1/AT_1/AT_wildtype_101_Probabilities.h5"
-
-tidy_brain <- file %>%
-  read_h5() %>%
-  tidy()
-##############################
-
-
-
-tidy_brain <- file %>%
-  read_h5() %>%
-  tidy()
-plot3d(tidy_brain)
-
-
-read_h5 <- function(file, name = NULL, ...) {
-  objs <- rhdf5::h5ls(file) %>%
-    dplyr::filter(otype == "H5I_DATASET")
-  if (is.null(name)) {
-    # take the first HDF5 dataset
-    name <- objs$name[1]
-  }
-  x <- rhdf5::h5read(file, name, ...)
-  if (length(dim(x)) > 3) {
-    # take the second image
-    x <- x[2,,,]
-  }
-  class(x) <- append("brain", class(x))
-  return(x)
 }
 
 
