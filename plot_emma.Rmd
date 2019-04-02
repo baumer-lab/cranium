@@ -18,6 +18,7 @@ library(dplyr)
 library(cranium)
 library(broom)
 library(tidyverse)
+library(rgl)
 
 
 file <- "AT_wildtype_101_Probabilities.h5"
@@ -72,6 +73,83 @@ tidy_brain <- file %>%
 
 ```
 
+```{r}
+plot3d_model(tidy_brain)
+plot3d(tidy_brain)
+```
+
+
+#plot 3d
+```{r}
+#' Plot a 3D image of a brain
+#' @inheritParams rgl::plot3d
+#' @export
+#' @examples
+#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
+#' if (require(dplyr)) {
+#'   tidy_brain <- file %>%
+#'     read_h5() %>%
+#'     tidy()
+#'   plot3d(tidy_brain)
+#' }
+#' }
+
+plot3d.tbl_brain <- function(x, ...) {
+  x_df <- as.data.frame(x)
+  n <- nrow(x_df)
+  message(paste("Will now plot", n, "points..."))
+  if (n > 250000) {
+    warning(paste("You are about to plot", n,
+                  "points. Consider increasing the threshold parameter."))
+  }
+  rgl::plot3d(x_df, type = "p", alpha = x_df$Freq,
+              #         width = 900, height = 800,
+              xlab = "x", ylab = "y", zlab = "z",
+              size = 2, col = x_df$gray_val, ...)
+  #  plot3d_model(x_df)
+}
+
+#' @rdname plot3d.tbl_brain
+#' @export
+#' @examples
+#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
+#' brain <- read_h5(file)
+#' plot3d(brain)
+#' }
+
+
+plot3d.brain <- function(x, ...) {
+  tidy_brain <- tidy(x)
+  return(plot3d(tidy_brain, ...))
+}
+
+#' @importFrom mosaic makeFun
+#' @importFrom stats lm coef
+
+plot3d_model <- function(xyz, ...) {
+  mod_list <- get_jawbone(xyz)
+  # quadratic plane
+  plot3d(mod_list[[1]], alpha = 0.5, col = "dodgerblue",
+         xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
+         add = TRUE)
+  
+  # flat plane
+  plot3d(mod_list[[2]], alpha = 0.5, col = "green",
+         xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
+         add = TRUE)
+  
+  # their intersection
+  t <- seq(0, max(xyz$x))
+  plot3d(mod_list[[3]](t), alpha = 0.5, col = "red", size = 5,
+         xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
+         add = TRUE)
+  return(mod_list)
+}
+
+
+```
 
 
 #read_h5
