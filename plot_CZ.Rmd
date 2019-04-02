@@ -20,32 +20,10 @@ library(broom)
 library(tidyverse)
 library(gridExtra)
 
-
-
-read_h5 <- function(file, name = NULL, ...) {
-  if("hdf5" %in% (.packages())){
-    objs <- rhdf5::h5ls(file) %>%
-      dplyr::filter(otype == "H5I_DATASET")
-    if (is.null(name)) {
-      # take the first HDF5 dataset
-      name <- objs$name[1]
-    }
-    x <- rhdf5::h5read(file, name, ...)
-    if (length(dim(x)) > 3) {
-      # take the second image
-      x <- x[2,,,]
-    }
-    class(x) <- append("brain", class(x))
-    return(x)
-  }
-  if("hdf5r" %in% (.packages())){
-    file.h5 <- H5File$new(file, mode="r")
-    brain <- file.h5[["exported_data"]]
-    x <- brain[2,,,]
-  }
-  class(x) <- append("brain", class(x))
-  return(x)
-}
+#test function YAY WORKING
+file="Sample/AT_wildtype_101_Probabilities.h5"
+read_h5("Sample/AT_wildtype_101_Probabilities.h5") %>%
+  tidy()
 ```
 
 
@@ -85,8 +63,10 @@ for (i in (1:length(plot)))
     print(p1)
     plot[[i]] <<- p1
     })
-plot2d_all = function(data)
-      plot2d(data)
+
+
+#plot2d_all = function(data)
+#      plot2d(data)
 
 #myplots<-lapply(plot2d_all, data = tidy_brain_ls[[1]])
 
