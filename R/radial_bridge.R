@@ -12,7 +12,7 @@
 #' dim(raw)
 
 read_h5 <- function(file, name = NULL, ...) {
-  if("hdf5" %in% (.packages())){
+  if("rhdf5" %in% (.packages())){
     objs <- rhdf5::h5ls(file) %>%
       dplyr::filter(otype == "H5I_DATASET")
     if (is.null(name)) {
@@ -34,39 +34,6 @@ read_h5 <- function(file, name = NULL, ...) {
   }
   class(x) <- append("brain", class(x))
   return(x)
-}
-
-#' Tidy 3D brain image data
-#' @inheritParams broom::tidy.lm
-#' @param threshold probability below which points will be discarded
-#' @importFrom tibble as_tibble
-#' @importFrom generics tidy
-#' @export
-#' @examples
-#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
-#' \dontrun{
-#' if (require(dplyr)) {
-#'   tidy_brain <- file %>%
-#'     read_h5() %>%
-#'     tidy()
-#'   class(tidy_brain)
-#'   glimpse(tidy_brain)
-#' }
-#' }
-#' 
-tidy.brain <- function(x, threshold = 0.9, ...) {
-  res <- x %>%
-    as.data.frame.table() %>%
-    mutate(x = as.integer(Var1) * 0.13,
-           y = as.integer(Var2) * 0.13,
-           z = as.integer(Var3) * 0.21) %>%
-    select(x, y, z, Freq) %>%
-    tibble::as_tibble() %>%
-    mutate(gray_val = gray(1 - Freq)) %>%
-    #    filter(Freq > 0) %>%
-    filter(Freq > threshold)
-  class(res) <- append("tbl_brain", class(res))
-  return(res)
 }
 
 
