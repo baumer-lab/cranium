@@ -1,0 +1,102 @@
+---
+title: "Plot"
+author: "CZ"
+date: "4/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#hdf5
+```
+
+
+#hdf5r
+```{r}
+library(hdf5r)
+library(dplyr)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+
+
+
+read_h5 <- function(file, name = NULL, ...) {
+  if("hdf5" %in% (.packages())){
+    objs <- rhdf5::h5ls(file) %>%
+      dplyr::filter(otype == "H5I_DATASET")
+    if (is.null(name)) {
+      # take the first HDF5 dataset
+      name <- objs$name[1]
+    }
+    x <- rhdf5::h5read(file, name, ...)
+    if (length(dim(x)) > 3) {
+      # take the second image
+      x <- x[2,,,]
+    }
+    class(x) <- append("brain", class(x))
+    return(x)
+  }
+  if("hdf5r" %in% (.packages())){
+    file.h5 <- H5File$new(file, mode="r")
+    brain <- file.h5[["exported_data"]]
+    x <- brain[2,,,]
+  }
+  class(x) <- append("brain", class(x))
+  return(x)
+}
+```
+
+
+
+
+```{r}
+
+ls <- c("101", "102", "104")
+file_ls =c("0", "0", "0")
+
+for (i in (1:length(ls))) {
+  file_ls[i] = paste("file", ls[i], sep='')
+}
+
+file_ls
+
+file_ls[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
+file_ls[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
+file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
+
+file_ls
+tidy_brain_ls <- list()
+
+for (i in (1:length(ls))) {
+  tidy_brain_ls[[i]] <- file_ls[i] %>%
+  read_h5() %>%
+  tidy()
+}
+
+#tidy_brain_ls
+plot <- list()
+for (i in (1:length(plot)))
+  local({
+    i <- i
+    p1 <- plot2d(tidy_brain_ls[[i]])
+    print(i)
+    print(p1)
+    plot[[i]] <<- p1
+    })
+plot2d_all = function(data)
+      plot2d(data)
+
+myplots<-lapply(plot2d_all, data = tidy_brain_ls[[1]])
+
+plot_data_column = function (data, column)
+    ggplot(data = data2, aes_string(x = column)) +
+        geom_histogram(fill = "lightgreen") +
+        xlab(column)
+
+myplots <- lapply(colnames(data2), plot_data_column, data = data2)
+```
+
+
+
