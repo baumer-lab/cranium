@@ -88,14 +88,14 @@ for (i in (1:length(plot)))
 plot2d_all = function(data)
       plot2d(data)
 
-myplots<-lapply(plot2d_all, data = tidy_brain_ls[[1]])
+#myplots<-lapply(plot2d_all, data = tidy_brain_ls[[1]])
 
-plot_data_column = function (data, column)
-    ggplot(data = data2, aes_string(x = column)) +
-        geom_histogram(fill = "lightgreen") +
-        xlab(column)
+#plot_data_column = function (data, column)
+#    ggplot(data = data2, aes_string(x = column)) +
+#        geom_histogram(fill = "lightgreen") +
+ #       xlab(column)
 
-myplots <- lapply(colnames(data2), plot_data_column, data = data2)
+#myplots <- lapply(colnames(data2), plot_data_column, data = data2)
 ```
 
 
