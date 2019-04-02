@@ -11,6 +11,21 @@
 #' class(raw)
 #' dim(raw)
 
+library(cranium)
+library(tidyverse)
+library(hdf5r)
+
+
+file <- "Wild_Type_1/AT_1/AT_wildtype_101_Probabilities.h5"
+
+file.h5 <- H5File$new(file, mode="r")
+
+brain <- file.h5[["exported_data"]]
+
+x <- brain[2,,,]
+
+##############################
+#function
 read_h5 <- function(file, name = NULL, ...) {
   if("hdf5" %in% (.packages())){
     objs <- rhdf5::h5ls(file) %>%
@@ -31,6 +46,52 @@ read_h5 <- function(file, name = NULL, ...) {
     file.h5 <- H5File$new(file, mode="r")
     brain <- file.h5[["exported_data"]]
     x <- brain[2,,,]
+  }
+  class(x) <- append("brain", class(x))
+  return(x)
+}
+
+tidy.brain <- function(x, threshold = 0.9, ...) {
+  res <- x %>%
+    as.data.frame.table() %>%
+    mutate(x = as.integer(Var1) * 0.13,
+           y = as.integer(Var2) * 0.13,
+           z = as.integer(Var3) * 0.21) %>%
+    select(x, y, z, Freq) %>%
+    tibble::as_tibble() %>%
+    mutate(gray_val = gray(1 - Freq)) %>%
+    #    filter(Freq > 0) %>%
+    filter(Freq > threshold)
+  class(res) <- append("tbl_brain", class(res))
+  return(res)
+}
+
+file <- "Wild_Type_1/AT_1/AT_wildtype_101_Probabilities.h5"
+
+tidy_brain <- file %>%
+  read_h5() %>%
+  tidy()
+##############################
+
+
+
+tidy_brain <- file %>%
+  read_h5() %>%
+  tidy()
+plot3d(tidy_brain)
+
+
+read_h5 <- function(file, name = NULL, ...) {
+  objs <- rhdf5::h5ls(file) %>%
+    dplyr::filter(otype == "H5I_DATASET")
+  if (is.null(name)) {
+    # take the first HDF5 dataset
+    name <- objs$name[1]
+  }
+  x <- rhdf5::h5read(file, name, ...)
+  if (length(dim(x)) > 3) {
+    # take the second image
+    x <- x[2,,,]
   }
   class(x) <- append("brain", class(x))
   return(x)
@@ -59,8 +120,8 @@ tidy.brain <- function(x, threshold = 0.9, ...) {
   res <- x %>%
     as.data.frame.table() %>%
     mutate(x = as.integer(Var1) * 0.13,
-            y = as.integer(Var2) * 0.13,
-            z = as.integer(Var3) * 0.21) %>%
+           y = as.integer(Var2) * 0.13,
+           z = as.integer(Var3) * 0.21) %>%
     select(x, y, z, Freq) %>%
     tibble::as_tibble() %>%
     mutate(gray_val = gray(1 - Freq)) %>%
@@ -134,13 +195,13 @@ plot2d.tbl_brain <- function(x, show_max = FALSE, ...) {
 plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   depth <- setdiff(c("x", "y", "z"), plane)
   depth_var <- rlang::sym(depth)
-
+  
   gg_data <- x %>%
     group_by(.dots = plane) %>%
     summarize(N = n(), min_freq = min(Freq),
               avg_depth = mean(!! depth_var, na.rm = TRUE),
               max_depth = max(!! depth_var, na.rm = TRUE))
-
+  
   if (show_max) {
     plot_var <- "max_depth"
   } else
@@ -218,12 +279,12 @@ plot3d_model <- function(xyz, ...) {
   plot3d(mod_list[[1]], alpha = 0.5, col = "dodgerblue",
          xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
          add = TRUE)
-
+  
   # flat plane
   plot3d(mod_list[[2]], alpha = 0.5, col = "green",
          xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
          add = TRUE)
-
+  
   # their intersection
   t <- seq(0, max(xyz$x))
   plot3d(mod_list[[3]](t), alpha = 0.5, col = "red", size = 5,
@@ -247,11 +308,11 @@ get_jawbone <- function(xyz, ...) {
   # quadratic plane
   mod1 <- stats::lm(z ~ x + y + I(x^2), data = xyz)
   bent_plane <- mosaic::makeFun(mod1)
-
+  
   # flat plane
   mod2 <- stats::lm(y ~ x + z, data = xyz)
   flat_plane <- mosaic::makeFun(mod2)
-
+  
   # their intersection
   a <- coef(mod1)["I(x^2)"]
   b <- coef(mod1)["x"]
@@ -349,5 +410,5 @@ change_coordinates <- function(obj, ...) {
   alpha <- lapply(obj$x, stats::integrate, f = integrand, lower = 0, a = a) %>%
     unlist()
   obj$alpha <- alpha[seq(from = 1, to = length(alpha), by = 5)]
-
+  
 }
