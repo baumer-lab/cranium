@@ -54,16 +54,25 @@ for (i in (1:length(ls))) {
 }
 
 #tidy_brain_ls
-plot <- list()
+plotlist <- list()
+
+#Try 1
 for (i in (1:length(plot)))
   local({
     i <- i
     p1 <- plot2d(tidy_brain_ls[[i]])
     print(i)
     print(p1)
-    plot[[i]] <<- p1
+    plotlist[[i]] <<- p1
     })
 
+#Try2
+for (i in (1:length(plot))){
+  plotlist[[i]] <- plot2d(tidy_brain_ls[[i]])
+    plot(plotlist[[i]])
+    dev.off
+}
+do.call(grid.arrange, c(plotlist, ncol = 5))
 
 #plot2d_all = function(data)
 #      plot2d(data)
