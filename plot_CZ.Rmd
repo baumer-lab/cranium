@@ -31,13 +31,62 @@ library(mosaic)
 
 # Edited functions
 ```{r}
+tidy.brain <- function(x, threshold = 0.9, ...) {
+  res <- x %>%
+    as.data.frame.table() %>%
+    mutate(x = as.integer(Var1) * 0.13,
+           y = as.integer(Var2) * 0.13,
+           z = as.integer(Var3) * 0.21) %>%
+    select(x, y, z, Freq) %>%
+    tibble::as_tibble() %>%
+    mutate(gray_val = grDevices::gray(1 - Freq)) %>%
+    #    filter(Freq > 0) %>%
+    filter(Freq > threshold)
+  class(res) <- append("tbl_brain", class(res))
+  return(res)
+}
 
-plot2d <- function(x, show_max = FALSE, title...) UseMethod("plot2d")
+
+#' Plot a slice of a 3D image
+#' @inheritParams graphics::image
+#' @param z slice of the 3D image to display
+#' @importFrom graphics image
+#' @export
+#' @examples
+#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' raw <- read_h5(file)
+#' image(raw)
+#' image(raw, z = 23)
+
+
+image.brain <- function(x, z = NULL, ...) {
+  if (is.null(z)) {
+    z <- floor(dim(x)[3] / 2)
+  }
+  graphics::image(x[,,z])
+}
+
+#' Plot a 2D projection of a 3D image
+#' @inheritParams plot3d.tbl_brain
+#' @param plane a character vector of length 2 indicating the
+#' plane to project to (x, y, z)
+#' @param show_max Plot the maximum frequency or the average?
+#' @export
+#' @examples
+#' file <- "~/Data/barresi/wildtype/AT/AT_1_Probabilities.h5"
+#' \dontrun{
+#' tidy_brain <- read_h5(file) %>%
+#'   tidy()
+#' plot2d(tidy_brain, show_max = TRUE)
+#' plot2d(tidy_brain)
+#' }
+
+plot2d <- function(x, title, show_max = FALSE, ...) UseMethod("plot2d")
 
 #' @export
 #' @rdname plot2d
 
-plot2d.brain <- function(x, show_max = FALSE, ...) {
+plot2d.brain <- function(x, title, show_max = FALSE, ...) {
   tidy_brain <- tidy(x)
   plot2d(tidy_brain, show_max = FALSE, ...)
 }
@@ -62,13 +111,13 @@ plot2d.tbl_brain <- function(x, title, show_max = FALSE, ...) {
 plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   depth <- setdiff(c("x", "y", "z"), plane)
   depth_var <- rlang::sym(depth)
-  
+
   gg_data <- x %>%
     group_by(.dots = plane) %>%
     summarize(N = n(), min_freq = min(Freq),
               avg_depth = mean(!! depth_var, na.rm = TRUE),
               max_depth = max(!! depth_var, na.rm = TRUE))
-  
+
   if (show_max) {
     plot_var <- "max_depth"
   } else
@@ -92,6 +141,21 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
     scale_y_continuous(filter(labels, var == plane[2])$label) +
     ggtitle(filter(titles, depth_var == depth)$title)
 }
+
+#' Plot a 3D image of a brain
+#' @inheritParams rgl::plot3d
+#' @export
+#' @examples
+#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
+#' \dontrun{
+#' if (require(dplyr)) {
+#'   tidy_brain <- file %>%
+#'     read_h5() %>%
+#'     tidy()
+#'   plot3d(tidy_brain)
+#' }
+#' }
+
 ```
 
 # Wild Type 
@@ -217,6 +281,13 @@ for (i in (4:4)){
 
 # All plots
 ```{r}
+plotlist_wt <- list()
+for (i in (1:length(ls_wt))){
+  plotlist_wt[[i]] <- plot2d(ro_brain_ls_wt[[i]], title=paste("Sample", ls_wt[i]))
+   # plot(plotlist[[i]])
+   # dev.off
+}
+
 plotlist_youtoo <- list()
 for (i in (1:length(ls_youtoo))){
   plotlist_youtoo[[i]] <- plot2d(ro_brain_ls_youtoo[[i]], title=paste("Sample", ls_youtoo[i]))
