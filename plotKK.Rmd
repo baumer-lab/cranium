@@ -20,6 +20,8 @@ library(broom)
 library(tidyverse)
 library(rgl)
 
+devtools::install_github("beanumber/cranium")
+
 file <- "AT_wildtype_101_Probabilities.h5"
 
 
