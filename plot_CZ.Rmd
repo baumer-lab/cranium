@@ -115,11 +115,15 @@ for (i in (1:length(ls))) {
   tidy()
 }
 
+#Reorient
 ro_brain_ls<-tidy_brain_ls%>%
 lapply(reorient)
 
+```
 
-#1 plot
+
+# Test plot
+```{r}
 plotlist <- list()
 for (i in (1:1)){
   plotlist[[i]] <- plot2d(ro_brain_ls[[i]], title=paste("Sample", ls[i]))
@@ -128,8 +132,10 @@ for (i in (1:1)){
  # decorate3d
 }
 
+```
 
-#all plot
+# All plots
+```{r}
 plotlist <- list()
 for (i in (1:length(file_ls))){
   plotlist[[i]] <- plot2d(ro_brain_ls[[i]],title=paste("Sample", ls[i]))
@@ -137,8 +143,6 @@ for (i in (1:length(file_ls))){
    # dev.off
 }
 #do.call(grid.arrange, c(plotlist, ncol = 3))
-
-p
 
 ```
 
