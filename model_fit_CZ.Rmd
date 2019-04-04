@@ -1,0 +1,111 @@
+---
+title: "model_fit_CZ"
+author: "CZ"
+date: "4/4/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(hdf5r)
+library(dplyr)
+library(rlang)
+library(BiocInstaller)
+library(rhdf5)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+```
+
+
+# Data: Wild Type 
+```{r}
+ls_wt <- c("Wild Type_101", "Wild Type_102")
+ls_wt
+
+file_ls_wt =c("0")
+file_ls_wt
+
+for (i in (1:length(ls_wt))) {
+  file_ls_wt[i] = paste("file", ls_wt[i])
+}
+
+file_ls_wt
+
+file_ls_wt[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
+file_ls_wt[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
+#file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
+
+
+
+file_ls_wt
+
+#defalt threshol = 0.9
+brain_ls_wt <- list()
+for (i in (1:length(ls_wt))) {
+  brain_ls_wt[[i]] <- file_ls_wt[i] %>%
+  read_h5()
+}
+```
+
+
+#Data: You too
+```{r}
+ls_youtoo <- c("You_Too_01", "You_Too_02")
+
+file_ls_youtoo =c("0")
+file_ls_youtoo
+
+for (i in (1:length(ls_youtoo))) {
+  file_ls_youtoo[i] = paste("file", ls_youtoo[i])
+}
+
+file_ls_youtoo
+
+file_ls_youtoo[1] <- "Sample/AT_01_Probabilities.h5"
+file_ls_youtoo[2] <- "Sample/AT_02_Probabilities.h5"
+#file_ls[6] <- "Sample/AT_03_Probabilities.h5"
+#file_ls[7] <- "Sample/AT_04_Probabilities.h5"
+#file_ls[8] <- "Sample/AT_06_Probabilities.h5"
+#file_ls[9] <- "Sample/AT_21_Probabilities.h5"
+
+
+file_ls_youtoo
+#threshold = 0.7
+tidy_brain_ls_youtoo <- list()
+for (i in (1:length(file_ls_youtoo))) {
+  tidy_brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
+  read_h5() %>%
+  tidy(threshold=0.5)
+}
+
+```
+
+```{r}
+x0 = 8
+list <- seq(x0, 9.5, 0.06)
+
+#list <- seq(x0, 9.5, 0.04)%>%
+#  as.data.frame()
+#colnames(list)[1] = "threshold"
+
+tidy_brain_ls_wt <- brain_ls_wt[[1]]%>%
+  tidy(threshold = list[1])
+
+
+for i in (1:length(list)){
+  tidy_brain_ls_wt <- brain_ls_wt%>%
+  tidy(threshold = list[i])
+  model <- lm(y ~ I(x^2) + x, data = tidy_brain_ls_wt[[1]])
+
+}
+
+
+model_fitted <- model%>%
+  broom::augment()
+summary(model)$r.squared 
+```
+
+
