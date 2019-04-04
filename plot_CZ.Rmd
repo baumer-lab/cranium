@@ -53,38 +53,30 @@ for (i in (1:length(ls))) {
   tidy()
 }
 
-#tidy_brain_ls
+ro_brain_ls<-tidy_brain_ls%>%
+lapply(reorient)
+
+
+#1 plot
 plotlist <- list()
-
-#Try 1
-for (i in (1:length(plot)))
-  local({
-    i <- i
-    p1 <- plot2d(tidy_brain_ls[[i]])
-    print(i)
-    print(p1)
-    plotlist[[i]] <<- p1
-    })
-
-#Try2
-for (i in (1:length(plot))){
-  plotlist[[i]] <- plot2d(tidy_brain_ls[[i]])
-    plot(plotlist[[i]])
-    dev.off
+for (i in (1:1)){
+  plotlist[[i]] <- plot2d(ro_brain_ls[[i]], main.sub=paste("Sample", ls[i]))
+   # plot(plotlist[[i]])
+   # dev.off
+  decorate3d
 }
-do.call(grid.arrange, c(plotlist, ncol = 5))
 
-#plot2d_all = function(data)
-#      plot2d(data)
 
-#myplots<-lapply(plot2d_all, data = tidy_brain_ls[[1]])
+#all plot
+plotlist <- list()
+for (i in (1:length(file_ls))){
+  plotlist[[i]] <- plot2d(ro_brain_ls[[i]], mai.sub=paste("Sample", ls[i]))
+   # plot(plotlist[[i]])
+   # dev.off
+}
+#do.call(grid.arrange, c(plotlist, ncol = 3))
 
-#plot_data_column = function (data, column)
-#    ggplot(data = data2, aes_string(x = column)) +
-#        geom_histogram(fill = "lightgreen") +
- #       xlab(column)
 
-#myplots <- lapply(colnames(data2), plot_data_column, data = data2)
 ```
 
 
