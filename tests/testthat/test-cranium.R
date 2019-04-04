@@ -1,6 +1,9 @@
 context("test-cranium")
 
 test_that("reading works", {
+  # file <- "https://s3.us-east-2.amazonaws.com/deltascope/AT_04_Probabilities.h5"
+  # download.file(file, destfile = tempfile())
+
   file <- "~/Data/barresi/AT_1_Probabilities.h5"
   if (file.exists(file)) {
     brain <- read_h5(file)
