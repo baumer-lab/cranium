@@ -141,7 +141,15 @@ file_ls_wt[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
 
 file_ls_wt
 
-#Wild Type
+#threshold = 0
+brain_ls_wt <- list()
+for (i in (1:length(ls_wt))) {
+  brain_ls_wt[[i]] <- file_ls_wt[i] %>%
+  read_h5() %>%
+  tidy(threshold=0)
+}
+
+#defalt threshol = 0.9
 tidy_brain_ls_wt <- list()
 for (i in (1:length(ls_wt))) {
   tidy_brain_ls_wt[[i]] <- file_ls_wt[i] %>%
@@ -158,9 +166,10 @@ for (i in (1:length(ls_wt))) {
 ls_youtoo <- c("You_Too_01", "You_Too_02")
 
 file_ls_youtoo =c("0")
-file
+file_ls_youtoo
+
 for (i in (1:length(ls_youtoo))) {
-  file_ls_youtoo[i] = paste("file", ls_youtoo[i], sep='')
+  file_ls_youtoo[i] = paste("file", ls_youtoo[i])
 }
 
 file_ls_youtoo
@@ -175,9 +184,17 @@ file_ls_youtoo[2] <- "Sample/AT_02_Probabilities.h5"
 
 file_ls_youtoo
 
-#You Too
+#threshold = 0
+brain_ls_youtoo <- list()
+for (i in (1:length(file_ls_youtoo))) {
+  brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
+  read_h5() %>%
+  tidy(threshold=0)
+}
+
+#threshold = 0.7
 tidy_brain_ls_youtoo <- list()
-for (i in (3:4)) {
+for (i in (1:length(file_ls_youtoo))) {
   tidy_brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
   read_h5() %>%
   tidy()
@@ -188,22 +205,12 @@ for (i in (3:4)) {
 
 # Investigate thresholds
 ```{r}
-sample1<- tidy_brain_ls[[1]]
-sample1
+sample1<- brain_ls_wt[[1]]
+sample3<- brain_ls_youtoo[[1]]
 
-#mplot(sample1)
-
-
-
-sample3<- tidy_brain_ls[[3]]
-sample3
-mplot(sample1)
-
-
-
-ggplot( data = sample1, aes(x = Freq)) + geom_density(adjust = 0.4) + labs(title = "Wild type") 
-
-ggplot( data = sample1, aes(x = Freq)) + geom_density(adjust = 0.4) + labs(title = "You too") 
+p1<-ggplot( data = sample1, aes(x = Freq)) + geom_density(adjust = 0.4) + labs(title = "Wild type sample 101") 
+p2<-ggplot( data = sample3, aes(x = Freq)) + geom_density(adjust = 0.4) + labs(title = "You too sample 01") 
+grid.arrange(p1,p2,ncol=1)
 ```
 
 
