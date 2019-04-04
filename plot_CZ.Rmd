@@ -3,6 +3,8 @@ title: "Plot"
 author: "CZ"
 date: "4/1/2019"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -20,24 +22,14 @@ library(BiocInstaller)
 #biocLite("rhdf5")
 library(rhdf5)
 #devtools::install_github("beanumber/cranium")
-
 library(cranium)
 library(broom)
 library(tidyverse)
 library(gridExtra)
-
-```
-
-#test read h5 function 
-```{r}
-file="Sample/AT_wildtype_101_Probabilities.h5"
-read_h5("Sample/AT_wildtype_101_Probabilities.h5") %>%
-  tidy()
+library(mosaic)
 ```
 
 # Edited functions
-
-
 ```{r}
 read_h5 <- function(file, name = NULL, ...) {
   if("rhdf5" %in% (.packages())){
@@ -131,7 +123,9 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
 
 ```{r}
 
-ls <- c("W_101", "W_102", "W_104", "You_Too_01", "You_Too_02", "You_Too_03", "You_Too_04","You_Too_06", "You_Too_21")
+#ls <- c("W_101", "W_102", "W_104", "You_Too_01", "You_Too_02", "You_Too_03", "You_Too_04","You_Too_06", "You_Too_21")
+
+ls <- c("W_101", "W_102", "You_Too_01", "You_Too_02")
 
 file_ls =c("0")
 
@@ -144,13 +138,13 @@ file_ls
 
 file_ls[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
 file_ls[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
-file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
-file_ls[4] <- "Sample/AT_01_Probabilities.h5"
-file_ls[5] <- "Sample/AT_02_Probabilities.h5"
-file_ls[6] <- "Sample/AT_03_Probabilities.h5"
-file_ls[7] <- "Sample/AT_04_Probabilities.h5"
-file_ls[8] <- "Sample/AT_06_Probabilities.h5"
-file_ls[9] <- "Sample/AT_21_Probabilities.h5"
+#file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
+file_ls[3] <- "Sample/AT_01_Probabilities.h5"
+file_ls[4] <- "Sample/AT_02_Probabilities.h5"
+#file_ls[6] <- "Sample/AT_03_Probabilities.h5"
+#file_ls[7] <- "Sample/AT_04_Probabilities.h5"
+#file_ls[8] <- "Sample/AT_06_Probabilities.h5"
+#file_ls[9] <- "Sample/AT_21_Probabilities.h5"
 
 
 file_ls
@@ -163,11 +157,47 @@ for (i in (1:length(ls))) {
   tidy()
 }
 
+
+```
+
+
+```{r}
+sample1<- tidy_brain_ls[[1]]
+sample1
+
+#mplot(sample1)
+
+
+
+sample3<- tidy_brain_ls[[3]]
+sample3
+mplot(sample1)
+
+
+
+ggplot( data = sample1, aes(x = Freq)) + geom_density(adjust = 0.4) + labs(title = "Wild type") 
+
+ggplot( data = sample1, aes(x = Freq)) + geom_density(adjust = 0.4) + labs(title = "You too") 
+
+
+```
+
+
+
+```{r}
+for (i in (1:length(ls))) {
+  tidy_brain_ls[[i]] <- file_ls[i] %>%
+  read_h5() %>%
+  tidy()
+}
+
 #Reorient
 ro_brain_ls<-tidy_brain_ls%>%
 lapply(reorient)
 
 ```
+
+
 
 
 # Test plot
