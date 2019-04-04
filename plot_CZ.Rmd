@@ -132,8 +132,10 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
 ```{r}
 
 ls <- c("W_101", "W_102", "W_104", "You_Too_01", "You_Too_02", "You_Too_03", "You_Too_04","You_Too_06", "You_Too_21")
-file_ls =c("0", "0", "0","0", "0", "0", "0","0")
 
+file_ls =c("0")
+
+file
 for (i in (1:length(ls))) {
   file_ls[i] = paste("file", ls[i], sep='')
 }
