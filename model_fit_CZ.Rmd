@@ -84,28 +84,32 @@ for (i in (1:length(file_ls_youtoo))) {
 ```
 
 ```{r}
-x0 = 8
-list <- seq(x0, 9.5, 0.06)
+x0 = 8.7
+list <- seq(x0, 9, 0.1)
 
-#list <- seq(x0, 9.5, 0.04)%>%
-#  as.data.frame()
-#colnames(list)[1] = "threshold"
+list <- seq(x0, 9.3, 0.1)%>%
+  as.data.frame()
+colnames(list)[1] = "threshold"
 
-tidy_brain_ls_wt <- brain_ls_wt[[1]]%>%
-  tidy(threshold = list[1])
-
-
-for i in (1:length(list)){
-  tidy_brain_ls_wt <- brain_ls_wt%>%
-  tidy(threshold = list[i])
-  model <- lm(y ~ I(x^2) + x, data = tidy_brain_ls_wt[[1]])
-
+model_fit <- function(th, data){
+  tidy_brain <- data%>%
+  tidy(threshold = th)
+  model <- lm(y ~ I(x^2) + x, data = tidy_brain)
+  return(summary(model)$r.squared)
 }
 
 
-model_fitted <- model%>%
-  broom::augment()
-summary(model)$r.squared 
+
+model_fit(0.9, brain_ls_wt[[1]])
+
+fit_value<-c()
+
+for (i in (1:length(list))){
+   fit_value[i]<- model_fit(list[i], brain_ls_wt[[1]])
+}
+
+fit_value[1]<- model_fit(list[1], brain_ls_wt[[1]])
+
 ```
 
 
