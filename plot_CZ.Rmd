@@ -119,48 +119,74 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
 }
 ```
 
-
-
+# Wild Type 
 ```{r}
+ls_wt <- c("Wild Type_101", "Wild Type_102")
+ls_wt
 
-#ls <- c("W_101", "W_102", "W_104", "You_Too_01", "You_Too_02", "You_Too_03", "You_Too_04","You_Too_06", "You_Too_21")
+file_ls_wt =c("0")
+file_ls_wt
 
-ls <- c("W_101", "W_102", "You_Too_01", "You_Too_02")
-
-file_ls =c("0")
-
-file
-for (i in (1:length(ls))) {
-  file_ls[i] = paste("file", ls[i], sep='')
+for (i in (1:length(ls_wt))) {
+  file_ls_wt[i] = paste("file", ls_wt[i])
 }
 
-file_ls
+file_ls_wt
 
-file_ls[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
-file_ls[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
+file_ls_wt[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
+file_ls_wt[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
 #file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
-file_ls[3] <- "Sample/AT_01_Probabilities.h5"
-file_ls[4] <- "Sample/AT_02_Probabilities.h5"
+
+
+
+file_ls_wt
+
+#Wild Type
+tidy_brain_ls_wt <- list()
+for (i in (1:length(ls_wt))) {
+  tidy_brain_ls_wt[[i]] <- file_ls_wt[i] %>%
+  read_h5() %>%
+  tidy()
+}
+```
+
+
+#You too
+```{r}
+#ls <- c("W_101", "W_102", "W_104", "You_Too_01", "You_Too_02", "You_Too_03", "You_Too_04","You_Too_06", "You_Too_21")
+
+ls_youtoo <- c("You_Too_01", "You_Too_02")
+
+file_ls_youtoo =c("0")
+file
+for (i in (1:length(ls_youtoo))) {
+  file_ls_youtoo[i] = paste("file", ls_youtoo[i], sep='')
+}
+
+file_ls_youtoo
+
+file_ls_youtoo[1] <- "Sample/AT_01_Probabilities.h5"
+file_ls_youtoo[2] <- "Sample/AT_02_Probabilities.h5"
 #file_ls[6] <- "Sample/AT_03_Probabilities.h5"
 #file_ls[7] <- "Sample/AT_04_Probabilities.h5"
 #file_ls[8] <- "Sample/AT_06_Probabilities.h5"
 #file_ls[9] <- "Sample/AT_21_Probabilities.h5"
 
 
-file_ls
+file_ls_youtoo
 
-tidy_brain_ls <- list()
-
-for (i in (1:length(ls))) {
-  tidy_brain_ls[[i]] <- file_ls[i] %>%
+#You Too
+tidy_brain_ls_youtoo <- list()
+for (i in (3:4)) {
+  tidy_brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
   read_h5() %>%
   tidy()
 }
 
-
 ```
 
 
+# Investigate thresholds
 ```{r}
 sample1<- tidy_brain_ls[[1]]
 sample1
@@ -178,8 +204,6 @@ mplot(sample1)
 ggplot( data = sample1, aes(x = Freq)) + geom_density(adjust = 0.4) + labs(title = "Wild type") 
 
 ggplot( data = sample1, aes(x = Freq)) + geom_density(adjust = 0.4) + labs(title = "You too") 
-
-
 ```
 
 
