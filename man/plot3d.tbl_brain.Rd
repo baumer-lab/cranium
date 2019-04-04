@@ -5,9 +5,9 @@
 \alias{plot3d.brain}
 \title{Plot a 3D image of a brain}
 \usage{
-plot3d.tbl_brain(x, ...)
+\method{plot3d}{tbl_brain}(x, ...)
 
-plot3d.brain(x, ...)
+\method{plot3d}{brain}(x, ...)
 }
 \arguments{
 \item{x}{vectors of points to be plotted. Any reasonable way of defining the
