@@ -1,0 +1,153 @@
+---
+title: "Plot"
+author: "CZ"
+date: "4/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#hdf5
+```
+
+
+#hdf5r
+```{r}
+library(hdf5r)
+library(dplyr)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+
+```
+
+#test read h5 function 
+```{r}
+file="Sample/AT_wildtype_101_Probabilities.h5"
+read_h5("Sample/AT_wildtype_101_Probabilities.h5") %>%
+  tidy()
+```
+# Edited functions
+```{r}
+plot2d <- function(x, show_max = FALSE, title...) UseMethod("plot2d")
+
+#' @export
+#' @rdname plot2d
+
+plot2d.brain <- function(x, show_max = FALSE, ...) {
+  tidy_brain <- tidy(x)
+  plot2d(tidy_brain, show_max = FALSE, ...)
+}
+
+#' @export
+#' @importFrom gridExtra grid.arrange
+#' @rdname plot2d
+plot2d.tbl_brain <- function(x, title, show_max = FALSE, ...) {
+  gridExtra::grid.arrange(
+    plot2d_plane(x, plane = c("x", "z"), show_max, ...),
+    plot2d_plane(x, plane = c("x", "y"), show_max, ...),
+    plot2d_plane(x, plane = c("y", "z"), show_max, ...),
+    nrow = 1,
+    top = title
+  )
+}
+
+#' @export
+#' @importFrom rlang !!
+#' @import ggplot2
+#' @rdname plot2d
+plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
+  depth <- setdiff(c("x", "y", "z"), plane)
+  depth_var <- rlang::sym(depth)
+  
+  gg_data <- x %>%
+    group_by(.dots = plane) %>%
+    summarize(N = n(), min_freq = min(Freq),
+              avg_depth = mean(!! depth_var, na.rm = TRUE),
+              max_depth = max(!! depth_var, na.rm = TRUE))
+  
+  if (show_max) {
+    plot_var <- "max_depth"
+  } else
+    plot_var <- "avg_depth"
+  labels <- data.frame(var = c("x", "y", "z"),
+                       label = c("Lateral (x, microns)",
+                                 "Anterior/Posterior (y, microns)",
+                                 "Dorsal/Ventral (z, microns)")) %>%
+    filter(var %in% plane)
+  titles <- data.frame(depth_var = c("x", "y", "z"),
+                       title = c("Side View", "Front View", "Top View"))
+  ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
+    geom_point(alpha = 0.1, size = 0.5) +
+    geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red") +
+    geom_smooth(method = "lm", color = "red") +
+    annotate("text", x = 0, y = 0, label = "origin", size = 5) +
+    annotate("text", x = 0, y = 0,
+             label = paste0("min_prob: ", round(min(pull(ungroup(gg_data), "min_freq")), 2))) +
+    scale_color_continuous(guide = FALSE) +
+    scale_x_continuous(filter(labels, var == plane[1])$label) +
+    scale_y_continuous(filter(labels, var == plane[2])$label) +
+    ggtitle(filter(titles, depth_var == depth)$title)
+}
+```
+
+
+
+```{r}
+
+ls <- c("101", "102", "104")
+file_ls =c("0", "0", "0")
+
+for (i in (1:length(ls))) {
+  file_ls[i] = paste("file", ls[i], sep='')
+}
+
+file_ls
+
+file_ls[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
+file_ls[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
+file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
+
+file_ls
+tidy_brain_ls <- list()
+
+for (i in (1:length(ls))) {
+  tidy_brain_ls[[i]] <- file_ls[i] %>%
+  read_h5() %>%
+  tidy()
+}
+
+#Reorient
+ro_brain_ls<-tidy_brain_ls%>%
+lapply(reorient)
+
+```
+
+
+# Test plot
+```{r}
+plotlist <- list()
+for (i in (1:1)){
+  plotlist[[i]] <- plot2d(ro_brain_ls[[i]], title=paste("Sample", ls[i]))
+   # plot(plotlist[[i]])
+   # dev.off
+ # decorate3d
+}
+
+```
+
+# All plots
+```{r}
+plotlist <- list()
+for (i in (1:length(file_ls))){
+  plotlist[[i]] <- plot2d(ro_brain_ls[[i]],title=paste("Sample", ls[i]))
+   # plot(plotlist[[i]])
+   # dev.off
+}
+#do.call(grid.arrange, c(plotlist, ncol = 3))
+
+```
+
+
+
