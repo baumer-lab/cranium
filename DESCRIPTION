@@ -10,7 +10,6 @@ Imports:
   gridExtra,
   mosaic,
   rgl,
-  rhdf5,
   rlang,
   tibble
 Depends: 
