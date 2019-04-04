@@ -19,7 +19,9 @@ library(cranium)
 library(broom)
 library(tidyverse)
 library(gridExtra)
+library(devtools)
 
+devtools::install_github("beanumber/cranium")
 ```
 
 #test read h5 function 
@@ -96,8 +98,8 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
 
 ```{r}
 
-ls <- c("101", "102", "104")
-file_ls =c("0", "0", "0")
+ls <- c("101", "102", "104", "01", "02", "03")
+file_ls =c("0", "0", "0", "0", "0", "0")
 
 for (i in (1:length(ls))) {
   file_ls[i] = paste("file", ls[i], sep='')
@@ -108,6 +110,9 @@ file_ls
 file_ls[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
 file_ls[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
 file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
+file_ls[4] <- "Sample/AT_01_Probabilities.h5"
+file_ls[5] <- "Sample/AT_02_Probabilities.h5"
+file_ls[6] <- "Sample/AT_03_Probabilities.h5"
 
 file_ls
 tidy_brain_ls <- list()
@@ -128,7 +133,7 @@ lapply(reorient)
 # Test plot
 ```{r}
 plotlist <- list()
-for (i in (1:1)){
+for (i in (1:6)){
   plotlist[[i]] <- plot2d(ro_brain_ls[[i]], title=paste("Sample", ls[i]))
    # plot(plotlist[[i]])
    # dev.off
