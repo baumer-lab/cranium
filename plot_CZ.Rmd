@@ -20,7 +20,11 @@ library(broom)
 library(tidyverse)
 library(gridExtra)
 
-#test function YAY WORKING
+
+```
+
+#test read h5 function 
+```{r}
 file="Sample/AT_wildtype_101_Probabilities.h5"
 read_h5("Sample/AT_wildtype_101_Probabilities.h5") %>%
   tidy()
