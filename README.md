@@ -12,7 +12,7 @@ source("https://bioconductor.org/biocLite.R")
 biocLite("rhdf5")
 ```
 
-If you are having trouble downloading `rhdf5` with the code above, an alternative option would be downloading `rhdf5` from bioconductor using the `pak` package: https://github.com/r-lib/pak
+If you are having trouble downloading `rhdf5` using the code above, an alternative option would be downloading `rhdf5` from bioconductor using the `pak` package: https://github.com/r-lib/pak
 
 After installing `rhdf5`, you can install `cranium` from GitHub using the following commands:
 
