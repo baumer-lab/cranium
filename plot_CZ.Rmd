@@ -31,31 +31,6 @@ library(mosaic)
 
 # Edited functions
 ```{r}
-read_h5 <- function(file, name = NULL, ...) {
-  if("rhdf5" %in% (.packages())){
-    objs <- rhdf5::h5ls(file) %>%
-      dplyr::filter(otype == "H5I_DATASET")
-    if (is.null(name)) {
-      # take the first HDF5 dataset
-      name <- objs$name[1]
-    }
-    x <- rhdf5::h5read(file, name, ...)
-    if (length(dim(x)) > 3) {
-      # take the second image
-      x <- x[2,,,]
-    }
-    class(x) <- append("brain", class(x))
-    return(x)
-  }
-  if("hdf5r" %in% (.packages())){
-    file.h5 <- H5File$new(file, mode="r")
-    brain <- file.h5[["exported_data"]]
-    x <- brain[2,,,]
-  }
-  class(x) <- append("brain", class(x))
-  return(x)
-}
-
 
 plot2d <- function(x, show_max = FALSE, title...) UseMethod("plot2d")
 
@@ -141,14 +116,6 @@ file_ls_wt[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
 
 file_ls_wt
 
-#threshold = 0
-brain_ls_wt <- list()
-for (i in (1:length(ls_wt))) {
-  brain_ls_wt[[i]] <- file_ls_wt[i] %>%
-  read_h5() %>%
-  tidy(threshold=0)
-}
-
 #defalt threshol = 0.9
 tidy_brain_ls_wt <- list()
 for (i in (1:length(ls_wt))) {
@@ -183,8 +150,28 @@ file_ls_youtoo[2] <- "Sample/AT_02_Probabilities.h5"
 
 
 file_ls_youtoo
+#threshold = 0.7
+tidy_brain_ls_youtoo <- list()
+for (i in (1:length(file_ls_youtoo))) {
+  tidy_brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
+  read_h5() %>%
+  tidy(threshold=0.5)
+}
 
-#threshold = 0
+```
+
+
+# Investigate thresholds
+```{r eval=FALSE, include=FALSE}
+#Wild type threshold = 0
+brain_ls_wt <- list()
+for (i in (1:length(ls_wt))) {
+  brain_ls_wt[[i]] <- file_ls_wt[i] %>%
+  read_h5() %>%
+  tidy(threshold=0)
+}
+
+#You too threshold = 0
 brain_ls_youtoo <- list()
 for (i in (1:length(file_ls_youtoo))) {
   brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
@@ -192,19 +179,7 @@ for (i in (1:length(file_ls_youtoo))) {
   tidy(threshold=0)
 }
 
-#threshold = 0.7
-tidy_brain_ls_youtoo <- list()
-for (i in (1:length(file_ls_youtoo))) {
-  tidy_brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
-  read_h5() %>%
-  tidy()
-}
 
-```
-
-
-# Investigate thresholds
-```{r}
 sample1<- brain_ls_wt[[1]]
 sample3<- brain_ls_youtoo[[1]]
 
@@ -214,24 +189,21 @@ grid.arrange(p1,p2,ncol=1)
 ```
 
 
-
+# Reorient
 ```{r}
-for (i in (1:length(ls))) {
-  tidy_brain_ls[[i]] <- file_ls[i] %>%
-  read_h5() %>%
-  tidy()
-}
-
-#Reorient
-ro_brain_ls<-tidy_brain_ls%>%
+#Wild Type
+ro_brain_ls_wt<-tidy_brain_ls_wt%>%
 lapply(reorient)
 
+#You Too
+ro_brain_ls_youtoo<-tidy_brain_ls_youtoo%>%
+lapply(reorient)
 ```
 
 
 
 
-# Test plot
+# Test one plot
 ```{r}
 plotlist <- list()
 for (i in (4:4)){
@@ -245,20 +217,9 @@ for (i in (4:4)){
 
 # All plots
 ```{r}
-
-
-plotlist <- list()
-for (i in (1:length(file_ls))){
-  plotlist[[i]] <- plot2d(tidy_brain_ls[[i]],title=paste("Sample", ls[i]))
-   # plot(plotlist[[i]])
-   # dev.off
-}
-
-
-
-plotlist <- list()
-for (i in (1:length(file_ls))){
-  plotlist[[i]] <- plot2d(ro_brain_ls[[i]],title=paste("Sample", ls[i]))
+plotlist_youtoo <- list()
+for (i in (1:length(ls_youtoo))){
+  plotlist_youtoo[[i]] <- plot2d(ro_brain_ls_youtoo[[i]], title=paste("Sample", ls_youtoo[i]))
    # plot(plotlist[[i]])
    # dev.off
 }
