@@ -15,6 +15,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(hdf5r)
 library(dplyr)
+library(rlang)
+library(BiocInstaller)
+#biocLite("rhdf5")
+library(rhdf5)
+#devtools::install_github("beanumber/cranium")
+
 library(cranium)
 library(broom)
 library(tidyverse)
@@ -28,8 +34,37 @@ file="Sample/AT_wildtype_101_Probabilities.h5"
 read_h5("Sample/AT_wildtype_101_Probabilities.h5") %>%
   tidy()
 ```
+
 # Edited functions
+
+
 ```{r}
+read_h5 <- function(file, name = NULL, ...) {
+  if("rhdf5" %in% (.packages())){
+    objs <- rhdf5::h5ls(file) %>%
+      dplyr::filter(otype == "H5I_DATASET")
+    if (is.null(name)) {
+      # take the first HDF5 dataset
+      name <- objs$name[1]
+    }
+    x <- rhdf5::h5read(file, name, ...)
+    if (length(dim(x)) > 3) {
+      # take the second image
+      x <- x[2,,,]
+    }
+    class(x) <- append("brain", class(x))
+    return(x)
+  }
+  if("hdf5r" %in% (.packages())){
+    file.h5 <- H5File$new(file, mode="r")
+    brain <- file.h5[["exported_data"]]
+    x <- brain[2,,,]
+  }
+  class(x) <- append("brain", class(x))
+  return(x)
+}
+
+
 plot2d <- function(x, show_max = FALSE, title...) UseMethod("plot2d")
 
 #' @export
@@ -96,8 +131,8 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
 
 ```{r}
 
-ls <- c("101", "102", "104")
-file_ls =c("0", "0", "0")
+ls <- c("W_101", "W_102", "W_104", "You_Too_01", "You_Too_02", "You_Too_03", "You_Too_04","You_Too_06", "You_Too_21")
+file_ls =c("0", "0", "0","0", "0", "0", "0","0")
 
 for (i in (1:length(ls))) {
   file_ls[i] = paste("file", ls[i], sep='')
@@ -108,8 +143,16 @@ file_ls
 file_ls[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
 file_ls[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
 file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
+file_ls[4] <- "Sample/AT_01_Probabilities.h5"
+file_ls[5] <- "Sample/AT_02_Probabilities.h5"
+file_ls[6] <- "Sample/AT_03_Probabilities.h5"
+file_ls[7] <- "Sample/AT_04_Probabilities.h5"
+file_ls[8] <- "Sample/AT_06_Probabilities.h5"
+file_ls[9] <- "Sample/AT_21_Probabilities.h5"
+
 
 file_ls
+
 tidy_brain_ls <- list()
 
 for (i in (1:length(ls))) {
@@ -128,8 +171,8 @@ lapply(reorient)
 # Test plot
 ```{r}
 plotlist <- list()
-for (i in (1:1)){
-  plotlist[[i]] <- plot2d(ro_brain_ls[[i]], title=paste("Sample", ls[i]))
+for (i in (4:4)){
+  plotlist[[i]] <- plot2d(tidy_brain_ls[[i]], title=paste("Sample", ls[i]))
    # plot(plotlist[[i]])
    # dev.off
  # decorate3d
@@ -139,6 +182,17 @@ for (i in (1:1)){
 
 # All plots
 ```{r}
+
+
+plotlist <- list()
+for (i in (1:length(file_ls))){
+  plotlist[[i]] <- plot2d(tidy_brain_ls[[i]],title=paste("Sample", ls[i]))
+   # plot(plotlist[[i]])
+   # dev.off
+}
+
+
+
 plotlist <- list()
 for (i in (1:length(file_ls))){
   plotlist[[i]] <- plot2d(ro_brain_ls[[i]],title=paste("Sample", ls[i]))

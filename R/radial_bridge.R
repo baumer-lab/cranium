@@ -105,7 +105,7 @@ image.brain <- function(x, z = NULL, ...) {
 #' plot2d(tidy_brain)
 #' }
 
-plot2d <- function(x, show_max = FALSE, ...) UseMethod("plot2d")
+plot2d <- function(x, show_max = FALSE, title...) UseMethod("plot2d")
 
 #' @export
 #' @rdname plot2d
@@ -118,12 +118,13 @@ plot2d.brain <- function(x, show_max = FALSE, ...) {
 #' @export
 #' @importFrom gridExtra grid.arrange
 #' @rdname plot2d
-plot2d.tbl_brain <- function(x, show_max = FALSE, ...) {
+plot2d.tbl_brain <- function(x, title, show_max = FALSE, ) {
   gridExtra::grid.arrange(
     plot2d_plane(x, plane = c("x", "z"), show_max, ...),
     plot2d_plane(x, plane = c("x", "y"), show_max, ...),
     plot2d_plane(x, plane = c("y", "z"), show_max, ...),
-    nrow = 1
+    nrow = 1,
+    top = title
   )
 }
 
