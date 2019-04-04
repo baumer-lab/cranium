@@ -3,7 +3,7 @@ An R package to quantify radial bridge images
 Installation
 ------------
 
-`cranium` depends on the`hdf5r` package or `rhdf5` package for reading HDF5 files. You could download `hdf5r` from CRAN. However, `rhdf5` package is not available on CRAN. You must install it from Bioconductor. To do this, you have to run the following code once:
+`cranium` depends on the`hdf5r` package or `rhdf5` package for reading HDF5 files. You could download `hdf5r` from CRAN. However, `rhdf5` package is not available on CRAN--it is a bioconductor package. You must install it from Bioconductor. To do this, you have to run the following code once:
 
 ``` r
 install.packages("BiocInstaller",
@@ -12,7 +12,9 @@ source("https://bioconductor.org/biocLite.R")
 biocLite("rhdf5")
 ```
 
-Then, you can install `cranium` from GitHub using the following commands:
+If you are having trouble downloading `rhdf5` using the code above, an alternative option would be downloading `rhdf5` from bioconductor using the `pak` package: https://github.com/r-lib/pak
+
+After installing `rhdf5`, you can install `cranium` from GitHub using the following commands:
 
 ``` r
 install.packages("devtools")
