@@ -3,7 +3,9 @@ Title: Quantifying Radial Bridge Structures
 Version: 0.0.1.9006
 Authors@R: c(
   person("Benjamin", "Baumer", email = "ben.baumer@gmail.com", role = c("aut", "cre")),
-  person("Crystal", "Zang", role = "ctb")
+  person("Crystal", "Zang", role = "ctb"),
+  person("Emma", "Ning", role = "ctb"),
+  person("Kalynn", "Kosyka", role = "ctb")
   )
 Description: What the package does (one paragraph).
 Imports:
