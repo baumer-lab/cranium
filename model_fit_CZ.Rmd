@@ -118,65 +118,6 @@ qmodel.brain(brain_ls_youtoo[[1]], type="youtoo")
 # Plot Function 
 Take out the linear model
 ```{r}
-
-
-#' Plot a slice of a 3D image
-#' @inheritParams graphics::image
-#' @param z slice of the 3D image to display
-#' @importFrom graphics image
-#' @export
-#' @examples
-#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
-#' raw <- read_h5(file)
-#' image(raw)
-#' image(raw, z = 23)
-
-
-image.brain <- function(x, z = NULL, ...) {
-  if (is.null(z)) {
-    z <- floor(dim(x)[3] / 2)
-  }
-  graphics::image(x[,,z])
-}
-
-#' Plot a 2D projection of a 3D image
-#' @inheritParams plot3d.tbl_brain
-#' @param plane a character vector of length 2 indicating the
-#' plane to project to (x, y, z)
-#' @param show_max Plot the maximum frequency or the average?
-#' @export
-#' @examples
-#' file <- "~/Data/barresi/wildtype/AT/AT_1_Probabilities.h5"
-#' \dontrun{
-#' tidy_brain <- read_h5(file) %>%
-#'   tidy()
-#' plot2d(tidy_brain, show_max = TRUE)
-#' plot2d(tidy_brain)
-#' }
-
-plot2d <- function(x, title, show_max = FALSE, ...) UseMethod("plot2d")
-
-#' @export
-#' @rdname plot2d
-
-plot2d.brain <- function(x, title, show_max = FALSE, ...) {
-  tidy_brain <- tidy(x)
-  plot2d(tidy_brain, show_max = FALSE, ...)
-}
-
-#' @export
-#' @importFrom gridExtra grid.arrange
-#' @rdname plot2d
-plot2d.tbl_brain <- function(x, title, show_max = FALSE, ...) {
-  gridExtra::grid.arrange(
-    plot2d_plane(x, plane = c("x", "z"), show_max, ...),
-    plot2d_plane(x, plane = c("x", "y"), show_max, ...),
-    plot2d_plane(x, plane = c("y", "z"), show_max, ...),
-    nrow = 1,
-    top = title
-  )
-}
-
 #' @export
 #' @importFrom rlang !!
 #' @import ggplot2
