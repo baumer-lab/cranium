@@ -51,7 +51,7 @@ for (i in (1:length(ls_wt))) {
 ```
 
 
-#Data: You too
+# Data: You too
 ```{r}
 ls_youtoo <- c("You_Too_01", "You_Too_02")
 
@@ -74,42 +74,81 @@ file_ls_youtoo[2] <- "Sample/AT_02_Probabilities.h5"
 
 file_ls_youtoo
 #threshold = 0.7
-tidy_brain_ls_youtoo <- list()
+brain_ls_youtoo <- list()
 for (i in (1:length(file_ls_youtoo))) {
-  tidy_brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
-  read_h5() %>%
-  tidy(threshold=0.5)
+  brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
+  read_h5()
 }
 
 ```
 
+# Function (Final)
+Requires: 
+1.data to be in brain class type.
+2.type to be either "wildtype" or "youtoo"
 ```{r}
-x0 = 8.7
-list <- seq(x0, 9, 0.1)
+#Fit quadratic model, output is the adjusted r_square
 
-list <- seq(x0, 9.3, 0.1)%>%
-  as.data.frame()
-colnames(list)[1] = "threshold"
-
-model_fit <- function(th, data){
-  tidy_brain <- data%>%
-  tidy(threshold = th)
+qmodel.brain<- function(data, type){
+  if (type == "wildtype"){
+    tidy_brain <- data%>%
+  tidy(threshold = 0.9)
+  }
+  if(type== "youtoo"){
+    tidy_brain <- data%>%
+    tidy(threshold = 0.5)
+  }
   model <- lm(y ~ I(x^2) + x, data = tidy_brain)
-  return(summary(model)$r.squared)
+  r_2 = round(summary(model)$r.squared,3)
+  num_signal = nrow(tidy_brain)
+  #return(list(r_2, num_signal))
+  return(data.frame(type, r_2, num_signal))
 }
+```
 
 
+# Use qmodel function on the youtoo data
+```{r}
+model_df <- data.frame()
+for (i in (1:length(ls_youtoo))) {
+  m <- qmodel.brain(brain_ls_youtoo[[i]], "youtoo")%>%
+          mutate(sample = ls_youtoo[i])
+  model_df <- rbind(model_df, m)
+}
+View(model_df)
+```
 
-model_fit(0.9, brain_ls_wt[[1]])
+# Experiment 
+Generate two tables for wildtype and youtoo for threshold, $r^2$, number of signals comparison.
+```{r}
 
+x0 = 0.9
+list <- seq(x0, 0.99, 0.03)
+
+#Calculate fitted r square
 fit_value<-c()
-
 for (i in (1:length(list))){
-   fit_value[i]<- model_fit(list[i], brain_ls_wt[[1]])
+   fit_value[i]<- round(model_fit(list[i], brain_ls_youtoo[[1]]),4)
 }
+fit_value
 
-fit_value[1]<- model_fit(list[1], brain_ls_wt[[1]])
+#Calculate number signals
+num_signals<- c()
+for (i in (1:length(list))){
+   num_signals[i]<- model_num_signal(list[i], brain_ls_wt[[1]])
+}
+num_signals
+  
+fitted_threshold_tb <- data.frame(list, fit_value, num_signals)
+colnames(fitted_threshold_tb)[1] = "threshold.YouToo"
+colnames(fitted_threshold_tb)[2] = "r_square.YouToo"
+colnames(fitted_threshold_tb)[3] = "num_signals.YouToo"
 
+df2
+fitted_threshold_tb_wt <- data.frame(df2, num_signals)
+colnames(fitted_threshold_tb_wt)[1] = "threshold.WT"
+colnames(fitted_threshold_tb_wt)[2] = "r_square.WT"
+colnames(fitted_threshold_tb_wt)[3] = "num_signals.WT"
 ```
 
 
