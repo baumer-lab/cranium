@@ -102,13 +102,13 @@ qmodel.brain<- function(data, type){
     lapply(reorient)
   }
   model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
-  r_2 = round(summary(model)$r.squared,3) #original r square
-  ro_model <- lm(y ~ I(x^2) + x, data = ro_tidy_brain) #model applied on reoriented data
-  ro_r_2 = round(summary(ro_model)$r.squared,3) #reoriented r square
+  r_2 = round(summary(model)$r.squared, 3) #original r square
+ # ro_model <- lm(y ~ I(x^2) + x, data = ro_tidy_brain) #model applied on reoriented data
+ # ro_r_2 = round(summary(ro_model)$r.squared,3) #reoriented r square
 
   num_signal = nrow(tidy_brain)
-  #return(list(r_2, num_signal))
-  return(data.frame(type, r_2, ro_r_2, num_signal))
+  return(data.frame(type, r_2, num_signal))
+  #return(data.frame(type, r_2, ro_r_2, num_signal))
 }
 
 qmodel.brain(brain_ls_youtoo[[1]], type="youtoo")
