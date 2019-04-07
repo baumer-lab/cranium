@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 #hdf5r
-```{r}
+```{r, message=FALSE}
 library(hdf5r)
 library(dplyr)
 library(cranium)
@@ -31,27 +31,10 @@ file="Sample/AT_wildtype_101_Probabilities.h5"
 read_h5("Sample/AT_wildtype_101_Probabilities.h5") %>%
   tidy()
 ```
+
 # Edited functions
 ```{r}
-#' Tidy 3D brain image data
-#' @inheritParams broom::tidy.lm
-#' @param threshold probability below which points will be discarded
-#' @importFrom tibble as_tibble
-#' @importFrom generics tidy
-#' @export
-#' @examples
-#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
-#' \dontrun{
-#' if (require(dplyr)) {
-#'   tidy_brain <- file %>%
-#'     read_h5() %>%
-#'     tidy()
-#'   class(tidy_brain)
-#'   glimpse(tidy_brain)
-#' }
-#' }
-
-tidy.brain <- function(x, threshold = 0.9, ...) {
+tidy.brain <- function(x, threshold = 0.8, ...) {
   res <- x %>%
     as.data.frame.table() %>%
     mutate(x = as.integer(Var1) * 0.13,
@@ -65,19 +48,10 @@ tidy.brain <- function(x, threshold = 0.9, ...) {
   class(res) <- append("tbl_brain", class(res))
   return(res)
 }
+```
 
-
-#' Plot a slice of a 3D image
-#' @inheritParams graphics::image
-#' @param z slice of the 3D image to display
-#' @importFrom graphics image
-#' @export
-#' @examples
-#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
-#' raw <- read_h5(file)
-#' image(raw)
-#' image(raw, z = 23)
-
+# plot a slice of a 3d image
+```{r}
 
 image.brain <- function(x, z = NULL, ...) {
   if (is.null(z)) {
@@ -91,17 +65,13 @@ image.brain <- function(x, z = NULL, ...) {
 ```{r}
 plot2d <- function(x, show_max = FALSE, title...) UseMethod("plot2d")
 
-#' @export
-#' @rdname plot2d
 
 plot2d.brain <- function(x, show_max = FALSE, ...) {
   tidy_brain <- tidy(x)
   plot2d(tidy_brain, show_max = FALSE, ...)
 }
 
-#' @export
-#' @importFrom gridExtra grid.arrange
-#' @rdname plot2d
+
 plot2d.tbl_brain <- function(x, title, show_max = FALSE, ...) {
   gridExtra::grid.arrange(
     plot2d_plane(x, plane = c("x", "z"), show_max, ...),
@@ -112,10 +82,7 @@ plot2d.tbl_brain <- function(x, title, show_max = FALSE, ...) {
   )
 }
 
-#' @export
-#' @importFrom rlang !!
-#' @import ggplot2
-#' @rdname plot2d
+
 plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   depth <- setdiff(c("x", "y", "z"), plane)
   depth_var <- rlang::sym(depth)
@@ -156,7 +123,7 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
 ```{r}
 
 ls <- c("101", "102", "01")
-file_ls =c("0", "0")
+file_ls =c("0")
 
 for (i in (1:length(ls))) {
   file_ls[i] = paste("file", ls[i], sep='')
@@ -186,7 +153,7 @@ lapply(reorient)
 ```{r}
 sample1 <- tidy_brain_ls[[1]]
 mplot(sample1)
-ggplot(sample1, aes(x=x))+geom_freqpoly()
+ggplot(sample1, aes(x=Freq))+geom_freqpoly()
 ```
 
 
