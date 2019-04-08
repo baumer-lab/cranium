@@ -21,7 +21,7 @@ library(gridExtra)
 library(mosaic)
 ```
 
-# Tidy Function 
+# Tidy Function (Model)
 ```{r}
 threshold.n=0.8
 threshold.n != 0.9
@@ -59,6 +59,43 @@ tidy.brain <- function(x, type="wildtype", threshold.n=0.9, ...) {
     class(res) <- append("tbl_brain", class(res))
   return(res)
 }
+```
+
+# Function--model (Final)
+Requires: 
+1.data to be in brain class type.
+2.type to be either "wildtype" or "youtoo"
+```{r}
+#Fit quadratic model, output is the adjusted r_square
+qmodel.brain<- function(data, type="wildtype"){
+  if (type == "wildtype"){  
+    tidy_brain <- data %>%
+    tidy(type="wildtype")
+    #ro_tidy_brain<-tidy_brain%>%
+   # lapply(reorient)
+    ro_tidy_brain<- reorient(tidy_brain)
+  }
+  if(type== "youtoo"){  #1: youtoo
+    tidy_brain <- data%>%
+    tidy(type="youtoo")
+    #ro_tidy_brain<-tidy_brain%>%
+    #lapply(reorient)
+    ro_tidy_brain<- reorient(tidy_brain)
+
+  }
+  model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
+  r_2 = round(summary(model)$r.squared, 3) #original r square
+  ro_model <- attr(ro_tidy_brain, "quad_mod") #model applied on reoriented data
+  ro_r_2 = round(summary(ro_model)$r.squared,3) #reoriented r square
+
+  num_signal = nrow(tidy_brain)
+  #return(data.frame(type, r_2, num_signal))
+  return(data.frame(type, r_2, ro_r_2, num_signal))
+}
+
+#test
+#qmodel.brain(data=brain_ls_youtoo[[1]], type= "youtoo")
+
 ```
 
 # Data: Wild Type 
@@ -123,42 +160,6 @@ for (i in (1:length(file_ls_youtoo))) {
 
 ```
 
-# Function--model (Final)
-Requires: 
-1.data to be in brain class type.
-2.type to be either "wildtype" or "youtoo"
-```{r}
-#Fit quadratic model, output is the adjusted r_square
-qmodel.brain<- function(data, type="wildtype"){
-  if (type == "wildtype"){  
-    tidy_brain <- data %>%
-    tidy(type="wildtype")
-    #ro_tidy_brain<-tidy_brain%>%
-   # lapply(reorient)
-    ro_tidy_brain<- reorient(tidy_brain)
-  }
-  if(type== "youtoo"){  #1: youtoo
-    tidy_brain <- data%>%
-    tidy(type="wildtype")
-    #ro_tidy_brain<-tidy_brain%>%
-    #lapply(reorient)
-    ro_tidy_brain<- reorient(tidy_brain)
-
-  }
-  model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
-  r_2 = round(summary(model)$r.squared, 3) #original r square
-  ro_model <- lm(y ~ I(x^2) + x, data = ro_tidy_brain) #model applied on reoriented data
-  ro_r_2 = round(summary(ro_model)$r.squared,3) #reoriented r square
-
-  num_signal = nrow(tidy_brain)
-  #return(data.frame(type, r_2, num_signal))
-  return(data.frame(type, r_2, ro_r_2, num_signal))
-}
-
-qmodel.brain(data=brain_ls_youtoo[[1]], type= "wildtype")
-
-
-```
 
 ```{r}
 #breakdown the steps of the function
@@ -167,12 +168,23 @@ tidy_brain <- data %>%
  tidy(type="youtoo")
 class(tidy_brain)
 ro_tidy_brain<- reorient(tidy_brain)
-model1 <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
-#model2 <- lm(y ~ I(x^2) + x +z, data = tidy_brain) #model applied on original data
-r_2 = round(summary(model1)$r.squared, 3)
-fitted<-model1%>%
+
+model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
+r_2 = round(summary(model)$r.squared, 3) #original r square
+ro_model <- attr(ro_tidy_brain, "quad_mod") #model applied on reoriented data
+ro_r_2 = round(summary(ro_model)$r.squared,3) 
+  
+#Extract pca model
+#str(ro_tidy_brain)
+quad_mod <- attr(ro_tidy_brain, "quad_mod")
+fitted<-quad_mod%>%
   augment()
-summary(model1)
+quad_mod$r.squared
+
+summary(quad_mod)$Estimate
+glance(quad_mod)
+
+coefficients$summary(quad_mod)
 ```
 
 # Use qmodel function on the youtoo data
@@ -264,14 +276,13 @@ depth_var <- rlang::sym(depth)
 # Experiment(Old function) 
 Generate two tables for wildtype and youtoo for threshold, $r^2$, number of signals comparison.
 ```{r}
-
 x0 = 0.9
 list <- seq(x0, 0.99, 0.03)
 
 #Calculate fitted r square
 fit_value<-c()
 for (i in (1:length(list))){
-   fit_value[i]<- round(model_fit(list[i], brain_ls_youtoo[[1]]),4)
+   fit_value[i]<- round(model_fit(list[i], brain_ls_youtoo[[1]]), 4)
 }
 fit_value
 
