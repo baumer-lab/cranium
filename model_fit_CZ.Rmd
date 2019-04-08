@@ -3,6 +3,8 @@ title: "model_fit_CZ"
 author: "CZ"
 date: "4/4/2019"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -126,11 +128,12 @@ tidy_brain <- data %>%
  tidy(type="youtoo")
 class(tidy_brain)
 ro_tidy_brain<- reorient(tidy_brain)
-model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
-r_2 = round(summary(model)$r.squared, 3)
+model1 <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
+model2 <- lm(y ~ I(x^2) + x +z, data = tidy_brain) #model applied on original data
+r_2 = round(summary(model1)$r.squared, 3)
 fitted<-model%>%
   augment()
-summary(model)
+summary(model2)
 ```
 
 # Plot Function 
@@ -163,7 +166,7 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
                        title = c("Side View", "Front View", "Top View"))
   ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
     geom_point(alpha = 0.1, size = 0.5) +
-    geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red") +
+    geom_smooth(method = "lm", formula = y ~ I(x^2) + x +z, color = "red") +
    # geom_smooth(method = "lm", color = "red") +
     annotate("text", x = 0, y = 0, label = "origin", size = 5) +
     annotate("text", x = 0, y = 0,
@@ -298,6 +301,13 @@ for (i in (1:length(ls_youtoo))) {
   model_df <- rbind(model_df, m)
 }
 View(model_df)
+tidy_brain$x
+
+test <- tidy_brain %>%
+  
+plane= c(tidy_brain$x, tidy_brain$z)
+depth <- setdiff(c(tidy_brain$x, tidy_brain$y, tidy_brain$z), plane)
+depth_var <- rlang::sym(depth)
 ```
 
 
