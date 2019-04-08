@@ -129,11 +129,11 @@ tidy_brain <- data %>%
 class(tidy_brain)
 ro_tidy_brain<- reorient(tidy_brain)
 model1 <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
-model2 <- lm(y ~ I(x^2) + x +z, data = tidy_brain) #model applied on original data
+#model2 <- lm(y ~ I(x^2) + x +z, data = tidy_brain) #model applied on original data
 r_2 = round(summary(model1)$r.squared, 3)
 fitted<-model%>%
   augment()
-summary(model2)
+summary(model1)
 ```
 
 # Plot Function 
@@ -206,84 +206,31 @@ for (i in (1:length(ls_youtoo))) {
 View(model_df)
 ```
 
-# Test
+# Tidy Function 
 ```{r}
-#Edit tidy function
-type= "wildtype"
-type=="wildtype"
-
-tidy.brain <- function(x, threshold, type =NULL, ...) {  #type=NULL
-#   if (is.null(type)){
-#     threshold = threshold  # If user did not specify type, use the threshold instead
-#     res <- x %>%
-#     as.data.frame.table() %>%
-#     mutate(x = as.integer(Var1) * 0.13,
-#            y = as.integer(Var2) * 0.13,
-#            z = as.integer(Var3) * 0.21) %>%
-#     select(x, y, z, Freq) %>%
-#     tibble::as_tibble() %>%
-#     mutate(gray_val = grDevices::gray(1 - Freq)) %>%
-#     filter(Freq > threshold)
-#     class(res) <- append("tbl_brain", class(res))
-# }
+threshold.n=0.8
+threshold.n != 0.9
+tidy.brain <- function(x, type="wildtype", threshold.n=0.9, ...) {
   if (type== "wildtype"){
-    threshold = 0.9
-    res <- x %>%
-      as.data.frame.table() %>%
-      mutate(x = as.integer(Var1) * 0.13,
-           y = as.integer(Var2) * 0.13,
-           z = as.integer(Var3) * 0.21) %>%
-      select(x, y, z, Freq) %>%
-      tibble::as_tibble() %>%
-      mutate(gray_val = grDevices::gray(1 - Freq)) %>%
-      filter(Freq > threshold)
-    class(res) <- append("tbl_brain", class(res))
-  } 
-  if (type=="youtoo"){
-    threshold=0.5
-    res <- x %>%
-    as.data.frame.table() %>%
-    mutate(x = as.integer(Var1) * 0.13,
-           y = as.integer(Var2) * 0.13,
-           z = as.integer(Var3) * 0.21) %>%
-    select(x, y, z, Freq) %>%
-    tibble::as_tibble() %>%
-    mutate(gray_val = grDevices::gray(1 - Freq)) %>%
-    filter(Freq > threshold)
-    class(res) <- append("tbl_brain", class(res))
-  } else{
-    threshold = threshold  # If user did not specify type, use the threshold instead
-    res <- x %>%
-    as.data.frame.table() %>%
-    mutate(x = as.integer(Var1) * 0.13,
-           y = as.integer(Var2) * 0.13,
-           z = as.integer(Var3) * 0.21) %>%
-    select(x, y, z, Freq) %>%
-    tibble::as_tibble() %>%
-    mutate(gray_val = grDevices::gray(1 - Freq)) %>%
-    filter(Freq > threshold)
-    class(res) <- append("tbl_brain", class(res))
-}
-  return(res)
-}
-
-
-
-#Edit 2
-tidy.brain <- function(x, threshold.n, type=NULL, ...) {
-  if(is.null(type)){
-    if(is.null(threshold.n)){
-      threshold =0.9
-    }else{threshold = threshold.n}
-  }
-  if (type== "wildtype"){
-    threshold = 0.9
+      if(threshold.n != 0.9) {  #if threshold is not default, use the input threshold
+        threshold = threshold.n   
+        print(paste0("Set threshold:", threshold.n))
+      }else{
+        threshold = 0.9
+        print(("Default Wild Type threshold: 0.9"))
+      }
   }
   if (type=="youtoo"){
-    threshold=0.5
-  } else{            
-    threshold = threshold.n    # If user did not specify type, use the threshold instead
-  } 
+      if(threshold != 0.9){
+        threshold = threshold.n   
+        print(paste0("Set threshold:", threshold.n))
+      }else{
+        threshold = 0.5
+        print("Default You-Too threshold: 0.5")
+      }
+  }else{
+     print("Default Wild Type threshold: 0.9")
+   }
     res <- x %>%
     as.data.frame.table() %>%
     mutate(x = as.integer(Var1) * 0.13,
@@ -296,40 +243,6 @@ tidy.brain <- function(x, threshold.n, type=NULL, ...) {
     class(res) <- append("tbl_brain", class(res))
   return(res)
 }
-
-
-#Edit 3
-tidy.brain <- function(x,  type, threshold.n, ...) {
-  if(missing(type)){
-    if(missing(threshold.n)){
-      threshold =0.9
-    }else{threshold = threshold.n}
-  }
-  if (type== "wildtype"){
-    if(missing(threshold.n)){
-      threshold = 0.9
-    }else{threshold = threshold.n}
-  }
-  if (type=="youtoo"){
-   if(missing(threshold.n)){
-      threshold = 0.5
-    }else{threshold = threshold.n}
-  }  
- 
-    res <- x %>%
-    as.data.frame.table() %>%
-    mutate(x = as.integer(Var1) * 0.13,
-           y = as.integer(Var2) * 0.13,
-           z = as.integer(Var3) * 0.21) %>%
-    select(x, y, z, Freq) %>%
-    tibble::as_tibble() %>%
-    mutate(gray_val = grDevices::gray(1 - Freq)) %>%
-    filter(Freq > threshold)
-    class(res) <- append("tbl_brain", class(res))
-  return(res)
-}
-
-
 ```
 
 
@@ -337,9 +250,12 @@ tidy.brain <- function(x,  type, threshold.n, ...) {
 #Test tudy function
 data=brain_ls_youtoo[[1]]
 
-tidy_youtoo_sample<-tidy(data, threshold.n=0.3, type == "wildtype") #Works
+tidy_youtoo_sample<-tidy(data, threshold.n=0.3, type == "youtoo") #Works
 
-tidy_youtoo_sample<-tidy(data, type == "wildtype") #Not working
+tidy_youtoo_sample<-tidy(data) #"Default Wild Type threshold: 0.9"
+
+
+tidy_youtoo_sample<-tidy(data, type == "wildtype") #"Default type: Wild type. Default threshold: 0.9"
 
 class(tidy_youtoo_sample)
 
