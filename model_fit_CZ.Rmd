@@ -170,7 +170,7 @@ ro_tidy_brain<- reorient(tidy_brain)
 model1 <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
 #model2 <- lm(y ~ I(x^2) + x +z, data = tidy_brain) #model applied on original data
 r_2 = round(summary(model1)$r.squared, 3)
-fitted<-model%>%
+fitted<-model1%>%
   augment()
 summary(model1)
 ```
