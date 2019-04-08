@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 #hdf5r
-```{r}
+```{r, message=FALSE}
 library(hdf5r)
 library(dplyr)
 library(cranium)
@@ -20,8 +20,9 @@ library(broom)
 library(tidyverse)
 library(gridExtra)
 library(devtools)
+library(mosaic)
 
-devtools::install_github("beanumber/cranium")
+#devtools::install_github("beanumber/cranium")
 ```
 
 #test read h5 function 
@@ -30,21 +31,47 @@ file="Sample/AT_wildtype_101_Probabilities.h5"
 read_h5("Sample/AT_wildtype_101_Probabilities.h5") %>%
   tidy()
 ```
+
 # Edited functions
+```{r}
+tidy.brain <- function(x, threshold = 0.8, ...) {
+  res <- x %>%
+    as.data.frame.table() %>%
+    mutate(x = as.integer(Var1) * 0.13,
+           y = as.integer(Var2) * 0.13,
+           z = as.integer(Var3) * 0.21) %>%
+    select(x, y, z, Freq) %>%
+    tibble::as_tibble() %>%
+    mutate(gray_val = gray(1 - Freq)) %>%
+    #    filter(Freq > 0) %>%
+    filter(Freq > threshold)
+  class(res) <- append("tbl_brain", class(res))
+  return(res)
+}
+```
+
+# plot a slice of a 3d image
+```{r}
+
+image.brain <- function(x, z = NULL, ...) {
+  if (is.null(z)) {
+    z <- floor(dim(x)[3] / 2)
+  }
+  graphics::image(x[,,z])
+}
+```
+
+
 ```{r}
 plot2d <- function(x, show_max = FALSE, title...) UseMethod("plot2d")
 
-#' @export
-#' @rdname plot2d
 
 plot2d.brain <- function(x, show_max = FALSE, ...) {
   tidy_brain <- tidy(x)
   plot2d(tidy_brain, show_max = FALSE, ...)
 }
 
-#' @export
-#' @importFrom gridExtra grid.arrange
-#' @rdname plot2d
+
 plot2d.tbl_brain <- function(x, title, show_max = FALSE, ...) {
   gridExtra::grid.arrange(
     plot2d_plane(x, plane = c("x", "z"), show_max, ...),
@@ -55,10 +82,7 @@ plot2d.tbl_brain <- function(x, title, show_max = FALSE, ...) {
   )
 }
 
-#' @export
-#' @importFrom rlang !!
-#' @import ggplot2
-#' @rdname plot2d
+
 plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   depth <- setdiff(c("x", "y", "z"), plane)
   depth_var <- rlang::sym(depth)
@@ -83,7 +107,7 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
     geom_point(alpha = 0.1, size = 0.5) +
     geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red") +
-    geom_smooth(method = "lm", color = "red") +
+    
     annotate("text", x = 0, y = 0, label = "origin", size = 5) +
     annotate("text", x = 0, y = 0,
              label = paste0("min_prob: ", round(min(pull(ungroup(gg_data), "min_freq")), 2))) +
@@ -98,8 +122,8 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
 
 ```{r}
 
-ls <- c("101", "102", "104", "01", "02", "03")
-file_ls =c("0", "0", "0", "0", "0", "0")
+ls <- c("101", "102", "01")
+file_ls =c("0")
 
 for (i in (1:length(ls))) {
   file_ls[i] = paste("file", ls[i], sep='')
@@ -109,10 +133,7 @@ file_ls
 
 file_ls[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
 file_ls[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
-file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
-file_ls[4] <- "Sample/AT_01_Probabilities.h5"
-file_ls[5] <- "Sample/AT_02_Probabilities.h5"
-file_ls[6] <- "Sample/AT_03_Probabilities.h5"
+file_ls[3] <- "Sample/AT_01_Probabilities.h5"
 
 file_ls
 tidy_brain_ls <- list()
@@ -129,12 +150,18 @@ lapply(reorient)
 
 ```
 
+```{r}
+sample1 <- tidy_brain_ls[[1]]
+mplot(sample1)
+ggplot(sample1, aes(x=Freq))+geom_freqpoly()
+```
+
 
 # Test plot
 ```{r}
 plotlist <- list()
-for (i in (1:6)){
-  plotlist[[i]] <- plot2d(ro_brain_ls[[i]], title=paste("Sample", ls[i]))
+for (i in (3:3)){
+  plotlist[[i]] <- plot2d(tidy_brain_ls[[i]], title=paste("Sample", ls[i]))
    # plot(plotlist[[i]])
    # dev.off
  # decorate3d
