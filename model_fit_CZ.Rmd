@@ -21,32 +21,26 @@ library(gridExtra)
 library(mosaic)
 ```
 
-# Tidy Function (Model)
+# Tidy Function (Final:4/8, 7:30 pm)
 ```{r}
-threshold.n=0.8
-threshold.n != 0.9
 tidy.brain <- function(x, type="wildtype", threshold.n=0.9, ...) {
-  if (type== "wildtype"){
-      if(threshold.n != 0.9) {  #if threshold is not default, use the input threshold
-        threshold = threshold.n 
-        print(paste0("Set threshold:", threshold))
-      }else{
-        threshold = 0.9
-        print(("Default Wild Type threshold: 0.9"))
-      }
-  }
   if (type=="youtoo"){
       if(threshold.n != 0.9){
         threshold = threshold.n   
-        print(paste0("Set threshold:", threshold))
+        print(paste0("Set threshold: ", threshold))
       }else{
         threshold = 0.5
         print("Default You-Too threshold: 0.5")
       }
+  }else{
+      if(threshold.n != 0.9) {  #if threshold is not default, use the input threshold
+        threshold = threshold.n 
+        print(paste0("Set threshold: ", threshold))
+      }else{
+        threshold = 0.9
+        print(("Default threshold: 0.9"))
+      }
   }
-  else{
-    print("Default threshold: 0.9")
-   }
     res <- x %>%
     as.data.frame.table() %>%
     mutate(x = as.integer(Var1) * 0.13,
@@ -59,42 +53,48 @@ tidy.brain <- function(x, type="wildtype", threshold.n=0.9, ...) {
     class(res) <- append("tbl_brain", class(res))
   return(res)
 }
+
+#test
+#test<-tidy(brain_ls_wt[[1]], type= "wildtype", threshold.n = 0.9)
 ```
 
-# Function--model (Final)
+# Function--model (Final:4/8, 7:30 pm)
 Requires: 
 1.data to be in brain class type.
 2.type to be either "wildtype" or "youtoo"
 ```{r}
 #Fit quadratic model, output is the adjusted r_square
-qmodel.brain<- function(data, type="wildtype"){
+qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
   if (type == "wildtype"){  
     tidy_brain <- data %>%
-    tidy(type="wildtype")
-    #ro_tidy_brain<-tidy_brain%>%
-   # lapply(reorient)
+    tidy(type="wildtype", threshold = threshold.n )
     ro_tidy_brain<- reorient(tidy_brain)
   }
-  if(type== "youtoo"){  #1: youtoo
+  if(type== "youtoo"){  
     tidy_brain <- data%>%
-    tidy(type="youtoo")
-    #ro_tidy_brain<-tidy_brain%>%
-    #lapply(reorient)
+    tidy(type="youtoo", threshold = threshold.n)
     ro_tidy_brain<- reorient(tidy_brain)
 
   }
   model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
+  num_signal = nrow(tidy_brain)
   r_2 = round(summary(model)$r.squared, 3) #original r square
   ro_model <- attr(ro_tidy_brain, "quad_mod") #model applied on reoriented data
   ro_r_2 = round(summary(ro_model)$r.squared,3) #reoriented r square
-
-  num_signal = nrow(tidy_brain)
+  quad_coeff = round(summary(ro_model)$coefficients[3, 1],4)  #quadratic coefficient
+  RMLSE <- fitted%>% 
+      mutate(residual = y- .fitted, residual_sq = residual^2) %>% 
+      summarize(MLSE = mean(residual_sq),RMLSE = sqrt(MLSE)) %>% 
+      pull(RMLSE)
+  
   #return(data.frame(type, r_2, num_signal))
-  return(data.frame(type, r_2, ro_r_2, num_signal))
+  return(data.frame(type, num_signal, r_2, ro_r_2,RMLSE, quad_coeff))
 }
 
 #test
-#qmodel.brain(data=brain_ls_youtoo[[1]], type= "youtoo")
+#qmodel.brain(data=brain_ls_youtoo[[2]], type= "youtoo")
+#qmodel.brain(data=brain_ls_wt[[1]], type= "wildtype", threshold.n = 0.1)
+#qmodel.brain(data=brain_ls_wt[[1]], type= "wildtype")
 
 ```
 
@@ -173,18 +173,29 @@ model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
 r_2 = round(summary(model)$r.squared, 3) #original r square
 ro_model <- attr(ro_tidy_brain, "quad_mod") #model applied on reoriented data
 ro_r_2 = round(summary(ro_model)$r.squared,3) 
-  
+
+quad_coeff = summary(quad_mod)$coefficients[3, 1]
+
+RMLSE <- fitted%>% 
+      mutate(residual = y- .fitted, residual_sq = residual^2) %>% 
+      summarize(MLSE = mean(residual_sq),RMLSE = sqrt(MLSE)) %>% 
+      pull(RMLSE)
+
 #Extract pca model
 #str(ro_tidy_brain)
 quad_mod <- attr(ro_tidy_brain, "quad_mod")
 fitted<-quad_mod%>%
   augment()
-quad_mod$r.squared
+rmsle(fitted$y, fitted$.fitted)
 
-summary(quad_mod)$Estimate
-glance(quad_mod)
+ 
+ 
+summary(quad_mod)
 
-coefficients$summary(quad_mod)
+# glance(quad_mod)
+
+
+
 ```
 
 # Use qmodel function on the youtoo data
@@ -202,7 +213,7 @@ View(model_df)
 
 
 ```{r}
-#Test tudy function
+#Test tidy function
 data=brain_ls_youtoo[[1]]
 
 tidy_youtoo_sample<-tidy(data, type = "d") #"Default threshold: 0.9"
@@ -262,13 +273,8 @@ for (i in (1:length(ls_youtoo))) {
   model_df <- rbind(model_df, m)
 }
 View(model_df)
-tidy_brain$x
 
-test <- tidy_brain %>%
-  
-plane= c(tidy_brain$x, tidy_brain$z)
-depth <- setdiff(c(tidy_brain$x, tidy_brain$y, tidy_brain$z), plane)
-depth_var <- rlang::sym(depth)
+
 ```
 
 
