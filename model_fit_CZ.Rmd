@@ -73,25 +73,42 @@ tidy.brain <- function(x, type="wildtype", threshold.n=0.9, ...) {
 ```{r}
 path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-brain_ls_wt <- list()
+brain_ls_wt <- list()  #Brain data files are stored in a list: brain_ls_wt
+name_wt <- list()  #Name of the files are stored in a list: name_wt
+
 for (i in (1:length(file_names))) {
   brain_ls_wt[[i]] <- file_names[i] %>%
   read_h5()
+  name_wt[i] <- sub("_Probabilities.h5", "",file_names[i])
 }
-
 ```
 
-#Read file: You Too. Output class type: brain.
+# Read file: You Too. Output class type: brain.
 ```{r}
 path = "Sample/YouToo"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
-
 brain_ls_youtoo <- list()
+name_youtoo <- list()  #Name of the files are stored in a list: name_wt
+
 for (i in (1:length(file_names))) {
   brain_ls_youtoo[[i]] <- file_names[i] %>%
   read_h5()
+  name_youtoo[i] <- sub("_Probabilities.h5", "", file_names[i])
 }
+
+##Test to see if data are correct
+# tidy_brain_ls_youtoo <- list()
+# 
+# tidy_brain_ls_youtoo[[1]] <- file_names[1] %>%
+#   read_h5()%>%
+#   tidy()
+# mean(tidy_brain_ls_youtoo[[1]]$x)  #39.35473
+# 
+# tidy_brain_ls_youtoo[[2]] <- file_names[2] %>%
+#   read_h5()%>%
+#   tidy()
+# mean(tidy_brain_ls_youtoo[[2]]$x)  #24.65265
 
 ```
 
@@ -128,77 +145,16 @@ qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
 }
 
 #test
-sum_tb <- qmodel.brain(data=brain_ls_youtoo[[2]], type= "youtoo")
+#sum_tb <- qmodel.brain(data=brain_ls_youtoo[[2]], type= "youtoo")
 #qmodel.brain(data=brain_ls_wt[[1]], type= "wildtype", threshold.n = 0.1)
 #qmodel.brain(data=brain_ls_wt[[1]], type= "wildtype")
 
 ```
 
-# Data: Wild Type 
-```{r}
-ls_wt <- c("Wild Type_101", "Wild Type_102")
-ls_wt
-
-file_ls_wt =c("0")
-file_ls_wt
-
-for (i in (1:length(ls_wt))) {
-  file_ls_wt[i] = paste("file", ls_wt[i])
-}
-
-file_ls_wt
-
-file_ls_wt[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
-file_ls_wt[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
-#file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
 
 
-
-file_ls_wt
-
-#defalt threshol = 0.9
-brain_ls_wt <- list()
-for (i in (1:length(ls_wt))) {
-  brain_ls_wt[[i]] <- file_ls_wt[i] %>%
-  read_h5()
-}
-```
-
-
-# Data: You too
-```{r}
-ls_youtoo <- c("You_Too_01", "You_Too_02")
-
-file_ls_youtoo =c("0")
-file_ls_youtoo
-
-for (i in (1:length(ls_youtoo))) {
-  file_ls_youtoo[i] = paste("file", ls_youtoo[i])
-}
-
-file_ls_youtoo
-
-file_ls_youtoo[1] <- "Sample/AT_01_Probabilities.h5"
-file_ls_youtoo[2] <- "Sample/AT_02_Probabilities.h5"
-#file_ls[6] <- "Sample/AT_03_Probabilities.h5"
-#file_ls[7] <- "Sample/AT_04_Probabilities.h5"
-#file_ls[8] <- "Sample/AT_06_Probabilities.h5"
-#file_ls[9] <- "Sample/AT_21_Probabilities.h5"
-
-
-file_ls_youtoo
-#threshold = 0.7
-brain_ls_youtoo <- list()
-for (i in (1:length(file_ls_youtoo))) {
-  brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
-  read_h5()
-}
-
-```
-
-
-```{r}
-#breakdown the steps of the function
+# Breakdown the steps of the function--qmodel
+```{r eval=FALSE, include=FALSE}
 data=brain_ls_youtoo[[2]]
 tidy_brain <- data %>%
  tidy(type="youtoo")
@@ -224,75 +180,35 @@ quad_mod <- attr(ro_tidy_brain, "quad_mod")
 fitted<-quad_mod%>%
   augment()
 rmsle(fitted$y, fitted$.fitted)
-
- 
- 
 summary(quad_mod)
 
-# glance(quad_mod)
-
-
-
 ```
 
-# Use qmodel function on the youtoo data
+# Apply qmodel on sample data 
 ```{r}
-model_df <- data.frame()
-for (i in (1:length(ls_youtoo))) {
-  m <- qmodel.brain(brain_ls_youtoo[[i]], type="youtoo")%>%
-          mutate(sample = ls_youtoo[i])
-  model_df <- rbind(model_df, m)
+#youtoo data
+qmodel_sum_tb<- data.frame()
+m <- list()
+for (i in (1:length(brain_ls_youtoo))) {
+  m<- qmodel.brain(brain_ls_youtoo[[i]], type = "youtoo")%>%
+    mutate(sample = name_youtoo[[i]])
+  qmodel_sum_tb <- rbind(qmodel_sum_tb, m)
 }
-View(model_df)
+
+#wildtype
+qmodel_sum_tb_wt<- data.frame()
+m <- list()
+for (i in (1:length(brain_ls_wt))) {
+  m<- qmodel.brain(brain_ls_wt[[i]])%>%
+    mutate(sample = name_wt[[i]])
+  qmodel_sum_tb_wt <- rbind(qmodel_sum_tb_wt, m)
+}
 ```
 
 
 
-
+# Plot
 ```{r}
-#Test tidy function
-data=brain_ls_youtoo[[1]]
-
-tidy_youtoo_sample<-tidy(data, type = "d") #"Default threshold: 0.9"
-
-tidy_youtoo_sample<-tidy(data, threshold.n=0.3) #"Set threshold:0.3"
-                         
-tidy_youtoo_sample<-tidy(data, threshold.n=0.3, type = "youtoo") #Works
-
-tidy_youtoo_sample<-tidy(data) #"Default Wild Type threshold: 0.9"
-
-
-tidy_youtoo_sample<-tidy(data, type == "wildtype") #"Default type: Wild type. Default threshold: 0.9"
-
-class(tidy_youtoo_sample)
-
-#You too data
-ls_youtoo <- c("You_Too_01", "You_Too_02")
-file_ls_youtoo =c("0")
-
-for (i in (1:length(ls_youtoo))) {
-  file_ls_youtoo[i] = paste("file", ls_youtoo[i])
-}
-
-file_ls_youtoo[1] <- "Sample/AT_01_Probabilities.h5"
-file_ls_youtoo[2] <- "Sample/AT_02_Probabilities.h5"
-#file_ls[6] <- "Sample/AT_03_Probabilities.h5"
-#file_ls[7] <- "Sample/AT_04_Probabilities.h5"
-#file_ls[8] <- "Sample/AT_06_Probabilities.h5"
-#file_ls[9] <- "Sample/AT_21_Probabilities.h5"
-
-#Read and tidy
-tidy_brain_ls_youtoo <- list()
-for (i in (1:length(file_ls_youtoo))) {
-  tidy_brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
-  read_h5() %>%
- # tidy( threshold=0.5)
-  tidy(type="youtoo")
-}
-#Reorient
-ro_brain_ls_youtoo<-tidy_brain_ls_youtoo%>%
-lapply(reorient)
-
 #Plot
 plotlist_youtoo <- list()
 for (i in (1:length(ls_youtoo))){
@@ -300,52 +216,8 @@ for (i in (1:length(ls_youtoo))){
    # plot(plotlist[[i]])
    # dev.off
 }
-
-
-
-model_df <- data.frame()
-for (i in (1:length(ls_youtoo))) {
-  m <- qmodel.brain(brain_ls_youtoo[[i]], type="youtoo")%>%
-          mutate(sample = ls_youtoo[i])
-  model_df <- rbind(model_df, m)
-}
-View(model_df)
-
-
 ```
 
 
-
-# Experiment(Old function) 
-Generate two tables for wildtype and youtoo for threshold, $r^2$, number of signals comparison.
-```{r}
-x0 = 0.9
-list <- seq(x0, 0.99, 0.03)
-
-#Calculate fitted r square
-fit_value<-c()
-for (i in (1:length(list))){
-   fit_value[i]<- round(model_fit(list[i], brain_ls_youtoo[[1]]), 4)
-}
-fit_value
-
-#Calculate number signals
-num_signals<- c()
-for (i in (1:length(list))){
-   num_signals[i]<- model_num_signal(list[i], brain_ls_wt[[1]])
-}
-num_signals
-  
-fitted_threshold_tb <- data.frame(list, fit_value, num_signals)
-colnames(fitted_threshold_tb)[1] = "threshold.YouToo"
-colnames(fitted_threshold_tb)[2] = "r_square.YouToo"
-colnames(fitted_threshold_tb)[3] = "num_signals.YouToo"
-
-df2
-fitted_threshold_tb_wt <- data.frame(df2, num_signals)
-colnames(fitted_threshold_tb_wt)[1] = "threshold.WT"
-colnames(fitted_threshold_tb_wt)[2] = "r_square.WT"
-colnames(fitted_threshold_tb_wt)[3] = "num_signals.WT"
-```
 
 
