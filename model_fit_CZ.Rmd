@@ -19,16 +19,19 @@ library(broom)
 library(tidyverse)
 library(gridExtra)
 library(mosaic)
+
+#new packages
+library(sjstats)
 ```
 
 ```{r}
-library("aws.s3")
-h1<-get_object("https://s3.us-east-2.amazonaws.com/deltascope/AT_04_Probabilities.h5")
+#library("aws.s3")
+#h1<-get_object("https://s3.us-east-2.amazonaws.com/deltascope/AT_04_Probabilities.h5")
 
 ```
 
 
-# Tidy Function (Final:4/8, 7:30 pm)
+# Tidy Function (Final:4/9, 4:30 pm)
 ```{r}
 tidy.brain <- function(x, type="wildtype", threshold.n=0.9, ...) {
   if (type=="youtoo"){
@@ -92,7 +95,7 @@ for (i in (1:length(file_names))) {
 
 ```
 
-# Function--model (Final:4/9, 3:38 pm)
+# Function--model (Final:4/9, 4:30 pm)
 Requires: 
 1.data to be in brain class type.
 2.type to be either "wildtype" or "youtoo"
@@ -112,18 +115,20 @@ qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
   }
   model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
   ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
-
+  mean.fitted = mean(ro_model$fitted.values)
+  #sigma=sjstats::rse(ro_model). RSE: residual standard error
+  #RSE = sjstats::rse(ro_model)
   sum_tb<- ro_model %>%
     broom::glance() %>%
     mutate(num.signal = nrow(tidy_brain),
-           r.squared.original = round(summary(model)$r.squared, 3),#original r square
+           adj.r.squared.original = round(summary(model)$adj.r.squared, 3),#original r square
            quad.coeff = round(summary(ro_model)$coefficients[3, 1],4),
-           RMSE = sqrt(sigma)) #quadratic coefficient)
+           RMSE = sjstats::rmse(ro_model) ) 
   return(sum_tb)
 }
 
 #test
-qmodel.brain(data=brain_ls_youtoo[[2]], type= "youtoo")
+sum_tb <- qmodel.brain(data=brain_ls_youtoo[[2]], type= "youtoo")
 #qmodel.brain(data=brain_ls_wt[[1]], type= "wildtype", threshold.n = 0.1)
 #qmodel.brain(data=brain_ls_wt[[1]], type= "wildtype")
 
