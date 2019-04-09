@@ -92,9 +92,7 @@ for (i in (1:length(file_names))) {
 
 ```
 
-
-
-# Function--model (Final:4/8, 7:30 pm)
+# Function--model (Final:4/9, 3:38 pm)
 Requires: 
 1.data to be in brain class type.
 2.type to be either "wildtype" or "youtoo"
@@ -113,21 +111,14 @@ qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
 
   }
   model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
-#  RMLSE = model %>%
-#    fitted%>% 
-#              mutate(residual = y- .fitted, residual_sq = residual^2) %>% 
-#              summarize(MLSE = mean(residual_sq),RMLSE = sqrt(MLSE)) %>% 
-#              pull(RMLSE)
   ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
-  
+
   sum_tb<- ro_model %>%
     broom::glance() %>%
-    mutate(num_signal = nrow(tidy_brain),
-           r_2 = round(summary(model)$r.squared, 3),#original r square
-           ro_r_2 = round(summary(ro_model)$r.squared,3), #reoriented r square
-#           RMLSE = RMLSE,
-           quad_coeff = round(summary(ro_model)$coefficients[3, 1],4)) #quadratic coefficient)
-                  #return(data.frame(type, r_2, num_signal))
+    mutate(num.signal = nrow(tidy_brain),
+           r.squared.original = round(summary(model)$r.squared, 3),#original r square
+           quad.coeff = round(summary(ro_model)$coefficients[3, 1],4),
+           RMSE = sqrt(sigma)) #quadratic coefficient)
   return(sum_tb)
 }
 
