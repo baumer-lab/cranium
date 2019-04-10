@@ -106,7 +106,7 @@ qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
 ```
 
 #Read file: Wild Type. Output class type: brain.
-```{r}
+```{r eval=FALSE, include=FALSE}
 path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
@@ -136,14 +136,14 @@ for (i in (1:length(brain_ls_wt.1))) {
 ```
 
 # Read file: You Too. Output class type: brain.
-```{r}
+```{r eval=FALSE, include=FALSE}
 path = "Sample/YouToo"
 
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-
+file_names[11]
 brain_ls_youtoo.1 <- list()  #Brain data files are stored in a list: brain_ls_wt
 name_youtoo.1 <- list()  #Name of the files are stored in a list: name_wt
-file_names.1 <-  file_names [1:20]  #select files
+file_names.1 <-  file_names [1:35]  #select files
 
 for (i in (1:length(file_names.1))) {
   brain_ls_youtoo.1[[i]] <- file_names.1[i] %>%
@@ -160,7 +160,7 @@ for (i in (1:length(brain_ls_youtoo.1))) {
   qmodel_sum_tb_youtoo.1 <- rbind(qmodel_sum_tb_youtoo.1, m)
 }
 
-write.csv(qmodel_sum_tb_youtoo.1, file = "visualization_results/qmodel_sum_tb_youtoo.1.csv", row.names=F)
+#write.csv(qmodel_sum_tb_youtoo.1, file = "visualization_results/qmodel_sum_tb_youtoo.1.csv", row.names=F)
 
 ```
 
