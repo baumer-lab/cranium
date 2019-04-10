@@ -3,6 +3,8 @@ title: "model_eval"
 author: "CZ"
 date: "4/9/2019"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r}
@@ -114,7 +116,50 @@ qmodel_sum_tb_wt <- read_csv("visualization_results/qmodel_sum_tb_wt.csv")
 qmodel_sum_tb_youtoo <- read_csv("visualization_results/qmodel_sum_tb_youtoo.1.csv")
 ```
 
+```{r}
+mplot(qmodel_sum_tb_wt)
 
+#adj r2
+ggplot( data = qmodel_sum_tb_wt, aes(x = adj.r.squared)) + geom_histogram(binwidth = 0.011) + labs(title = "Adjusted R square for 43 Wild Type Sample")
+
+#RMSE
+ggplot( data = qmodel_sum_tb_wt, aes(x = RMSE)) + geom_histogram(binwidth = 0.14) + labs(title = "RMSE for 43 Wild Type Sample") 
+
+#adj r2 + RMSE + num signals
+ggplot(data = qmodel_sum_tb_wt, aes(x = adj.r.squared, y = RMSE)) + geom_point()  + aes(colour = num.signal) + theme(legend.position = "right") + 
+  theme(axis.text.x = element_text(size=18),
+          axis.text.y = element_text(size=18),
+          axis.title = element_text(size = 18, face= "bold"),
+          legend.text=element_text(size=13),
+          legend.title=element_text(size=18, face="bold"))+
+   labs(title = "Wild Type: Relationship between Adj.R2, RMSE and number of signals depicted")
+
+```
+
+#You Too
+```{r}
+mplot(qmodel_sum_tb_youtoo)
+
+#adj r2
+ggplot( data = qmodel_sum_tb_youtoo, aes(x = adj.r.squared)) +  geom_histogram(binwidth = 0.028) + labs(title = "Adjusted R square for 35 You Too Sample")
+
+#RMSE
+ggplot( data = qmodel_sum_tb_youtoo, aes(x = RMSE)) +  geom_histogram(binwidth = 0.33) + labs(title = "RMSE for 35 You Too Sample") 
+
+
+#adj r2 + RMSE + num signals
+ggplot(data = qmodel_sum_tb_youtoo, aes(x = adj.r.squared, y = RMSE)) +   geom_point()  +
+  aes(colour = num.signal) + 
+  theme(legend.position = "right") + 
+  theme(axis.text.x = element_text(size=18),
+          axis.text.y = element_text(size=18),
+          axis.title = element_text(size = 18, face= "bold"),
+          legend.text=element_text(size=13),
+          legend.title=element_text(size=18, face="bold"))+
+  labs(title = "You Too: Relationship between Adj.R2, RMSE and number of signals depicted")
+
+
+```
 
 
 
