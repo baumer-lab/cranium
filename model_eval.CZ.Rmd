@@ -119,6 +119,12 @@ qmodel_sum_tb_youtoo <- read_csv("visualization_results/qmodel_sum_tb_youtoo.1.c
 ```{r}
 mplot(qmodel_sum_tb_wt)
 
+#num signals
+ggplot( data = qmodel_sum_tb_wt, aes(x = num.signal)) + geom_histogram(binwidth = 5100) + labs(title = "Wild Type: number of signals captured")+ 
+  theme(axis.text.x = element_text(size=13),
+          axis.text.y = element_text(size=13),
+          axis.title = element_text(size = 15, face= "bold"))
+
 #adj r2
 ggplot( data = qmodel_sum_tb_wt, aes(x = adj.r.squared)) + geom_histogram(binwidth = 0.011) + labs(title = "Adjusted R square for 43 Wild Type Sample")
 
@@ -134,11 +140,25 @@ ggplot(data = qmodel_sum_tb_wt, aes(x = adj.r.squared, y = RMSE)) + geom_point()
           legend.title=element_text(size=18, face="bold"))+
    labs(title = "Wild Type: Relationship between Adj.R2, RMSE and number of signals depicted")
 
+#Number of signals and RMSE
+ggplot(data = qmodel_sum_tb_wt, aes(x = num.signal, y = adj.r.squared)) + geom_point()  + labs(title = "Wild Type: Relationshop between number of signals and RMSE") +
+   theme(axis.text.x = element_text(size=13),
+          axis.text.y = element_text(size=18),
+          axis.title = element_text(size = 18, face= "bold"),
+          legend.text=element_text(size=13),
+          legend.title=element_text(size=18, face="bold"))
 ```
 
 #You Too
 ```{r}
 mplot(qmodel_sum_tb_youtoo)
+
+
+#num signals
+ggplot( data = qmodel_sum_tb_youtoo, aes(x = num.signal)) + geom_histogram(binwidth = 59) + labs(title = "You Too: number of signals captured")+ 
+  theme(axis.text.x = element_text(size=13),
+          axis.text.y = element_text(size=13),
+          axis.title = element_text(size = 15, face= "bold"))
 
 #adj r2
 ggplot( data = qmodel_sum_tb_youtoo, aes(x = adj.r.squared)) +  geom_histogram(binwidth = 0.028) + labs(title = "Adjusted R square for 35 You Too Sample")
@@ -157,6 +177,18 @@ ggplot(data = qmodel_sum_tb_youtoo, aes(x = adj.r.squared, y = RMSE)) +   geom_p
           legend.text=element_text(size=13),
           legend.title=element_text(size=18, face="bold"))+
   labs(title = "You Too: Relationship between Adj.R2, RMSE and number of signals depicted")
+
+
+#Number of signals and RMSE
+ggplot(data = qmodel_sum_tb_youtoo, aes(x = num.signal, y = adj.r.squared)) + geom_point()  + labs(title = "You Too: Relationshop between number of signals and RMSE") +
+   theme(axis.text.x = element_text(size=13),
+          axis.text.y = element_text(size=18),
+          axis.title = element_text(size = 18, face= "bold"),
+          legend.text=element_text(size=13),
+          legend.title=element_text(size=18, face="bold"))
+
++
+   scale_x_discrete(limits=c(0, 1550))
 
 
 ```
