@@ -1,6 +1,6 @@
 ---
-title: "model_fit_CZ"
-author: "CZ"
+title: "model_fit_em"
+author: "em"
 date: "4/4/2019"
 output: html_document
 ---
@@ -17,246 +17,206 @@ library(broom)
 library(tidyverse)
 library(gridExtra)
 library(mosaic)
+library(sjstats)
 ```
 
+# Tidy Function (Final:4/9, 4:30 pm)
 ```{r}
-# first set working directory to your folder
-path = "test_loop"
-file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-#out.file<-""
-for(i in 1:length(file_names)){
-  file <- read_h5(file_names[i]) %>%
-   # print(file_names, digits=TRUE, quote=TRUE) %>% 
-    tidy()
-
+tidy.brain <- function(x, type="wildtype", threshold.n=0.9, ...) {
+  if (type=="youtoo"){
+      if(threshold.n != 0.9){
+        threshold = threshold.n   
+        print(paste0("Set threshold: ", threshold))
+      }else{
+        threshold = 0.5
+        print("Default You-Too threshold: 0.5")
+      }
+  }else{
+      if(threshold.n != 0.9) {  #if threshold is not default, use the input threshold
+        threshold = threshold.n 
+        print(paste0("Set threshold: ", threshold))
+      }else{
+        threshold = 0.9
+        print(("Default threshold: 0.9"))
+      }
+  }
+    res <- x %>%
+    as.data.frame.table() %>%
+    mutate(x = as.integer(Var1) * 0.13,
+           y = as.integer(Var2) * 0.13,
+           z = as.integer(Var3) * 0.21) %>%
+    select(x, y, z, Freq) %>%
+    tibble::as_tibble() %>%
+    mutate(gray_val = grDevices::gray(1 - Freq)) %>%
+    filter(Freq > threshold)
+    class(res) <- append("tbl_brain", class(res))
+  return(res)
 }
+
+#test
+#test<-tidy(brain_ls_wt[[1]], type= "wildtype", threshold.n = 0.9)
 ```
 
 
-# Data: Wild Type 
-```{r}
-ls_wt <- c("Wild Type_101", "Wild Type_102")
-ls_wt
-
-file_ls_wt =c("0")
-file_ls_wt
-
-for (i in (1:length(ls_wt))) {
-  file_ls_wt[i] = paste("file", ls_wt[i])
-}
-
-file_ls_wt
-
-file_ls_wt[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
-file_ls_wt[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
-#file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
-
-
-
-file_ls_wt
-
-#defalt threshol = 0.9
-brain_ls_wt <- list()
-for (i in (1:length(ls_wt))) {
-  brain_ls_wt[[i]] <- file_ls_wt[i] %>%
-  read_h5()
-}
-```
-
-
-# Data: You too
-```{r}
-ls_youtoo <- c("You_Too_01", "You_Too_02")
-
-file_ls_youtoo =c("0")
-file_ls_youtoo
-
-for (i in (1:length(ls_youtoo))) {
-  file_ls_youtoo[i] = paste("file", ls_youtoo[i])
-}
-
-file_ls_youtoo
-
-file_ls_youtoo[1] <- "Sample/AT_01_Probabilities.h5"
-file_ls_youtoo[2] <- "Sample/AT_02_Probabilities.h5"
-#file_ls[6] <- "Sample/AT_03_Probabilities.h5"
-#file_ls[7] <- "Sample/AT_04_Probabilities.h5"
-#file_ls[8] <- "Sample/AT_06_Probabilities.h5"
-#file_ls[9] <- "Sample/AT_21_Probabilities.h5"
-
-
-file_ls_youtoo
-#threshold = 0.7
-brain_ls_youtoo <- list()
-for (i in (1:length(file_ls_youtoo))) {
-  brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
-  read_h5()
-}
-
-```
-
-# Function--model (Final)
+# Function--model (Final:4/9, 4:30 pm)
 Requires: 
 1.data to be in brain class type.
 2.type to be either "wildtype" or "youtoo"
 ```{r}
 #Fit quadratic model, output is the adjusted r_square
-qmodel.brain<- function(data, type){
-  if (type == "wildtype"){
+qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
+  if (type == "wildtype"){  
     tidy_brain <- data %>%
-  tidy(threshold = 0.9)
-    ro_tidy_brain<-tidy_brain%>%
-    lapply(reorient)
+    tidy(type="wildtype", threshold = threshold.n )
+    ro_tidy_brain<- reorient(tidy_brain)
   }
-  if(type== "youtoo"){
+  if(type== "youtoo"){  
     tidy_brain <- data%>%
-    tidy(threshold = 0.5)
-    ro_tidy_brain<-tidy_brain%>%
-    lapply(reorient)
+    tidy(type="youtoo", threshold = threshold.n)
+    ro_tidy_brain<- reorient(tidy_brain)
+
   }
   model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
-  r_2 = round(summary(model)$r.squared, 3) #original r square
- # ro_model <- lm(y ~ I(x^2) + x, data = ro_tidy_brain) #model applied on reoriented data
- # ro_r_2 = round(summary(ro_model)$r.squared,3) #reoriented r square
-
-  num_signal = nrow(tidy_brain)
-  return(data.frame(type, r_2, num_signal))
-  #return(data.frame(type, r_2, ro_r_2, num_signal))
+  ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
+  mean.fitted = mean(ro_model$fitted.values)
+  #sigma=sjstats::rse(ro_model). RSE: residual standard error
+  #RSE = sjstats::rse(ro_model)
+  sum_tb<- ro_model %>%
+    broom::glance() %>%
+    mutate(num.signal = nrow(tidy_brain),
+           adj.r.squared.original = round(summary(model)$adj.r.squared, 3),#original r square
+           quad.coeff = round(summary(ro_model)$coefficients[3, 1],4),
+           RMSE = sjstats::rmse(ro_model) ) 
+  return(sum_tb)
 }
 
-qmodel.brain(brain_ls_youtoo[[1]], type="youtoo")
+#test
+#sum_tb <- qmodel.brain(data=brain_ls_youtoo[[2]], type= "youtoo")
+#qmodel.brain(data=brain_ls_wt[[1]], type= "wildtype", threshold.n = 0.1)
+#qmodel.brain(data=brain_ls_wt[[1]], type= "wildtype")
 
 ```
 
-# Plot Function 
-Take out the linear model
-```{r}
-#' @export
-#' @importFrom rlang !!
-#' @import ggplot2
-#' @rdname plot2d
-plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
-  depth <- setdiff(c("x", "y", "z"), plane)
-  depth_var <- rlang::sym(depth)
+#Read file: Wild Type. Output class type: brain.
+```{r eval=FALSE, include=FALSE}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
-  gg_data <- x %>%
-    group_by(.dots = plane) %>%
-    summarize(N = n(), min_freq = min(Freq),
-              avg_depth = mean(!! depth_var, na.rm = TRUE),
-              max_depth = max(!! depth_var, na.rm = TRUE))
+brain_ls_wt.1 <- list()  #Brain data files are stored in a list: brain_ls_wt
+name_wt.1 <- list()  #Name of the files are stored in a list: name_wt
+#file_names.1 <-  file_names [1:9]  #select files
 
-  if (show_max) {
-    plot_var <- "max_depth"
-  } else
-    plot_var <- "avg_depth"
-  labels <- data.frame(var = c("x", "y", "z"),
-                       label = c("Lateral (x, microns)",
-                                 "Anterior/Posterior (y, microns)",
-                                 "Dorsal/Ventral (z, microns)")) %>%
-    filter(var %in% plane)
-  titles <- data.frame(depth_var = c("x", "y", "z"),
-                       title = c("Side View", "Front View", "Top View"))
-  ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
-    geom_point(alpha = 0.1, size = 0.5) +
-    geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red") +
-   # geom_smooth(method = "lm", color = "red") +
-    annotate("text", x = 0, y = 0, label = "origin", size = 5) +
-    annotate("text", x = 0, y = 0,
-             label = paste0("min_prob: ", round(min(pull(ungroup(gg_data), "min_freq")), 2))) +
-    scale_color_continuous(guide = FALSE) +
-    scale_x_continuous(filter(labels, var == plane[1])$label) +
-    scale_y_continuous(filter(labels, var == plane[2])$label) +
-    ggtitle(filter(titles, depth_var == depth)$title)
+file_names.1 <-  file_names [10:19]  #select files
+#file_names.1 <-  file_names [20:30]  #select files
+#file_names.1 <-  file_names [31:43]  #select files
+for (i in (1:length(file_names.1))) {
+  brain_ls_wt.1[[i]] <- file_names.1[i] %>%
+  read_h5()
+  name_wt.1[i] <- sub("_Probabilities.h5", "", file_names.1[i])
 }
 
-#' Plot a 3D image of a brain
-#' @inheritParams rgl::plot3d
-#' @export
-#' @examples
-#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
-#' \dontrun{
-#' if (require(dplyr)) {
-#'   tidy_brain <- file %>%
-#'     read_h5() %>%
-#'     tidy()
-#'   plot3d(tidy_brain)
-#' }
-#' }
+#Fit model
+#qmodel_sum_tb_wt.1<- data.frame()
+#m <- list()
+#for (i in (1:length(brain_ls_wt.1))) {
+#  m<- qmodel.brain(brain_ls_wt.1[[i]])%>%
+#    mutate(sample = name_wt.1[[i]])
+#  qmodel_sum_tb_wt.1 <- rbind(qmodel_sum_tb_wt.1, m)
+#}
+
+#write.csv(qmodel_sum_tb_wt.1, file = "visualization_results/qmodel_sum_tb_wt.4.csv", row.names=F)
+```
+
+# Read file: You Too. Output class type: brain.
+```{r eval=FALSE, include=FALSE}
+path = "Sample/YouToo"
+
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+brain_ls_youtoo.1 <- list()  #Brain data files are stored in a list: brain_ls_wt
+name_youtoo.1 <- list()  #Name of the files are stored in a list: name_wt
+file_names.1 <-  file_names [1:35]  #select files
+
+for (i in (1:length(file_names.1))) {
+  brain_ls_youtoo.1[[i]] <- file_names.1[i] %>%
+  read_h5()
+  name_youtoo.1[i] <- sub("_Probabilities.h5", "", file_names.1[i])
+}
+
+#Fit model
+qmodel_sum_tb_youtoo.1<- data.frame()
+m <- list()
+for (i in (1:length(brain_ls_youtoo.1))) {
+  m<- qmodel.brain(brain_ls_youtoo.1[[i]])%>%
+    mutate(sample = name_youtoo.1[[i]])
+  qmodel_sum_tb_youtoo.1 <- rbind(qmodel_sum_tb_youtoo.1, m)
+}
+
+#write.csv(qmodel_sum_tb_youtoo.1, file = "visualization_results/qmodel_sum_tb_youtoo.1.csv", row.names=F)
 
 ```
 
 
 
-# Use qmodel function on the youtoo data
-```{r}
-model_df <- data.frame()
-for (i in (1:length(ls_youtoo))) {
-  m <- qmodel.brain(brain_ls_youtoo[[i]], type="youtoo")%>%
-          mutate(sample = ls_youtoo[i])
-  model_df <- rbind(model_df, m)
-}
-View(model_df)
+# Breakdown the steps of the function--qmodel
+```{r eval=FALSE, include=FALSE}
+data=brain_ls_youtoo[[2]]
+tidy_brain <- data %>%
+ tidy(type="youtoo")
+class(tidy_brain)
+ro_tidy_brain<- reorient(tidy_brain)
+
+model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
+r_2 = round(summary(model)$r.squared, 3) #original r square
+ro_model <- attr(ro_tidy_brain, "quad_mod") #model applied on reoriented data
+ro_r_2 = round(summary(ro_model)$r.squared,3) 
+
+glance(ro_model)
+quad_coeff = summary(quad_mod)$coefficients[3, 1]
+
+RMLSE <- fitted%>% 
+      mutate(residual = y- .fitted, residual_sq = residual^2) %>% 
+      summarize(MLSE = mean(residual_sq),RMLSE = sqrt(MLSE)) %>% 
+      pull(RMLSE)
+
+#Extract pca model
+#str(ro_tidy_brain)
+quad_mod <- attr(ro_tidy_brain, "quad_mod")
+fitted<-quad_mod%>%
+  augment()
+rmsle(fitted$y, fitted$.fitted)
+summary(quad_mod)
+
 ```
 
-# Test
+# Apply qmodel on sample data 
 ```{r}
-#Edit tidy function
-tidy.brain <- function(x, threshold = 0.9, type = NA, ...) {
-  if (type== "wildtype"){
-    res <- x %>%
-    as.data.frame.table() %>%
-    mutate(x = as.integer(Var1) * 0.13,
-           y = as.integer(Var2) * 0.13,
-           z = as.integer(Var3) * 0.21) %>%
-    select(x, y, z, Freq) %>%
-    tibble::as_tibble() %>%
-    mutate(gray_val = grDevices::gray(1 - Freq)) %>%
-    filter(Freq > threshold)
-    class(res) <- append("tbl_brain", class(res))
-  } 
-  if (type=="youtoo"){
-    threshold=0.5
-    res <- x %>%
-    as.data.frame.table() %>%
-    mutate(x = as.integer(Var1) * 0.13,
-           y = as.integer(Var2) * 0.13,
-           z = as.integer(Var3) * 0.21) %>%
-    select(x, y, z, Freq) %>%
-    tibble::as_tibble() %>%
-    mutate(gray_val = grDevices::gray(1 - Freq)) %>%
-    filter(Freq > threshold)
-    class(res) <- append("tbl_brain", class(res))
-  } 
-  return(res)
+#youtoo data
+
+qmodel_sum_tb<- data.frame()
+m <- list()
+for (i in (1:length(brain_ls_youtoo))) {
+  m<- qmodel.brain(brain_ls_youtoo[[i]], type = "youtoo")%>%
+    mutate(sample = name_youtoo[[i]])
+  qmodel_sum_tb <- rbind(qmodel_sum_tb, m)
 }
 
-#You too data
-ls_youtoo <- c("You_Too_01", "You_Too_02")
-file_ls_youtoo =c("0")
-
-for (i in (1:length(ls_youtoo))) {
-  file_ls_youtoo[i] = paste("file", ls_youtoo[i])
+#wildtype
+qmodel_sum_tb_wt.1<- data.frame()
+m <- list()
+for (i in (1:length(brain_ls_wt.1))) {
+  m<- qmodel.brain(brain_ls_wt.1[[i]])%>%
+    mutate(sample = name_wt.1[[i]])
+  qmodel_sum_tb_wt.1 <- rbind(qmodel_sum_tb_wt.1, m)
 }
 
-file_ls_youtoo[1] <- "Sample/AT_01_Probabilities.h5"
-file_ls_youtoo[2] <- "Sample/AT_02_Probabilities.h5"
-#file_ls[6] <- "Sample/AT_03_Probabilities.h5"
-#file_ls[7] <- "Sample/AT_04_Probabilities.h5"
-#file_ls[8] <- "Sample/AT_06_Probabilities.h5"
-#file_ls[9] <- "Sample/AT_21_Probabilities.h5"
+write(qmodel_sum_tb_wt.1, file = "qmodel_sum_tb_wt.1.csv")
+```
 
-#Read and tidy
-tidy_brain_ls_youtoo <- list()
-for (i in (1:length(file_ls_youtoo))) {
-  tidy_brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
-  read_h5() %>%
- # tidy( threshold=0.5)
-  tidy(type="youtoo")
-}
-#Reorient
-ro_brain_ls_youtoo<-tidy_brain_ls_youtoo%>%
-lapply(reorient)
 
+
+# Plot
+```{r}
 #Plot
 plotlist_youtoo <- list()
 for (i in (1:length(ls_youtoo))){
@@ -264,51 +224,52 @@ for (i in (1:length(ls_youtoo))){
    # plot(plotlist[[i]])
    # dev.off
 }
-
-
-
-model_df <- data.frame()
-for (i in (1:length(ls_youtoo))) {
-  m <- qmodel.brain(brain_ls_youtoo[[i]], type="youtoo")%>%
-          mutate(sample = ls_youtoo[i])
-  model_df <- rbind(model_df, m)
-}
-View(model_df)
 ```
 
 
+# Freq and R^2 tradeoff
 
-# Experiment(Old function) 
-Generate two tables for wildtype and youtoo for threshold, $r^2$, number of signals comparison.
+
 ```{r}
+# now already fitted model to wt data
+# write a for loop to test freq (threshold)'s effect on R^2
 
-x0 = 0.9
-list <- seq(x0, 0.99, 0.03)
+# looping thresholds
+# first three rows correspond to: sample 1, 2, 3 at threshold level 0.87
 
-#Calculate fitted r square
-fit_value<-c()
-for (i in (1:length(list))){
-   fit_value[i]<- round(model_fit(list[i], brain_ls_youtoo[[1]]),4)
+# wild type
+fitted_value_df_wt2 <- data.frame()
+threshold.list <- list(0.87, 0.90, 0.93, 0.96, 0.99)
+length(threshold.list)
+length(brain_ls_wt.1)
+  for (i in (1:length(threshold.list))){
+    for (j in (1:length(brain_ls_wt.1))){
+      m <- qmodel.brain(brain_ls_wt.1[[j]], threshold.n = threshold.list[[i]])
+      fitted_value_df_wt2 <- rbind(fitted_value_df_wt2, m) #%>% 
+      #mutate(threshold=threshold.list[[i]])
+  }
 }
-fit_value
 
-#Calculate number signals
-num_signals<- c()
-for (i in (1:length(list))){
-   num_signals[i]<- model_num_signal(list[i], brain_ls_wt[[1]])
-}
-num_signals
-  
-fitted_threshold_tb <- data.frame(list, fit_value, num_signals)
-colnames(fitted_threshold_tb)[1] = "threshold.YouToo"
-colnames(fitted_threshold_tb)[2] = "r_square.YouToo"
-colnames(fitted_threshold_tb)[3] = "num_signals.YouToo"
+View(fitted_value_df_wt2)
 
-df2
-fitted_threshold_tb_wt <- data.frame(df2, num_signals)
-colnames(fitted_threshold_tb_wt)[1] = "threshold.WT"
-colnames(fitted_threshold_tb_wt)[2] = "r_square.WT"
-colnames(fitted_threshold_tb_wt)[3] = "num_signals.WT"
+
+
 ```
+
+# cleaning threshold dataframes
+
+```{r}
+# first 19 samples of wild type data
+threshold_wt_19 <- rbind(fitted_value_df_wt1, fitted_value_df_wt2)
+
+threshold_wt_19 <- threshold_wt_19 %>% 
+  mutate(Sample=rep(c(1:19), 5)) %>% 
+  mutate(threshold=c(rep(0.87, 19), rep(0.90, 19), rep(0.93, 19),
+                     rep(0.96, 19), rep(0.99, 19)))
+
+write.csv(threshold_wt_19, file="visualization_results/threshold_wt_19.csv",
+          row.names=F)
+```
+
 
 
