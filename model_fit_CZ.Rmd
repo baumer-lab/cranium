@@ -143,7 +143,9 @@ file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 file_names[11]
 brain_ls_youtoo.1 <- list()  #Brain data files are stored in a list: brain_ls_wt
 name_youtoo.1 <- list()  #Name of the files are stored in a list: name_wt
-file_names.1 <-  file_names [1:35]  #select files
+#file_names.1 <-  file_names [1:35]  #select files
+
+file_names.1 <- youtoo_y.flipped_name
 
 for (i in (1:length(file_names.1))) {
   brain_ls_youtoo.1[[i]] <- file_names.1[i] %>%

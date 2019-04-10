@@ -237,6 +237,24 @@ for (i in (1:length(file_names.1))) {
 
 ```
 
+```{r}
+th_wt <- read_csv("visualization_results/threshold_wt_19.csv")
+
+th_wt_test <- th_wt%>%
+  group_by(threshold)%>%
+  summarize(r2_avg = mean(adj.r.squared), sd = sd(adj.r.squared))
+th_wt$threshold <- as.character(th_wt$threshold)
+mplot(th_wt)
+
+
+th_wt$Sample <- as.character(th_wt$Sample)
+
+gf_point(threshold ~ adj.r.squared, data = th_wt) %>%
+gf_facet_wrap(~Sample, ncol = 5) %>% 
+gf_labs(title = "", caption = "")
+```
+
+
 
 
 
