@@ -151,7 +151,7 @@ ggplot(data = qmodel_sum_tb_wt, aes(x = num.signal, y = adj.r.squared)) + geom_p
 
 #You Too
 ```{r}
-mplot(qmodel_sum_tb_youtoo)
+#mplot(qmodel_sum_tb_youtoo)
 
 
 #num signals
@@ -187,17 +187,55 @@ ggplot(data = qmodel_sum_tb_youtoo, aes(x = num.signal, y = adj.r.squared)) + ge
           legend.text=element_text(size=13),
           legend.title=element_text(size=18, face="bold"))
 
-+
-   scale_x_discrete(limits=c(0, 1550))
+
 
 
 ```
 
 
+```{r}
+qmodel_sum_tb_youtoo_2 <- qmodel_sum_tb_youtoo%>%
+  mutate(y_flipped = if_else(quad.coeff < 0, "flipped", "correct"))
+
+mplot(qmodel_sum_tb_youtoo_2)
+
+ggplot(data = qmodel_sum_tb_youtoo_2, aes(x = num.signal, y = adj.r.squared)) + geom_point()  + aes(colour = y_flipped) + theme(legend.position = "right") + labs(title = "Identify Alignment Error-Flipped Y-Axis")+
+   theme(axis.text.x = element_text(size=13),
+          axis.text.y = element_text(size=18),
+          axis.title = element_text(size = 18, face= "bold"),
+          legend.text=element_text(size=13),
+          legend.title=element_text(size=18, face="bold"))
+```
+
+```{r}
+youtoo_y.flipped <- qmodel_sum_tb_youtoo_2%>%
+  filter(y_flipped == "flipped")
+
+youtoo_y.flipped_name<-as.vector(youtoo_y.flipped$sample)
+youtoo_y.flipped_name
+```
 
 
 
 
+# Read file: You Too. Output class type: brain.
+```{r eval=FALSE, include=FALSE}
+path = "Sample/YouToo"
+
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+brain_ls_youtoo.1 <- list()  
+name_youtoo.1 <- list()  
+file_names.1 <- youtoo_y.flipped_name
+
+for (i in (1:length(file_names.1))) {
+  brain_ls_youtoo.1[[i]] <- file_names.1[i] %>%
+  read_h5()
+  name_youtoo.1[i] <- sub("_Probabilities.h5", "", file_names.1[i])
+}
+
+
+```
 
 
 
