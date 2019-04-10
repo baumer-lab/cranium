@@ -27,7 +27,6 @@ library(sjstats)
 ```{r}
 #library("aws.s3")
 #h1<-get_object("https://s3.us-east-2.amazonaws.com/deltascope/AT_04_Probabilities.h5")
-
 ```
 
 
@@ -69,49 +68,6 @@ tidy.brain <- function(x, type="wildtype", threshold.n=0.9, ...) {
 ```
 
 
-#Read file: Wild Type. Output class type: brain.
-```{r}
-path = "Sample/WildType"
-file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-brain_ls_wt <- list()  #Brain data files are stored in a list: brain_ls_wt
-name_wt <- list()  #Name of the files are stored in a list: name_wt
-
-for (i in (1:length(file_names))) {
-  brain_ls_wt[[i]] <- file_names[i] %>%
-  read_h5()
-  name_wt[i] <- sub("_Probabilities.h5", "",file_names[i])
-}
-```
-
-# Read file: You Too. Output class type: brain.
-```{r}
-path = "Sample/YouToo"
-file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-
-brain_ls_youtoo <- list()
-name_youtoo <- list()  #Name of the files are stored in a list: name_wt
-
-for (i in (1:length(file_names))) {
-  brain_ls_youtoo[[i]] <- file_names[i] %>%
-  read_h5()
-  name_youtoo[i] <- sub("_Probabilities.h5", "", file_names[i])
-}
-
-##Test to see if data are correct
-# tidy_brain_ls_youtoo <- list()
-# 
-# tidy_brain_ls_youtoo[[1]] <- file_names[1] %>%
-#   read_h5()%>%
-#   tidy()
-# mean(tidy_brain_ls_youtoo[[1]]$x)  #39.35473
-# 
-# tidy_brain_ls_youtoo[[2]] <- file_names[2] %>%
-#   read_h5()%>%
-#   tidy()
-# mean(tidy_brain_ls_youtoo[[2]]$x)  #24.65265
-
-```
-
 # Function--model (Final:4/9, 4:30 pm)
 Requires: 
 1.data to be in brain class type.
@@ -151,6 +107,63 @@ qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
 
 ```
 
+#Read file: Wild Type. Output class type: brain.
+```{r}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+brain_ls_wt.1 <- list()  #Brain data files are stored in a list: brain_ls_wt
+name_wt.1 <- list()  #Name of the files are stored in a list: name_wt
+file_names.1 <-  file_names [1:8]  #select files
+for (i in (1:length(file_names.1))) {
+  brain_ls_wt.1[[i]] <- file_names.1[i] %>%
+  read_h5()
+  name_wt.1[i] <- sub("_Probabilities.h5", "", file_names.1[i])
+}
+
+#Fit model
+qmodel_sum_tb_wt.1<- data.frame()
+m <- list()
+for (i in (1:length(brain_ls_wt.1))) {
+  m<- qmodel.brain(brain_ls_wt.1[[i]])%>%
+    mutate(sample = name_wt.1[[i]])
+  qmodel_sum_tb_wt.1 <- rbind(qmodel_sum_tb_wt.1, m)
+}
+
+#write.csv(qmodel_sum_tb_wt.1, file = "visualization_results/qmodel_sum_tb_wt.1.csv", row.names=F)
+```
+
+# Read file: You Too. Output class type: brain.
+```{r}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+brain_ls_youtoo <- list()
+name_youtoo <- list()  #Name of the files are stored in a list: name_wt
+
+for (i in (1:length(file_names))) {
+  brain_ls_youtoo[[i]] <- file_names[i] %>%
+  read_h5()
+  name_youtoo[i] <- sub("_Probabilities.h5", "", file_names[i])
+}
+
+##Test to see if data are correct
+# tidy_brain_ls_youtoo <- list()
+# 
+# tidy_brain_ls_youtoo[[1]] <- file_names[1] %>%
+#   read_h5()%>%
+#   tidy()
+# mean(tidy_brain_ls_youtoo[[1]]$x)  #39.35473
+# 
+# tidy_brain_ls_youtoo[[2]] <- file_names[2] %>%
+#   read_h5()%>%
+#   tidy()
+# mean(tidy_brain_ls_youtoo[[2]]$x)  #24.65265
+
+```
+
+
+
 
 
 # Breakdown the steps of the function--qmodel
@@ -187,6 +200,7 @@ summary(quad_mod)
 # Apply qmodel on sample data 
 ```{r}
 #youtoo data
+
 qmodel_sum_tb<- data.frame()
 m <- list()
 for (i in (1:length(brain_ls_youtoo))) {
@@ -196,13 +210,15 @@ for (i in (1:length(brain_ls_youtoo))) {
 }
 
 #wildtype
-qmodel_sum_tb_wt<- data.frame()
+qmodel_sum_tb_wt.1<- data.frame()
 m <- list()
-for (i in (1:length(brain_ls_wt))) {
-  m<- qmodel.brain(brain_ls_wt[[i]])%>%
-    mutate(sample = name_wt[[i]])
-  qmodel_sum_tb_wt <- rbind(qmodel_sum_tb_wt, m)
+for (i in (1:length(brain_ls_wt.1))) {
+  m<- qmodel.brain(brain_ls_wt.1[[i]])%>%
+    mutate(sample = name_wt.1[[i]])
+  qmodel_sum_tb_wt.1 <- rbind(qmodel_sum_tb_wt.1, m)
 }
+
+write(qmodel_sum_tb_wt.1, file = "qmodel_sum_tb_wt.1.csv")
 ```
 
 
