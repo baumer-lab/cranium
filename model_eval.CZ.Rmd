@@ -98,17 +98,55 @@ qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
 
 ```
 
-#Combine files
+
+# 3D plot
 ```{r}
-# qmodel_sum_tb_wt_1 <- read_csv("visualization_results/qmodel_sum_tb_wt.1.csv")
-# qmodel_sum_tb_wt_2 <- read_csv("visualization_results/qmodel_sum_tb_wt.2.csv")
-# 
-# qmodel_sum_tb_wt_3 <- read_csv("visualization_results/qmodel_sum_tb_wt.3.csv")
-# qmodel_sum_tb_wt_4 <- read_csv("visualization_results/qmodel_sum_tb_wt.4.csv")
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
-#qmodel_sum_tb_wt <- rbind(qmodel_sum_tb_wt_1,qmodel_sum_tb_wt_2, qmodel_sum_tb_wt_3,qmodel_sum_tb_wt_4)
+brain_ls_wt.1 <- list()  #Brain data files are stored in a list: brain_ls_wt
+name_wt.1 <- list()  #Name of the files are stored in a list: name_wt
 
-#write.csv(qmodel_sum_tb_wt, file = "visualization_results/qmodel_sum_tb_wt .csv", row.names=F)
+#Read file
+file_names.1 <-  file_names [1]  #select files
+for (i in (1:length(file_names.1))) {
+  brain_ls_wt.1[[i]] <- file_names.1[i] %>%
+  read_h5()
+  name_wt.1[i] <- sub("_Probabilities.h5", "", file_names.1[i])
+}
+#Tidy
+tidy_brain_1 <- brain_ls_wt.1[[1]]%>%
+  tidy()
+#Reorient
+ro_tidy_brain_1<- reorient(tidy_brain_1)
+
+rgl::plot3d(ro_tidy_brain_1)
+
+```
+
+# Frequency Viz
+```{r}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+brain_ls_wt.1 <- list()  #Brain data files are stored in a list: brain_ls_wt
+name_wt.1 <- list()  #Name of the files are stored in a list: name_wt
+
+#Read file
+file_names.1 <-  file_names [1]  #select files
+for (i in (1:length(file_names.1))) {
+  brain_ls_wt.1[[i]] <- file_names.1[i] %>%
+  read_h5()
+  name_wt.1[i] <- sub("_Probabilities.h5", "", file_names.1[i])
+}
+#Tidy
+tidy_brain_1 <- brain_ls_wt.1[[1]]%>%
+  tidy(threshold = 0)
+#Reorient
+ro_tidy_brain_1<- reorient(tidy_brain_1)
+
+rgl::plot3d(ro_tidy_brain_1)
+
 ```
 
 ```{r}
@@ -116,6 +154,7 @@ qmodel_sum_tb_wt <- read_csv("visualization_results/qmodel_sum_tb_wt.csv")
 qmodel_sum_tb_youtoo <- read_csv("visualization_results/qmodel_sum_tb_youtoo.1.csv")
 ```
 
+# Wild type viz
 ```{r}
 mplot(qmodel_sum_tb_wt)
 
@@ -149,7 +188,7 @@ ggplot(data = qmodel_sum_tb_wt, aes(x = num.signal, y = adj.r.squared)) + geom_p
           legend.title=element_text(size=18, face="bold"))
 ```
 
-#You Too
+#You Too viz
 ```{r}
 #mplot(qmodel_sum_tb_youtoo)
 
@@ -186,10 +225,6 @@ ggplot(data = qmodel_sum_tb_youtoo, aes(x = num.signal, y = adj.r.squared)) + ge
           axis.title = element_text(size = 18, face= "bold"),
           legend.text=element_text(size=13),
           legend.title=element_text(size=18, face="bold"))
-
-
-
-
 ```
 
 
@@ -215,6 +250,41 @@ youtoo_y.flipped_name<-as.vector(youtoo_y.flipped$sample)
 youtoo_y.flipped_name
 ```
 
+
+#Read file: Wild Type.
+```{r eval=FALSE, include=FALSE}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+brain_ls_wt.1 <- list()  #Brain data files are stored in a list: brain_ls_wt
+name_wt.1 <- list()  #Name of the files are stored in a list: name_wt
+
+#Read file
+file_names.1 <-  file_names [1]  #select files
+for (i in (1:length(file_names.1))) {
+  brain_ls_wt.1[[i]] <- file_names.1[i] %>%
+  read_h5()
+  name_wt.1[i] <- sub("_Probabilities.h5", "", file_names.1[i])
+}
+#Tidy
+tidy_brain_1 <- brain_ls_wt.1[[1]]%>%
+  tidy()
+#Reorient
+ro_tidy_brain_1<- reorient(tidy_brain_1)
+
+rgl::plot3d(ro_tidy_brain_1)
+
+#Fit model
+qmodel_sum_tb_wt.1<- data.frame()
+m <- list()
+for (i in (1:length(brain_ls_wt.1))) {
+  m<- qmodel.brain(brain_ls_wt.1[[i]])%>%
+    mutate(sample = name_wt.1[[i]])
+  qmodel_sum_tb_wt.1 <- rbind(qmodel_sum_tb_wt.1, m)
+}
+
+#write.csv(qmodel_sum_tb_wt.1, file = "visualization_results/qmodel_sum_tb_wt.4.csv", row.names=F)
+```
 
 
 
@@ -255,6 +325,18 @@ gf_labs(title = "", caption = "")
 ```
 
 
+# Plot all
+```{r}
+plotlist_youtoo <- list()
+for (i in (1:length(ls_youtoo))){
+  plotlist_youtoo[[i]] <- plot2d(ro_brain_ls_youtoo[[i]], title=paste("Sample", ls_youtoo[i]))
+   # plot(plotlist[[i]])
+   # dev.off
+}
+```
 
 
+```{r}
+tidy_brain_1 
+```
 
