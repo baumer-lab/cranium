@@ -122,6 +122,9 @@ for (i in (1:length(file_names.1))) {
   read_h5()
   name_wt.1[i] <- sub("_Probabilities.h5", "", file_names.1[i])
 }
+file_names[1]%>%
+  read_h5()%>%
+  qmodel()
 
 #Fit model
 qmodel_sum_tb_wt.1<- data.frame()

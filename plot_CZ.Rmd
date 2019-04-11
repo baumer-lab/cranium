@@ -29,7 +29,7 @@ library(gridExtra)
 library(mosaic)
 ```
 
-# Edited functions
+# Edited functions (OLD)
 ```{r}
 tidy.brain <- function(x, threshold = 0.9, ...) {
   res <- x %>%
@@ -49,7 +49,7 @@ tidy.brain <- function(x, threshold = 0.9, ...) {
 
 ```
 
-# Wild Type 
+# Wild Type (OLD)
 ```{r}
 ls_wt <- c("Wild Type_101", "Wild Type_102")
 ls_wt
@@ -81,7 +81,7 @@ for (i in (1:length(ls_wt))) {
 ```
 
 
-#You too
+#You too (OLD)
 ```{r}
 #ls <- c("W_101", "W_102", "W_104", "You_Too_01", "You_Too_02", "You_Too_03", "You_Too_04","You_Too_06", "You_Too_21")
 
@@ -116,7 +116,7 @@ for (i in (1:length(file_ls_youtoo))) {
 ```
 
 
-# Investigate thresholds
+# Investigate thresholds (OLD)
 ```{r eval=FALSE, include=FALSE}
 #Wild type threshold = 0
 brain_ls_wt <- list()
@@ -158,7 +158,7 @@ lapply(reorient)
 
 
 
-# Test one plot
+# Test one plot (OLD)
 ```{r}
 plotlist <- list()
 for (i in (4:4)){
@@ -170,7 +170,7 @@ for (i in (4:4)){
 
 ```
 
-# All plots
+# All plots  
 ```{r}
 plotlist_wt <- list()
 for (i in (1:length(ls_wt))){
