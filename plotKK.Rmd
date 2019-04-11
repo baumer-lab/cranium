@@ -20,37 +20,41 @@ library(broom)
 library(tidyverse)
 library(rgl)
 
-devtools::install_github("beanumber/cranium")
+#devtools::install_github("beanumber/cranium")
 
-file <- "AT_wildtype_101_Probabilities.h5"
+#file <- "AT_wildtype_101_Probabilities.h5""
 
-
-plot3d_model <- function(xyz, ...) {
-  mod_list <- get_jawbone(xyz)
-  # quadratic plane
-  plot3d(mod_list[[1]], alpha = 0.5, col = "dodgerblue",
-         xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
-         add = TRUE)
-
-  # flat plane
-  plot3d(mod_list[[2]], alpha = 0.5, col = "green",
-         xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
-         add = TRUE)
-
-  # their intersection
-  t <- seq(0, max(xyz$x))
-  plot3d(mod_list[[3]](t), alpha = 0.5, col = "red", size = 5,
-         xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
-         add = TRUE)
-  return(mod_list)
+download_data <- function() {
+  youtoo_samples <- c("01", "02", "03", "04", "05", "06", "112", "19", "21", "24")
+  wildtype_samples <- c("101", "102", "103", "104", "105", "106", "107", "108", "109", "110")
+  
+  youtoo <- list()
+  wildtype <- list()
+  for(i in (1:length(youtoo_samples))){
+    #youtoo
+    url <- paste("https://s3.us-east-2.amazonaws.com/deltascope/AT_",youtoo_samples[[i]],"_Probabilities.h5", sep="")
+    filePath = paste("./dataAPI/AT_", youtoo_samples[[i]], "_Probabilites.h5", sep="")
+    download.file(url ,destfile = filePath)
+    currFile <- read_h5(filePath)
+    youtoo[[i]] <- currFile
+    
+    #wildtype
+    url <- paste("https://s3.us-east-2.amazonaws.com/deltascope/AT_wildtype_",wildtype_samples[[i]],"_Probabilities.h5", sep="")
+    filePath = paste("./dataAPI/AT_wildtype", wildtype_samples[[i]], "_Probabilites.h5", sep="")
+    download.file(url ,destfile = filePath)
+    currFile <- read_h5(filePath)
+    wildtype[[i]] <- currFile
+  }
+  
+  return(youtoo_samples)
 }
 
 
-tidy_brain <- file %>%
-  read_h5() %>%
-  tidy()
+download_data()
 
-plot3d_model(tidy_brain)
+plot3d(youtoo[[1]])
+
+
 
 ```
 
