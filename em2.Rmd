@@ -106,9 +106,9 @@ brain_ls_wt.1 <- list()  #Brain data files are stored in a list: brain_ls_wt
 name_wt.1 <- list()  #Name of the files are stored in a list: name_wt
 #file_names.1 <-  file_names [1:9]  #select files
 
-file_names.1 <-  file_names [10:19]  #select files
+#file_names.1 <-  file_names [10:19]  #select files
 #file_names.1 <-  file_names [20:30]  #select files
-#file_names.1 <-  file_names [31:43]  #select files
+file_names.1 <-  file_names [31:43]  #select files
 for (i in (1:length(file_names.1))) {
   brain_ls_wt.1[[i]] <- file_names.1[i] %>%
   read_h5()
@@ -135,7 +135,8 @@ file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
 brain_ls_youtoo.1 <- list()  #Brain data files are stored in a list: brain_ls_wt
 name_youtoo.1 <- list()  #Name of the files are stored in a list: name_wt
-file_names.1 <-  file_names [1:35]  #select files
+#file_names.1 <-  file_names [1:9]  #select files
+file_names.1 <-  file_names [10:19]
 
 for (i in (1:length(file_names.1))) {
   brain_ls_youtoo.1[[i]] <- file_names.1[i] %>%
@@ -144,13 +145,13 @@ for (i in (1:length(file_names.1))) {
 }
 
 #Fit model
-qmodel_sum_tb_youtoo.1<- data.frame()
-m <- list()
-for (i in (1:length(brain_ls_youtoo.1))) {
-  m<- qmodel.brain(brain_ls_youtoo.1[[i]])%>%
-    mutate(sample = name_youtoo.1[[i]])
-  qmodel_sum_tb_youtoo.1 <- rbind(qmodel_sum_tb_youtoo.1, m)
-}
+#qmodel_sum_tb_youtoo.1<- data.frame()
+#m <- list()
+#for (i in (1:length(brain_ls_youtoo.1))) {
+#  m<- qmodel.brain(brain_ls_youtoo.1[[i]])%>%
+#    mutate(sample = name_youtoo.1[[i]])
+#  qmodel_sum_tb_youtoo.1 <- rbind(qmodel_sum_tb_youtoo.1, m)
+#}
 
 #write.csv(qmodel_sum_tb_youtoo.1, file = "visualization_results/qmodel_sum_tb_youtoo.1.csv", row.names=F)
 
@@ -160,7 +161,7 @@ for (i in (1:length(brain_ls_youtoo.1))) {
 
 # Breakdown the steps of the function--qmodel
 ```{r eval=FALSE, include=FALSE}
-data=brain_ls_youtoo[[2]]
+data=brain_ls_youtoo.1[[2]]
 tidy_brain <- data %>%
  tidy(type="youtoo")
 class(tidy_brain)
@@ -172,7 +173,8 @@ ro_model <- attr(ro_tidy_brain, "quad_mod") #model applied on reoriented data
 ro_r_2 = round(summary(ro_model)$r.squared,3) 
 
 glance(ro_model)
-quad_coeff = summary(quad_mod)$coefficients[3, 1]
+#quad_coeff = summary(quad_mod)$coefficients[3, 1]
+quad_coeff = summary(ro_model)$coefficients[3, 1]
 
 RMLSE <- fitted%>% 
       mutate(residual = y- .fitted, residual_sq = residual^2) %>% 
@@ -227,8 +229,7 @@ for (i in (1:length(ls_youtoo))){
 ```
 
 
-# Freq and R^2 tradeoff
-
+# Freq and R^2 tradeoff for wild type
 
 ```{r}
 # now already fitted model to wt data
@@ -238,23 +239,43 @@ for (i in (1:length(ls_youtoo))){
 # first three rows correspond to: sample 1, 2, 3 at threshold level 0.87
 
 # wild type
-fitted_value_df_wt2 <- data.frame()
+fitted_value_df_wt4 <- data.frame()
 threshold.list <- list(0.87, 0.90, 0.93, 0.96, 0.99)
 length(threshold.list)
 length(brain_ls_wt.1)
   for (i in (1:length(threshold.list))){
     for (j in (1:length(brain_ls_wt.1))){
       m <- qmodel.brain(brain_ls_wt.1[[j]], threshold.n = threshold.list[[i]])
-      fitted_value_df_wt2 <- rbind(fitted_value_df_wt2, m) #%>% 
+      fitted_value_df_wt4 <- rbind(fitted_value_df_wt4, m) #%>% 
       #mutate(threshold=threshold.list[[i]])
   }
 }
 
-View(fitted_value_df_wt2)
+View(fitted_value_df_wt)
 
 
 
 ```
+
+# Freq and R^2 tradeoff for youtoo
+
+```{r}
+# you too
+fitted_value_df_yt1 <- data.frame()
+threshold.list <- list(0.87, 0.90, 0.93, 0.96, 0.99)
+length(threshold.list)
+length(brain_ls_youtoo.1)
+  for (i in (1:length(threshold.list))){
+    for (j in (1:1)){
+      m <- qmodel.brain(brain_ls_youtoo.1[[j]], threshold.n = threshold.list[[i]])
+      fitted_value_df_yt1 <- rbind(fitted_value_df_yt1, m) #%>% 
+      #mutate(threshold=threshold.list[[i]])
+  }
+}
+
+View(fitted_value_df_yt1)
+```
+
 
 # cleaning threshold dataframes
 
@@ -267,9 +288,16 @@ threshold_wt_19 <- threshold_wt_19 %>%
   mutate(threshold=c(rep(0.87, 19), rep(0.90, 19), rep(0.93, 19),
                      rep(0.96, 19), rep(0.99, 19)))
 
-write.csv(threshold_wt_19, file="visualization_results/threshold_wt_19.csv",
-          row.names=F)
+#write.csv(threshold_wt_19, file="visualization_results/threshold_wt_19.csv",
+          #row.names=F)
+
+threshold_wt_20_to_43 <- rbind(fitted_value_df_wt3, fitted_value_df_wt4)
+threshold_wt_20_to_43 <- threshold_wt_20_to_43 %>% 
+  mutate(Sample=rep(c(20:43), 5)) %>%
+  mutate(threshold=c(rep(0.87, 24), rep(0.90, 24), rep(0.93, 24),
+                     rep(0.96, 24), rep(0.99, 24)))
+#write.csv(threshold_wt_20_to_43, file="visualization_results/threshold_wt_20_to_43.csv",
+          #row.names=F)
+
 ```
-
-
 
