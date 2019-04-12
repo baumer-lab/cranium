@@ -48,7 +48,6 @@ read_h5 <- function(file, name = NULL, ...) {
   stop("Could not read file. Do you have a HDF5 library available?")
 }
 
-
 #' Tidy 3D brain image data
 #' @inheritParams broom::tidy.lm
 #' @param threshold probability below which points will be discarded
@@ -67,7 +66,24 @@ read_h5 <- function(file, name = NULL, ...) {
 #' }
 #' }
 
-tidy.brain <- function(x, threshold = 0.9, ...) {
+tidy.brain <- function(x, type="wildtype", threshold.n=0.9, ...) {
+  if (type=="youtoo"){
+    if(threshold.n != 0.9){
+      threshold = threshold.n
+      message(paste0("Set threshold: ", threshold))
+    }else{
+      threshold = 0.5
+      message("Default You-Too threshold: 0.5")
+    }
+  }else{
+    if(threshold.n != 0.9) {  #if threshold is not default, use the input threshold
+      threshold = threshold.n
+      message(paste0("Set threshold: ", threshold))
+    }else{
+      threshold = 0.9
+      message(("Default threshold: 0.9"))
+    }
+  }
   res <- x %>%
     as.data.frame.table() %>%
     mutate(x = as.integer(Var1) * 0.13,
@@ -76,12 +92,10 @@ tidy.brain <- function(x, threshold = 0.9, ...) {
     select(x, y, z, Freq) %>%
     tibble::as_tibble() %>%
     mutate(gray_val = grDevices::gray(1 - Freq)) %>%
-    #    filter(Freq > 0) %>%
     filter(Freq > threshold)
   class(res) <- append("tbl_brain", class(res))
   return(res)
 }
-
 
 #' Plot a slice of a 3D image
 #' @inheritParams graphics::image
@@ -117,12 +131,12 @@ image.brain <- function(x, z = NULL, ...) {
 #' plot2d(tidy_brain)
 #' }
 
-plot2d <- function(x, title, show_max = FALSE, ...) UseMethod("plot2d")
+plot2d <- function(x, title="Sample", show_max = FALSE, ...) UseMethod("plot2d")
 
 #' @export
 #' @rdname plot2d
 
-plot2d.brain <- function(x, title, show_max = FALSE, ...) {
+plot2d.brain <- function(x, title="Sample", show_max = FALSE, ...) {
   tidy_brain <- tidy(x)
   plot2d(tidy_brain, show_max = FALSE, ...)
 }
@@ -130,7 +144,7 @@ plot2d.brain <- function(x, title, show_max = FALSE, ...) {
 #' @export
 #' @importFrom gridExtra grid.arrange
 #' @rdname plot2d
-plot2d.tbl_brain <- function(x, title, show_max = FALSE, ...) {
+plot2d.tbl_brain <- function(x, title="Sample", show_max = FALSE, ...) {
   gridExtra::grid.arrange(
     plot2d_plane(x, plane = c("x", "z"), show_max, ...),
     plot2d_plane(x, plane = c("x", "y"), show_max, ...),
@@ -365,3 +379,23 @@ change_coordinates <- function(obj, ...) {
   obj$alpha <- alpha[seq(from = 1, to = length(alpha), by = 5)]
 
 }
+
+#Model evaluation
+#Requires: brain class type.
+qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
+  ro_tidy_brain <- data%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient()
+  model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
+  ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
+  mean.fitted <- mean(ro_model$fitted.values)
+  #sigma=sjstats::rse(ro_model). RSE: residual standard error
+  sum_tb<- ro_model %>%
+    broom::glance() %>%
+    mutate(num.signal = nrow(tidy_brain),
+           adj.r.squared.original = round(summary(model)$adj.r.squared, 3),#original r square
+           quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4),
+           RMSE = sjstats::rmse(ro_model) )
+  return(sum_tb)
+}
+
