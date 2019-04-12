@@ -48,7 +48,6 @@ read_h5 <- function(file, name = NULL, ...) {
   stop("Could not read file. Do you have a HDF5 library available?")
 }
 
-
 #' Tidy 3D brain image data
 #' @inheritParams broom::tidy.lm
 #' @param threshold probability below which points will be discarded
@@ -71,18 +70,18 @@ tidy.brain <- function(x, type="wildtype", threshold.n=0.9, ...) {
   if (type=="youtoo"){
     if(threshold.n != 0.9){
       threshold = threshold.n
-      print(paste0("Set threshold: ", threshold))
+      message(paste0("Set threshold: ", threshold))
     }else{
       threshold = 0.5
-      print("Default You-Too threshold: 0.5")
+      message("Default You-Too threshold: 0.5")
     }
   }else{
     if(threshold.n != 0.9) {  #if threshold is not default, use the input threshold
       threshold = threshold.n
-      print(paste0("Set threshold: ", threshold))
+      message(paste0("Set threshold: ", threshold))
     }else{
       threshold = 0.9
-      print(("Default threshold: 0.9"))
+      message(("Default threshold: 0.9"))
     }
   }
   res <- x %>%
@@ -97,7 +96,6 @@ tidy.brain <- function(x, type="wildtype", threshold.n=0.9, ...) {
   class(res) <- append("tbl_brain", class(res))
   return(res)
 }
-
 
 #' Plot a slice of a 3D image
 #' @inheritParams graphics::image
@@ -382,32 +380,22 @@ change_coordinates <- function(obj, ...) {
 
 }
 
-
 #Model evaluation
 #Requires: brain class type.
 qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
-  if (type == "wildtype"){
-    tidy_brain <- data %>%
-      tidy(type="wildtype", threshold = threshold.n )
-    ro_tidy_brain<- reorient(tidy_brain)
-  }
-  if(type== "youtoo"){
-    tidy_brain <- data%>%
-      tidy(type="youtoo", threshold = threshold.n)
-    ro_tidy_brain<- reorient(tidy_brain)
-  }
+  ro_tidy_brain <- data%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient()
   model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
   ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
-  mean.fitted = mean(ro_model$fitted.values)
+  mean.fitted <- mean(ro_model$fitted.values)
   #sigma=sjstats::rse(ro_model). RSE: residual standard error
   sum_tb<- ro_model %>%
     broom::glance() %>%
     mutate(num.signal = nrow(tidy_brain),
            adj.r.squared.original = round(summary(model)$adj.r.squared, 3),#original r square
-           quad.coeff = round(summary(ro_model)$coefficients[3, 1],4),
+           quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4),
            RMSE = sjstats::rmse(ro_model) )
   return(sum_tb)
 }
-
-
 
