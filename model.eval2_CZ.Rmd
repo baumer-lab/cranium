@@ -1,0 +1,37 @@
+---
+title: "model_eval_2CZ"
+author: "CZ"
+date: "4/13/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(hdf5r)
+library(dplyr)
+library(rlang)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+
+#new packages
+library(sjstats)
+```
+
+
+```{r}
+qmodel_sum_tb_wt <- read_csv("visualization_results/qmodel_sum_tb_wt.csv")
+qmodel_sum_tb_youtoo <- read_csv("visualization_results/qmodel_sum_tb_youtoo.1.csv")
+
+threshold_wt_19 <- read_csv("visualization_results/threshold_wt_19.csv")
+threshold_wt_20_to_43 <- read_csv("visualization_results/threshold_wt_20_to_43.csv")
+
+```
+
+
+```{r}
+threshold_wt <- rbind(threshold_wt_19,threshold_wt_20_to_43)
+write.csv(threshold_wt, file = "")
+```
+
