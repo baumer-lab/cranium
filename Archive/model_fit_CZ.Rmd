@@ -242,5 +242,45 @@ for (i in (1:length(ls_youtoo))){
 ```
 
 
+# Need more threshold
+# Freq and R^2 tradeoff for wild type
+
+```{r}
+# wild type
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+fitted_value_df_wt <- data.frame()
+threshold.list <- list(0.69, 0.72, 0.75, 0.78, 0.81, 0.84)
+
+  for (i in (1:length(threshold.list))){
+    for (j in (1:length(file_names))){
+      name <- sub("_Probabilities.h5", "", file_names[i])
+      name <- sub("Sample/WildType/", "WildType_", name)
+
+      m <- file_names[j]%>%
+        read_h5()%>%
+        qmodel.brain(threshold.n = threshold.list[[i]])%>%
+        mutate(Sample = name)
+      fitted_value_df_wt <- rbind(fitted_value_df_wt, m) #%>% 
+      #mutate(threshold=threshold.list[[i]])
+  }
+  }
+
+fitted_value_df_wt_final <- fitted_value_df_wt %>% 
+  mutate(Sample=rep(c(1:43), 6)) %>% 
+  mutate(threshold=c(rep(0.69, 43), rep(0.72, 43), rep(0.75, 43),rep(0.78, 43),
+                     rep(0.81, 43), rep(0.84, 43)))
+
+
+threshold_wt_all<- read_csv("visualization_results/threshold_wt_all.csv")%>%
+  select(-X1)
+
+threshold_wt_all2 <- rbind(threshold_wt_all, fitted_value_df_wt_final)
+
+
+
+#write.csv(threshold_wt_all2, file = "visualization_results/threshold_wt_all2.csv",row.names=F)
+```
 
 
