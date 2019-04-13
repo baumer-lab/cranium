@@ -14,9 +14,12 @@ threshold.list <- list(0.69, 0.72, 0.75, 0.78, 0.81, 0.84, 0.87, 0.90, 0.93, 0.9
 
   for (i in (1:length(threshold.list))){
     for (j in (1:length(file_names))){
+      name <- sub("_Probabilities.h5", "", file_names[i])
+      name <- sub("Sample/WildType/", "WildType_", name)
       m <- file_names[j]%>%
         read_h5()%>%
-        qmodel.brain(threshold.n = threshold.list[[i]])
+        qmodel.brain(threshold.n = threshold.list[[i]])%>%
+        mutate(Sample = name)
       fitted_value_df_wt <- rbind(fitted_value_df_wt, m) #%>% 
       #mutate(threshold=threshold.list[[i]])
   }
