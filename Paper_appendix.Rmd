@@ -1,0 +1,25 @@
+---
+title: "Paper_appendix"
+author: "CZ"
+date: "4/13/2019"
+output: html_document
+---
+
+```{r}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+fitted_value_df_wt <- data.frame()
+threshold.list <- list(0.69, 0.72, 0.75, 0.78, 0.81, 0.84, 0.87, 0.90, 0.93, 0.96, 0.99)
+
+  for (i in (1:length(threshold.list))){
+    for (j in (1:length(file_names))){
+      m <- file_names[j]%>%
+        read_h5()%>%
+        qmodel.brain(threshold.n = threshold.list[[i]])
+      fitted_value_df_wt <- rbind(fitted_value_df_wt, m) #%>% 
+      #mutate(threshold=threshold.list[[i]])
+  }
+}
+```
+

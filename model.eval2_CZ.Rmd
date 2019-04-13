@@ -3,6 +3,8 @@ title: "model_eval_2CZ"
 author: "CZ"
 date: "4/13/2019"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -17,21 +19,119 @@ library(mosaic)
 
 #new packages
 library(sjstats)
+library(grDevices)
 ```
 
 
 ```{r}
-qmodel_sum_tb_wt <- read_csv("visualization_results/qmodel_sum_tb_wt.csv")
-qmodel_sum_tb_youtoo <- read_csv("visualization_results/qmodel_sum_tb_youtoo.1.csv")
+#qmodel_sum_tb_wt <- read_csv("visualization_results/qmodel_sum_tb_wt.csv")
+#qmodel_sum_tb_youtoo <- read_csv("visualization_results/qmodel_sum_tb_youtoo.1.csv")
 
-threshold_wt_19 <- read_csv("visualization_results/threshold_wt_19.csv")
-threshold_wt_20_to_43 <- read_csv("visualization_results/threshold_wt_20_to_43.csv")
+threshold_wt_all<- read_csv("visualization_results/threshold_wt_all.csv")
+mplot(threshold_wt_all)
+```
+
+#Mode fit comparison: before PCA and after PCA (adj.r.square)
+```{r}
+threshold_wt_all_0.9 <- threshold_wt_all%>%
+  filter(threshold == 0.90)
+
+#t test
+tttest_pca <- t.test(threshold_wt_all_0.9$adj.r.squared.original, threshold_wt_all_0.9$adj.r.squared, paired = TRUE, alternative = "two.sided")
+tttest_pca
+
+# printing the p-value
+tttest_pca$p.value
+
+
+#Re orientation improved model fit
+ggplot(data = threshold_wt_all, aes(x = adj.r.squared.original, y = adj.r.squared)) + geom_point()  + labs(title = "Adjusted R square before and after reorientation")+ 
+  scale_y_continuous(limits=c(0.2,1))
+
+favstats(threshold_wt_all_0.9$adj.r.squared)
+favstats(threshold_wt_all_0.9$adj.r.squared.original)
+```
+
+# Finding optimal threshold
+```{r}
+threshold <- c(0.87, 0.9, 0.93, 0.96, 0.99)
+
+#one sample
+threshold_wt_all_1<-threshold_wt_all%>%
+  filter(Sample==1)%>%
+  filter(adj.r.squared == max(adj.r.squared))
+
+#for loop
+optimal_threshold <- data.frame()
+m <- list()
+for (i in (1: max(threshold_wt_all$Sample))){
+  m <- threshold_wt_all%>%
+  filter(Sample==i)%>%
+  filter(adj.r.squared == max(adj.r.squared))%>%
+    mutate()
+  
+  optimal_threshold <- rbind(optimal_threshold,m)
+}
+
 
 ```
 
 
+# Plot: You Too.
+threshold = 0.5
+```{r eval=FALSE, include=FALSE}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+  
+for (i in (1:length(file_names))){
+  name <- sub("_Probabilities.h5", "", file_names[i])
+  name <- sub("Sample/YouToo/", "Youtoo_", name)
+
+  png(filename = paste("visualization_results/youtoo_plots_0.5/", name, ".png", sep= ""))
+    mytitle = paste("plot_",name)
+    file_names[i] %>%
+    read_h5()%>%
+    tidy(type="youtoo", threshold.n = 0.5)%>%
+    reorient()%>%
+    plot2d(title=name)
+  dev.off()
+}
+```
+
+threshold = 0.6
+```{r eval=FALSE, include=FALSE}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+  
+for (i in (1:length(file_names))){
+  old <- Sys.time()
+  name <- sub("_Probabilities.h5", "", file_names[i])
+  name <- sub("Sample/YouToo/", "Youtoo_", name)
+
+  png(filename = paste("visualization_results/youtoo_plots_0.6/", name, ".png", sep= ""))
+    mytitle = paste("plot_",name)
+    file_names[i] %>%
+    read_h5()%>%
+    tidy(type="youtoo", threshold.n = 0.6)%>%
+    reorient()%>%
+    plot2d(title=name)
+  dev.off()
+  new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
+}
+```
+
+
 ```{r}
-threshold_wt <- rbind(threshold_wt_19,threshold_wt_20_to_43)
-write.csv(threshold_wt, file = "")
+brain <- file_names[1]%>%
+read_h5()
+class(brain)
+
+tidy_brain <- brain%>%
+  tidy()
+
+class(tidy_brain)
 ```
 
