@@ -136,7 +136,9 @@ file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 brain_ls_youtoo.1 <- list()  #Brain data files are stored in a list: brain_ls_wt
 name_youtoo.1 <- list()  #Name of the files are stored in a list: name_wt
 #file_names.1 <-  file_names [1:9]  #select files
-file_names.1 <-  file_names [10:19]
+#file_names.1 <-  file_names [10:19]
+#file_names.1 <-  file_names [20:30]
+file_names.1 <-  file_names [31:36]
 
 for (i in (1:length(file_names.1))) {
   brain_ls_youtoo.1[[i]] <- file_names.1[i] %>%
@@ -261,23 +263,23 @@ View(fitted_value_df_wt)
 
 ```{r}
 # you too
-fitted_value_df_yt1 <- data.frame()
-threshold.list <- list(0.87, 0.90, 0.93, 0.96, 0.99)
+fitted_value_df_yt4 <- data.frame()
+threshold.list <- list(0.4, 0.5, 0.6)
 length(threshold.list)
 length(brain_ls_youtoo.1)
   for (i in (1:length(threshold.list))){
-    for (j in (1:1)){
+    for (j in (1:length(brain_ls_youtoo.1))){
       m <- qmodel.brain(brain_ls_youtoo.1[[j]], threshold.n = threshold.list[[i]])
-      fitted_value_df_yt1 <- rbind(fitted_value_df_yt1, m) #%>% 
+      fitted_value_df_yt4 <- rbind(fitted_value_df_yt4, m) #%>% 
       #mutate(threshold=threshold.list[[i]])
   }
 }
 
-View(fitted_value_df_yt1)
+View(fitted_value_df_yt4)
 ```
 
 
-# cleaning threshold dataframes
+# cleaning threshold dataframes wt
 
 ```{r}
 # first 19 samples of wild type data
@@ -298,6 +300,20 @@ threshold_wt_20_to_43 <- threshold_wt_20_to_43 %>%
                      rep(0.96, 24), rep(0.99, 24)))
 #write.csv(threshold_wt_20_to_43, file="visualization_results/threshold_wt_20_to_43.csv",
           #row.names=F)
+
+#threshold_wt_19 <- read_csv("visualization_results/threshold_wt_19.csv")
+threshold_wt_all <- rbind(threshold_wt_19, threshold_wt_20_to_43)
+
+
+```
+
+
+# cleaning threshold dataframes youtoo
+
+```{r}
+fitted_value_df_yt1
+fitted_value_df_yt2
+fitted_value_df_yt3
 
 ```
 
