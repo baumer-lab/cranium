@@ -138,7 +138,7 @@ name_youtoo.1 <- list()  #Name of the files are stored in a list: name_wt
 #file_names.1 <-  file_names [1:9]  #select files
 #file_names.1 <-  file_names [10:19]
 #file_names.1 <-  file_names [20:30]
-file_names.1 <-  file_names [31:36]
+file_names.1 <-  file_names [31:35]
 
 for (i in (1:length(file_names.1))) {
   brain_ls_youtoo.1[[i]] <- file_names.1[i] %>%
@@ -311,9 +311,10 @@ threshold_wt_all <- rbind(threshold_wt_19, threshold_wt_20_to_43)
 # cleaning threshold dataframes youtoo
 
 ```{r}
-fitted_value_df_yt1
-fitted_value_df_yt2
-fitted_value_df_yt3
+threshold_yt_1_to_35 <- rbind(fitted_value_df_yt1, fitted_value_df_yt2, fitted_value_df_yt3, fitted_value_df_yt4)
+
+write.csv(threshold_yt_1_to_30, file="visualization_results/threshold_yt_1_to_30.csv",
+          row.names=F)
 
 ```
 
