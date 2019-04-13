@@ -35,3 +35,21 @@ tidy_brain <- file %>%
   tidy()
 plot3d(tidy_brain)
 ```
+Evaluate quadratic model fit
+--------------------------
+A quadratic model y = x^2+x is used to fit the data. You can evaluate the quadratic model fit on your sample. The default threshold for signal frequency is 0.9.
+``` r
+file%>%
+  read_h5()%>%
+  qmodel.brain()
+``` 
+If you are working with You-Too sample, you can change the data type and the default threshold for You-Too sample is 0.5. You can also adjust the threshold.
+``` r
+file%>%
+  read_h5()%>%
+  qmodel.brain(type="youtoo", threshold = 0.8)
+``` 
+
+
+
+
