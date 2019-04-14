@@ -10,6 +10,7 @@ editor_options:
 ```{r setup, include=FALSE}
 library(hdf5r)
 library(dplyr)
+library(readr)
 library(rlang)
 library(cranium)
 library(broom)
@@ -28,21 +29,27 @@ library(grDevices)
 #qmodel_sum_tb_youtoo <- read_csv("visualization_results/qmodel_sum_tb_youtoo.1.csv")
 
 threshold_wt_all<- read_csv("visualization_results/threshold_wt_all_final.csv")
-mplot(threshold_wt_all)
+
+threshold_yt_all_final <- read_csv("visualization_results/threshold_yt_all_final.csv")%>%
+  select(-X1)
+
+
+mplot(threshold_yt_all_final)
 
 summary(threshold_wt_all$num.signal)
 
 test<-threshold_wt_all%>%
   group_by(threshold)%>% 
   summarize(mean_r2 = mean(adj.r.squared), sd_r2 = sd(adj.r.squared))
-threshold_wt_all$threshold<- as.character(threshold_wt_all$threshold)
+threshold_yt_all_final$threshold<- as.character(threshold_yt_all_final$threshold)
 
 
-ggplot(data = threshold_wt_all, aes(x = threshold, y = adj.r.squared)) + geom_boxplot()  + labs(title = "Optimal threshold for wildtype")
+ggplot(data = threshold_yt_all_final, aes(x = threshold, y = adj.r.squared)) + geom_boxplot()  + labs(title = "Optimal threshold for You Too Mutatnt type")
 ```
 
 #Mode fit comparison: before PCA and after PCA (adj.r.square)
 ```{r}
+
 threshold_wt_all_0.9 <- threshold_wt_all%>%
   filter(threshold == 0.90)
 
@@ -57,6 +64,26 @@ tttest_pca$p.value
 #Re orientation improved model fit
 ggplot(data = threshold_wt_all, aes(x = adj.r.squared.original, y = adj.r.squared)) + geom_point()  + labs(title = "Adjusted R square before and after reorientation")+ 
   scale_y_continuous(limits=c(0.2,1))
+
+favstats(threshold_wt_all_0.9$adj.r.squared)
+favstats(threshold_wt_all_0.9$adj.r.squared.original)
+```
+
+#Mode fit comparison: before PCA and after PCA (adj.r.square) -- Youtoo
+```{r}
+threshold_yt_all_0.8 <- threshold_yt_all_final%>%
+  filter(threshold == 0.80)
+
+#t test
+tttest_pca <- t.test(threshold_yt_all_0.8$adj.r.squared.original, threshold_yt_all_0.8$adj.r.squared, paired = TRUE, alternative = "two.sided")
+tttest_pca
+
+# printing the p-value
+tttest_pca$p.value
+
+
+#Re orientation improved model fit
+ggplot(data = threshold_yt_all_final, aes(x = adj.r.squared.original, y = adj.r.squared)) + geom_point()  + labs(title = "Adjusted R square before and after reorientation for You Too Mutant")
 
 favstats(threshold_wt_all_0.9$adj.r.squared)
 favstats(threshold_wt_all_0.9$adj.r.squared.original)
@@ -85,6 +112,10 @@ for (i in (1: max(threshold_wt_all$Sample))){
 table(optimal_threshold$optimal_threshold)
 
 View(optimal_threshold)
+
+
+
+threshold_yt_all_final$threshold
 ```
 
 
