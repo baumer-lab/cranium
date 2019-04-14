@@ -383,6 +383,8 @@ change_coordinates <- function(obj, ...) {
 #Model evaluation
 #Requires: brain class type.
 qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
+  tidy_brain<-data%>%
+    tidy(type, threshold = threshold.n)
   ro_tidy_brain <- data%>%
     tidy(type, threshold = threshold.n)%>%
     reorient()

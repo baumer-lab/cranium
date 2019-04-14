@@ -67,6 +67,8 @@ ggplot(data = threshold_wt_all, aes(x = adj.r.squared.original, y = adj.r.square
 
 favstats(threshold_wt_all_0.9$adj.r.squared)
 favstats(threshold_wt_all_0.9$adj.r.squared.original)
+
+table(threshold_yt_all_final$threshold)
 ```
 
 #Mode fit comparison: before PCA and after PCA (adj.r.square) -- Youtoo
@@ -85,13 +87,12 @@ tttest_pca$p.value
 #Re orientation improved model fit
 ggplot(data = threshold_yt_all_final, aes(x = adj.r.squared.original, y = adj.r.squared)) + geom_point()  + labs(title = "Adjusted R square before and after reorientation for You Too Mutant")
 
-favstats(threshold_wt_all_0.9$adj.r.squared)
-favstats(threshold_wt_all_0.9$adj.r.squared.original)
+favstats(threshold_yt_all_0.8$adj.r.squared)
+favstats(threshold_yt_all_0.8$adj.r.squared.original)
 ```
 
 # Finding optimal threshold
 ```{r}
-threshold <- c(0.69, 0.72, 0.75, 0.78, 0.81, 0.84, 0.87, 0.9, 0.93, 0.96, 0.99)
 
 #one sample
 threshold_wt_all_1<-threshold_wt_all%>%
@@ -101,9 +102,9 @@ threshold_wt_all_1<-threshold_wt_all%>%
 #for loop
 optimal_threshold <- data.frame()
 m <- list()
-for (i in (1: max(threshold_wt_all$Sample))){
-  m <- threshold_wt_all%>%
-  filter(Sample==i)%>%
+for (i in (1: max(threshold_yt_all_final$Sample_id))){
+  m <-  threshold_yt_all_final%>%
+  filter(Sample_id==i)%>%
   filter(adj.r.squared == max(adj.r.squared))%>%
     mutate(optimal_threshold = threshold)%>%
     select(-threshold)
@@ -113,9 +114,17 @@ table(optimal_threshold$optimal_threshold)
 
 View(optimal_threshold)
 
+#number of signals for 0.8 threshold
+mean(threshold_yt_all_0.8$num.signal)
 
 
-threshold_yt_all_final$threshold
+#One Sample 
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+summary<-file_names[5]%>%
+  read_h5()%>%
+  qmodel.brain(threshold.n = 0.8)
+
 ```
 
 
@@ -165,16 +174,5 @@ for (i in (1:length(file_names))){
 }
 ```
 
-
-```{r}
-brain <- file_names[1]%>%
-read_h5()
-class(brain)
-
-tidy_brain <- brain%>%
-  tidy()
-
-class(tidy_brain)
-```
 
 
