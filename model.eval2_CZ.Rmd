@@ -25,6 +25,28 @@ library(grDevices)
 
 
 ```{r}
+#0.87 - 0.99 (5 thresholds)
+wt1 <- read_csv("visualization_results/Archive/threshold_wt_all.csv")%>%
+  select(-X1)
+table(wt1$Sample)
+table(wt1$threshold)
+
+#0.69, 0.72, 0.75, 0.78, 0.81, 0.84
+wt2 <- read_csv("visualization_results/Archive/threshold_wt_0.69_to_0.84.csv")
+wt2_edit <- wt2 %>% 
+  mutate(Sample=rep(c(1:43), 6)) %>% 
+  mutate(threshold=c(rep(0.69, 43), rep(0.72, 43), rep(0.75, 43),
+                     rep(0.78, 43), rep(0.81, 43), rep(0.84, 43)))
+
+table(wt2_edit$Sample)
+table(wt2_edit$threshold)
+
+threshold_wt_all_final <- rbind(wt1, wt2_edit)
+#write.csv(threshold_wt_all_final, file="visualization_results/threshold_wt_all_final.csv")
+```
+
+
+```{r}
 #qmodel_sum_tb_wt <- read_csv("visualization_results/qmodel_sum_tb_wt.csv")
 #qmodel_sum_tb_youtoo <- read_csv("visualization_results/qmodel_sum_tb_youtoo.1.csv")
 
