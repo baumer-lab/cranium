@@ -27,8 +27,18 @@ library(grDevices)
 #qmodel_sum_tb_wt <- read_csv("visualization_results/qmodel_sum_tb_wt.csv")
 #qmodel_sum_tb_youtoo <- read_csv("visualization_results/qmodel_sum_tb_youtoo.1.csv")
 
-threshold_wt_all<- read_csv("visualization_results/threshold_wt_all.csv")
+threshold_wt_all<- read_csv("visualization_results/threshold_wt_all_final.csv")
 mplot(threshold_wt_all)
+
+summary(threshold_wt_all$num.signal)
+
+test<-threshold_wt_all%>%
+  group_by(threshold)%>% 
+  summarize(mean_r2 = mean(adj.r.squared), sd_r2 = sd(adj.r.squared))
+threshold_wt_all$threshold<- as.character(threshold_wt_all$threshold)
+
+
+ggplot(data = threshold_wt_all, aes(x = threshold, y = adj.r.squared)) + geom_boxplot()  + labs(title = "Optimal threshold for wildtype")
 ```
 
 #Mode fit comparison: before PCA and after PCA (adj.r.square)
@@ -54,7 +64,7 @@ favstats(threshold_wt_all_0.9$adj.r.squared.original)
 
 # Finding optimal threshold
 ```{r}
-threshold <- c(0.87, 0.9, 0.93, 0.96, 0.99)
+threshold <- c(0.69, 0.72, 0.75, 0.78, 0.81, 0.84, 0.87, 0.9, 0.93, 0.96, 0.99)
 
 #one sample
 threshold_wt_all_1<-threshold_wt_all%>%
@@ -68,12 +78,13 @@ for (i in (1: max(threshold_wt_all$Sample))){
   m <- threshold_wt_all%>%
   filter(Sample==i)%>%
   filter(adj.r.squared == max(adj.r.squared))%>%
-    mutate()
-  
+    mutate(optimal_threshold = threshold)%>%
+    select(-threshold)
   optimal_threshold <- rbind(optimal_threshold,m)
 }
+table(optimal_threshold$optimal_threshold)
 
-
+View(optimal_threshold)
 ```
 
 
@@ -134,4 +145,5 @@ tidy_brain <- brain%>%
 
 class(tidy_brain)
 ```
+
 

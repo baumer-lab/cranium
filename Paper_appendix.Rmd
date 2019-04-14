@@ -5,6 +5,7 @@ date: "4/13/2019"
 output: html_document
 ---
 
+# Test for optimal threshold
 ```{r}
 path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
@@ -15,14 +16,31 @@ threshold.list <- list(0.69, 0.72, 0.75, 0.78, 0.81, 0.84, 0.87, 0.90, 0.93, 0.9
   for (i in (1:length(threshold.list))){
     for (j in (1:length(file_names))){
       name <- sub("_Probabilities.h5", "", file_names[i])
-      name <- sub("Sample/WildType/", "WildType_", name)
+      name <- sub("Sample/WildType/", "WildType_", name) #Change name for youtoo
       m <- file_names[j]%>%
         read_h5()%>%
         qmodel.brain(threshold.n = threshold.list[[i]])%>%
-        mutate(Sample = name)
-      fitted_value_df_wt <- rbind(fitted_value_df_wt, m) #%>% 
-      #mutate(threshold=threshold.list[[i]])
+        mutate(Sample = name)%>% 
+        mutate(threshold=threshold.list[[i]])
+      
+      fitted_value_df_wt <- rbind(fitted_value_df_wt, m) 
   }
+  }
+
+threshold <- c(0.69, 0.72, 0.75, 0.78, 0.81, 0.84, 0.87, 0.9, 0.93, 0.96, 0.99)
+
+#data frame for optimal threshold
+optimal_threshold <- data.frame()
+m <- list()
+for (i in (1: max(threshold_wt_all$Sample))){
+  m <- threshold_wt_all%>%
+  filter(Sample==i)%>%
+  filter(adj.r.squared == max(adj.r.squared))%>%
+    mutate(optimal_threshold = threshold)%>%
+    select(-threshold)
+  optimal_threshold <- rbind(optimal_threshold,m)
 }
+table(optimal_threshold$optimal_threshold)
+
 ```
 
