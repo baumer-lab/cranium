@@ -7,33 +7,39 @@ output: html_document
 
 # Test for optimal threshold
 ```{r}
-path = "Sample/WildType"
+path = "Sample/YouToo"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
-threshold_wt <- data.frame()
-threshold.list <- list(0.69, 0.72, 0.75, 0.78, 0.81, 0.84, 0.87, 0.90, 0.93, 0.96, 0.99)
+threshold_df <- data.frame()
+threshold.list <- list(0.83, 0.88, 0.9, 0.92)
 
 #apply qmodel to all sample, testing for each threshold
-for (i in (1:length(threshold.list))){
+for (i in (1:length(threshold.list))){ 
+   #Change name for youtoo
     for (j in (1:length(file_names))){
-      name <- sub("_Probabilities.h5", "", file_names[i])
-      name <- sub("Sample/WildType/", "WildType_", name) #Change name for youtoo
+       name <- sub("_Probabilities.h5", "", file_names[j])
+    name <- sub("Sample/YouToo/", "YouToo_", name) 
       m <- file_names[j]%>%
         read_h5()%>%
         qmodel.brain(threshold.n = threshold.list[[i]])%>%
         mutate(Sample = name)%>% 
         mutate(threshold=threshold.list[[i]])
-      
-      threshold_wt <- rbind(threshold_wt, m) 
+      threshold_df <- rbind(threshold_df, m) 
   }
 }
+
+threshold_df<-threshold_df %>% 
+  mutate(Sample_id=rep(c(1:length(file_names)), 4))
+
+threshold_df <- read_csv("visualization_results/threshold_yt_all_final.csv")
+
 
 #find optimal threshold
 optimal_threshold <- data.frame()
 m <- list()
-for (i in (1: max(threshold_wt$Sample))){
-  m <- threshold_wt%>%
-  filter(Sample==i)%>%
+for (i in (1: max(threshold_df$Sample_id))){
+  m <- threshold_df%>%
+  filter(Sample_id==i)%>%
   filter(adj.r.squared == max(adj.r.squared))%>%
     mutate(optimal_threshold = threshold)%>%
     select(-threshold)
@@ -42,5 +48,9 @@ for (i in (1: max(threshold_wt$Sample))){
 
 #optimal threhsold table
 table(optimal_threshold$optimal_threshold)
+
+threshold_0.92 <- threshold_df%>%
+  filter(threshold==0.92)
+
 ```
 

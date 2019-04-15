@@ -227,7 +227,7 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
     geom_point(alpha = 0.1, size = 0.5) +
     geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red") +
-    geom_smooth(method = "lm", color = "red") +
+ #   geom_smooth(method = "lm", color = "red") +
     annotate("text", x = 0, y = 0, label = "origin", size = 5) +
     annotate("text", x = 0, y = 0,
              label = paste0("min_prob: ", round(min(pull(ungroup(gg_data), "min_freq")), 2))) +

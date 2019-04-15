@@ -105,7 +105,6 @@ tttest_pca
 # printing the p-value
 tttest_pca$p.value
 
-
 #Re orientation improved model fit
 ggplot(data = threshold_yt_all_final, aes(x = adj.r.squared.original, y = adj.r.squared)) + geom_point()  + labs(title = "Adjusted R square before and after reorientation for You Too Mutant")
 
@@ -114,39 +113,38 @@ favstats(threshold_yt_all_0.8$adj.r.squared.original)
 ```
 
 # Finding optimal threshold
+You Too
 ```{r}
 
-#one sample
-threshold_wt_all_1<-threshold_wt_all%>%
-  filter(Sample==1)%>%
-  filter(adj.r.squared == max(adj.r.squared))
+threshold_yt <- read_csv("visualization_results/threshold_yt_all_final.csv")
 
-#for loop
+
+#find optimal threshold
 optimal_threshold <- data.frame()
 m <- list()
-for (i in (1: max(threshold_yt_all_final$Sample_id))){
-  m <-  threshold_yt_all_final%>%
+for (i in (1: max(threshold_yt$Sample_id))){
+  m <- threshold_df%>%
   filter(Sample_id==i)%>%
   filter(adj.r.squared == max(adj.r.squared))%>%
     mutate(optimal_threshold = threshold)%>%
     select(-threshold)
   optimal_threshold <- rbind(optimal_threshold,m)
 }
+
+#optimal threhsold table
 table(optimal_threshold$optimal_threshold)
 
-View(optimal_threshold)
+threshold_0.92 <- threshold_df%>%
+  filter(threshold==0.92)
 
-#number of signals for 0.8 threshold
-mean(threshold_yt_all_0.8$num.signal)
+threshold_yt$threshold <- as.character(threshold_yt$threshold)
+#mplot(threshold_yt)
+ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared)) + geom_boxplot()  + labs(title = "Optimal threshold--Adjusted R sqrae--Mutant (YouToo)")
+
+ggplot(data = threshold_yt, aes(x = threshold, y = RMSE)) + geom_boxplot()  + labs(title = "Optimal threshold--RMSE--Mutant (YouToo)")
 
 
-#One Sample 
-path = "Sample/YouToo"
-file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-summary<-file_names[5]%>%
-  read_h5()%>%
-  qmodel.brain(threshold.n = 0.8)
-
+ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared)) + geom_point()  + facet_wrap(~Sample, ncol = 5) + labs(title = "Sample level optimal threshold--r^2--Mutate")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
 
@@ -197,4 +195,52 @@ for (i in (1:length(file_names))){
 ```
 
 
+threshold = 0.8
+```{r eval=FALSE, include=FALSE}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+  
+for (i in (1:length(file_names))){
+  old <- Sys.time()
+  name <- sub("_Probabilities.h5", "", file_names[i])
+  name <- sub("Sample/YouToo/", "Youtoo_", name)
+
+  png(filename = paste("visualization_results/youtoo_plots_0.8/", name, ".png", sep= ""))
+    mytitle = paste("plot_",name)
+    file_names[i] %>%
+    read_h5()%>%
+    tidy(type="youtoo", threshold.n = 0.8)%>%
+    reorient()%>%
+    plot2d(title=name)
+  dev.off()
+  new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
+}
+```
+
+
+threshold = 0.92
+```{r eval=FALSE, include=FALSE}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+  
+for (i in (1:length(file_names))){
+  old <- Sys.time()
+  name <- sub("_Probabilities.h5", "", file_names[i])
+  name <- sub("Sample/YouToo/", "Youtoo_", name)
+
+  png(filename = paste("visualization_results/youtoo_plots_0.92/", name, ".png", sep= ""))
+    mytitle = paste("plot_",name)
+    file_names[i] %>%
+    read_h5()%>%
+    tidy(type="youtoo", threshold.n = 0.92)%>%
+    reorient()%>%
+    plot2d(title=name)
+  dev.off()
+  new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
+}
+```
 
