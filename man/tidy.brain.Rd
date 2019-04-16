@@ -4,12 +4,10 @@
 \alias{tidy.brain}
 \title{Tidy 3D brain image data}
 \usage{
-\method{tidy}{brain}(x, threshold = 0.9, ...)
+\method{tidy}{brain}(x, type = "wildtype", threshold.n = 0.9, ...)
 }
 \arguments{
 \item{x}{An \code{lm} object created by \code{\link[stats:lm]{stats::lm()}}.}
-
-\item{threshold}{probability below which points will be discarded}
 
 \item{...}{Additional arguments. Not used. Needed to match generic
 signature only. \strong{Cautionary note:} Misspelled arguments will be
@@ -20,6 +18,8 @@ proceed using \code{conf.level = 0.95}. Additionally, if you pass
 \code{newdata = my_tibble} to an \code{\link[=augment]{augment()}} method that does not
 accept a \code{newdata} argument, it will use the default value for
 the \code{data} argument.}
+
+\item{threshold}{probability below which points will be discarded}
 }
 \description{
 Tidy 3D brain image data
