@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 ^scratch
 ^README\.Rmd$
+^.*\.h5$

@@ -1,47 +1,56 @@
-
-#' Download You Too sample data
-#' @param folder where downloaded data will be stored
+#' Download YouToo sample data
+#' @param path where downloaded data will be stored
+#' @param type \code{wildtype} or \code{youtoo}. Default is \code{wildtype}
+#' @param pattern regular expression to match file names
+#' @param ... arguments passed to \code{\link{download.file}}
 #' @return a list of class \code{brain}
 #' @export
 #' @examples
-#' youtoo <- download_youtoo_data('folder')
-#' plot2d(youtoo[[1]], title=name)
-#input: folder - location where one wants to store the downloaded data of You Too
-#output: list of You Too data of class Brain
-download_youtoo_data <- function(folder) {
+#' wildtype_files <- download_brains(pattern = "101")
+#' youtoo_files <- download_brains(type = "youtoo", pattern = "6")
+#' brains <- read_brains(c(wildtype_files, youtoo_files))
+#' plot2d(brains[[1]], title = name)
+
+download_brains <- function(path = ".", type = "wildtype", pattern = NULL, ...) {
   youtoo_samples <- c("01", "02", "03", "04", "05", "06", "112", "19", "21", "24")
+  #youtoo
+  wildtype_samples <- c("101", "102", "103", "104", "105", "106", "107", "108", "109", "110")
 
+  x <- tibble::tibble(
+    src = paste0(
+    "https://s3.us-east-2.amazonaws.com/deltascope/AT_",
+    if (type == "wildtype") {
+      "wildtype_"
+    } else {
+      ""
+    },
+    if (type == "wildtype") {
+      wildtype_samples
+    } else {
+      youtoo_samples
+    },
+    "_Probabilities.h5"),
+    lcl = fs::path(path, basename(src)),
+    exists = fs::file_exists(lcl)
+  ) %>%
+    filter(grepl(pattern, src))
 
+  fs::dir_create(path)
 
-  dir.create(folder)
-  youtoo <- list()
-  for(i in (1:length(youtoo_samples))){
-    #youtoo
-    url <- paste("https://s3.us-east-2.amazonaws.com/deltascope/AT_",youtoo_samples[[i]],"_Probabilities.h5", sep="")
-    filePath = paste("./",folder,"/AT_", youtoo_samples[[i]], "_Probabilites.h5", sep="")
-    filePath
-    download.file(url ,destfile = filePath)
-    currFile <- read_h5(filePath)
-    youtoo[[i]] <- currFile
-  }
-  return(youtoo)
+  message(paste("Downloading", sum(x$exists), "new files. ",
+                sum(!x$exists), "untouched."))
+  x %>%
+    filter(!exists) %>%
+    group_split(src) %>%
+    purrr::walk(~download.file(.$src, destfile = .$lcl))
+
+  return(fs::dir_ls(path, regexp = pattern))
 }
 
-#' @rdname download_youtoo_data
+#' @rdname download_brains
+#' @param file path to HDF5 file
 #' @export
 
-download_wildtype_data <- function(folder) {
-  wildtype_samples <- c("101", "102", "103", "104", "105", "106", "107", "108", "109", "110")
-  dir.create(folder)
-  wildtype <- list()
-  for(i in (1:length(wildtype_samples))){
-    #wildtype
-    url <- paste("https://s3.us-east-2.amazonaws.com/deltascope/AT_wildtype_",wildtype_samples[[i]],"_Probabilities.h5", sep="")
-    filePath = paste("./",folder,"/AT_wildtype", wildtype_samples[[i]], "_Probabilites.h5", sep="")
-    filePath
-    download.file(url ,destfile = filePath)
-    currFile <- read_h5(filePath)
-    wildtype[[i]] <- currFile
-  }
-  return(wildtype)
+read_brains <- function(file) {
+  purrr::map(file, read_h5)
 }
