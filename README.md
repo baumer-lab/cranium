@@ -21,6 +21,20 @@ install.packages("devtools")
 devtools::install_github("beanumber/cranium")
 ```
 
+Download sample data
+--------------------
+
+To download sample data, You Too and WildType, you can run:
+
+```{r}
+youtoo <- download_youtoo_data("folder") #where folder is the location you want to store the You Too data
+wildtype <- download_wildtype_data("folder") #where folder is the location you want to store the Wild Type data
+youtoo[[1]] #first you too data sample
+```
+
+Once the above is ran, the files are saved in a list and in the folder you set, each data sample can be indivudually picked from list by indexing.
+
+
 Plot a 3D image of a brain
 --------------------------
 
