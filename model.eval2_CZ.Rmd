@@ -32,7 +32,11 @@ threshold_yt$Sample_id <- as.character(threshold_yt$Sample_id)
 threshold_yt$threshold <- as.character(threshold_yt$threshold )
 
 #lineplot for each sample 
-ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared)) + geom_line()  + aes(colour = Sample) + theme(legend.position = "right") + labs(title = "Threshold trend sample -- Mutant")
+ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared, group=Sample)) + 
+  geom_line()  + 
+  aes(colour = Sample) + theme(legend.position = "right") + labs(title = "Threshold trend sample -- Mutant")+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
 
 
 #Number of signals left in for each threshold 
