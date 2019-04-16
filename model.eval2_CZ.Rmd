@@ -23,50 +23,27 @@ library(sjstats)
 library(grDevices)
 ```
 
-
+# You Too 
 ```{r}
-#0.87 - 0.99 (5 thresholds)
-wt1 <- read_csv("visualization_results/Archive/threshold_wt_all.csv")%>%
-  select(-X1)
-table(wt1$Sample)
-table(wt1$threshold)
-
-#0.69, 0.72, 0.75, 0.78, 0.81, 0.84
-wt2 <- read_csv("visualization_results/Archive/threshold_wt_0.69_to_0.84.csv")
-wt2_edit <- wt2 %>% 
-  mutate(Sample=rep(c(1:43), 6)) %>% 
-  mutate(threshold=c(rep(0.69, 43), rep(0.72, 43), rep(0.75, 43),
-                     rep(0.78, 43), rep(0.81, 43), rep(0.84, 43)))
-
-table(wt2_edit$Sample)
-table(wt2_edit$threshold)
-
-threshold_wt_all_final <- rbind(wt1, wt2_edit)
-#write.csv(threshold_wt_all_final, file="visualization_results/threshold_wt_all_final.csv")
-```
-
-
-```{r}
-#qmodel_sum_tb_wt <- read_csv("visualization_results/qmodel_sum_tb_wt.csv")
-#qmodel_sum_tb_youtoo <- read_csv("visualization_results/qmodel_sum_tb_youtoo.1.csv")
-
-threshold_wt_all<- read_csv("visualization_results/threshold_wt_all_final.csv")
-
-threshold_yt_all_final <- read_csv("visualization_results/threshold_yt_all_final.csv")%>%
+threshold_yt <- read_csv("visualization_results/threshold_yt_all_final.csv")%>%
   select(-X1)
 
+threshold_yt$Sample_id <- as.character(threshold_yt$Sample_id)
+threshold_yt$threshold <- as.character(threshold_yt$threshold )
 
-mplot(threshold_yt_all_final)
-
-summary(threshold_wt_all$num.signal)
-
-test<-threshold_wt_all%>%
-  group_by(threshold)%>% 
-  summarize(mean_r2 = mean(adj.r.squared), sd_r2 = sd(adj.r.squared))
-threshold_yt_all_final$threshold<- as.character(threshold_yt_all_final$threshold)
+#lineplot for each sample 
+ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared)) + geom_line()  + aes(colour = Sample) + theme(legend.position = "right") + labs(title = "Threshold trend sample -- Mutant")
 
 
-ggplot(data = threshold_yt_all_final, aes(x = threshold, y = adj.r.squared)) + geom_boxplot()  + labs(title = "Optimal threshold for You Too Mutatnt type")
+#Number of signals left in for each threshold 
+num_signal_tb <- threshold_yt%>%
+  group_by(threshold)%>%
+  summarize(min=min(num.signal),mean_num_signal = mean(num.signal), max=max(num.signal), sd=sd(num.signal))
+
+#boxplot for each threshold y:r2
+ggplot(data =threshold_yt, aes(x = threshold, y = adj.r.squared)) +
+  geom_boxplot()  + 
+  labs(title = "Optimal threshold for You Too Mutatnt type")
 ```
 
 #Mode fit comparison: before PCA and after PCA (adj.r.square)
@@ -93,6 +70,8 @@ favstats(threshold_wt_all_0.9$adj.r.squared.original)
 table(threshold_yt_all_final$threshold)
 ```
 
+
+
 #Mode fit comparison: before PCA and after PCA (adj.r.square) -- Youtoo
 ```{r}
 threshold_yt_all_0.8 <- threshold_yt_all_final%>%
@@ -115,15 +94,11 @@ favstats(threshold_yt_all_0.8$adj.r.squared.original)
 # Finding optimal threshold
 You Too
 ```{r}
-
-threshold_yt <- read_csv("visualization_results/threshold_yt_all_final.csv")
-
-
 #find optimal threshold
 optimal_threshold <- data.frame()
 m <- list()
-for (i in (1: max(threshold_yt$Sample_id))){
-  m <- threshold_df%>%
+for (i in (1:35)){
+  m <- threshold_yt%>%
   filter(Sample_id==i)%>%
   filter(adj.r.squared == max(adj.r.squared))%>%
     mutate(optimal_threshold = threshold)%>%
@@ -134,7 +109,7 @@ for (i in (1: max(threshold_yt$Sample_id))){
 #optimal threhsold table
 table(optimal_threshold$optimal_threshold)
 
-threshold_0.92 <- threshold_df%>%
+threshold_0.92 <- threshold_yt%>%
   filter(threshold==0.92)
 
 threshold_yt$threshold <- as.character(threshold_yt$threshold)
@@ -145,6 +120,22 @@ ggplot(data = threshold_yt, aes(x = threshold, y = RMSE)) + geom_boxplot()  + la
 
 
 ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared)) + geom_point()  + facet_wrap(~Sample, ncol = 5) + labs(title = "Sample level optimal threshold--r^2--Mutate")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+```{r} 
+table(threshold_yt$threshold)
+
+yt_goodfit <- threshold_yt %>%
+  filter(threshold == 0.8)%>%
+  filter(adj.r.squared > 0.5 & RMSE< 6)
+
+
+yt_badfit <- threshold_yt %>%
+  filter(threshold == 0.8)%>%
+  filter(adj.r.squared < 0.5 | RMSE> 6)
+
+
 ```
 
 
@@ -243,4 +234,3 @@ for (i in (1:length(file_names))){
     print(new) # print in nice format
 }
 ```
-
