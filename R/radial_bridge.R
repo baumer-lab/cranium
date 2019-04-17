@@ -224,19 +224,26 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
     filter(var %in% plane)
   titles <- data.frame(depth_var = c("x", "y", "z"),
                        title = c("Side View", "Front View", "Top View"))
-  ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
+
+
+  plot <- ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
     geom_point(alpha = 0.1, size = 0.5) +
-    geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red") +
-    geom_smooth(method = "lm", color = "red") +
     annotate("text", x = 0, y = 0, label = "origin", size = 5) +
     annotate("text", x = 0, y = 0,
-             label = paste0("min_prob: ", round(min(pull(ungroup(gg_data), "min_freq")), 2))) +
+             label = paste0("min_prob: ", round(min(pull(ungroup(gg_data), "min_freq")), 2)))+
     scale_color_continuous(guide = FALSE) +
     scale_x_continuous(filter(labels, var == plane[1])$label) +
     scale_y_continuous(filter(labels, var == plane[2])$label) +
     ggtitle(filter(titles, depth_var == depth)$title)
-}
 
+  if (plane == c("x", "y")){
+    plot + geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red")
+  } else {
+    plot + geom_smooth(method = "lm", color = "red")
+  }
+
+
+}
 #' Plot a 3D image of a brain
 #' @inheritParams rgl::plot3d
 #' @export

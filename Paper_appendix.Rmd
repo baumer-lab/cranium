@@ -7,18 +7,18 @@ output: html_document
 
 # Test for optimal threshold
 ```{r}
-path = "Sample/YouToo"
+path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
 threshold_df <- data.frame()
-threshold.list <- list(0.81, 0.82, 0.84, 0.85, 0.86, 0.87, 0.89, 0.91)
+threshold.list <- list(0.6, 0.62,0.64,0.66,0.7,0.8,0.82,0.83,0.85,0.86,0.88,0.89,0.91,0.92)
 
 #apply qmodel to all sample, testing for each threshold
 for (i in (1:length(threshold.list))){ 
    #Change name for youtoo
     for (j in (1:length(file_names))){
        name <- sub("_Probabilities.h5", "", file_names[j])
-    name <- sub("Sample/YouToo/", "YouToo_", name) 
+    name <- sub("Sample/WildType/", "WildType_", name) 
       m <- file_names[j]%>%
         read_h5()%>%
         qmodel.brain(threshold.n = threshold.list[[i]])%>%
@@ -28,9 +28,6 @@ for (i in (1:length(threshold.list))){
       threshold_df <- rbind(threshold_df, m) 
   }
 }
-
-threshold_df<-threshold_df %>% 
-  mutate(Sample_id=rep(c(1:length(file_names)), 4))
 
 #find optimal threshold
 optimal_threshold <- data.frame()
