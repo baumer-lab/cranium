@@ -28,13 +28,6 @@ _Text based on plos sample manuscript, see [http://journals.plos.org/ploscompbio
 
 # Introduction
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eget porta erat. Morbi consectetur est vel gravida pretium. Suspendisse ut dui eu ante cursus gravida non sed sem. Phasellus mauris velit, dapibus finibus elementum vel, pulvinar non tellus. Nunc pellentesque pretium diam, quis maximus dolor faucibus id. Nunc convallis sodales ante, ut ullamcorper est egestas vitae. Nam sit amet enim ultrices, ultrices elit pulvinar, volutpat risus.
-
-A list
-
-- Item 1
-- Item 2
-
-Here are two sample references: @Feynman1963118 [@Dirac1953888].
+The current study serves as an enhancement to Dr. Michael Barresi’s research at Smith College on categorizing zebrafish brains. The goal of his research is to use the commissure, an axonal bridge formed to connect the two hemispheres of the brain, to classify whether a certain zebrafish belongs to wild type or mutant group. 
 
 # References {#references .unnumbered}
