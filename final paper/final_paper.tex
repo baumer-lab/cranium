@@ -208,34 +208,18 @@ Kalynn Kosyka\textsuperscript{\getAff{Smith College}}\\
 \end{flushleft}
 % Please keep the abstract below 300 words
 \section*{Abstract}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eget
-porta erat. Morbi consectetur est vel gravida pretium. Suspendisse ut
-dui eu ante cursus gravida non sed sem. Nullam sapien tellus, commodo id
-velit id, eleifend volutpat quam. Phasellus mauris velit, dapibus
-finibus elementum vel, pulvinar non tellus. Nunc pellentesque pretium
-diam, quis maximus dolor faucibus id. Nunc convallis sodales ante, ut
-ullamcorper est egestas vitae. Nam sit amet enim ultrices, ultrices elit
-pulvinar, volutpat risus.
+Collaborated with the Barresi Lab, we continued \(\Delta\) SCOPE by
+extending to R package Cranium.
 
 % Please keep the Author Summary between 150 and 200 words
 % Use first person. PLOS ONE authors please skip this step.
 % Author Summary not valid for PLOS ONE submissions.
 \section*{Author summary}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eget
-porta erat. Morbi consectetur est vel gravida pretium. Suspendisse ut
-dui eu ante cursus gravida non sed sem. Nullam sapien tellus, commodo id
-velit id, eleifend volutpat quam. Phasellus mauris velit, dapibus
-finibus elementum vel, pulvinar non tellus. Nunc pellentesque pretium
-diam, quis maximus dolor faucibus id. Nunc convallis sodales ante, ut
-ullamcorper est egestas vitae. Nam sit amet enim ultrices, ultrices elit
-pulvinar, volutpat risus.
+This is our first draft.
 
 \linenumbers
 
 % Use "Eq" instead of "Equation" for equation citations.
-\emph{Text based on plos sample manuscript, see
-\url{http://journals.plos.org/ploscompbiol/s/latex}}
-
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
 
@@ -245,7 +229,7 @@ his research is to use the commissure, an axonal bridge formed to
 connect the two hemispheres of the brain, to classify whether a certain
 zebrafish belongs to wild type or mutant group.
 
-! {[}Alt text{]} (/tufte.book.jpg)
+! {[}Figure 1{]} (/tufte.book.jpg)
 
 The difference between wildtype and you-too is shown above. Wild type
 zebrafish has a smooth parabolic-shaped commissure, where as in mutant
@@ -258,13 +242,13 @@ empirical knowledge. As a result, Morgan Schwartz, a former lab member
 wrote a Python program called deltascope to: 1. Align crooked 3D
 biological images so they could compare between samples; 2. Generate
 descriptive graphs with sample statistics; 3. Classify samples into
-either wild type or mutant group based on the statistics. Our goal is to
-``transfer'' the Python program into R while maintaining and improving
-as many features as possible. We build new packages and optimize
-parameters so that evaluating sample alignments is no longer vulnerable
-to subjective biases. Additionally, alignments will be able to run
-automatically without labor-intensive manual correction that would
-introduce more researcher biases.
+either wild type or mutant group based on the statistics{[}1{]} {[}2{]}.
+Our goal is to ``transfer'' the Python program into R while maintaining
+and improving as many features as possible. We build new packages and
+optimize parameters so that evaluating sample alignments is no longer
+vulnerable to subjective biases. Additionally, alignments will be able
+to run automatically without labor-intensive manual correction that
+would introduce more researcher biases.
 
 \hypertarget{data}{%
 \section{Data}\label{data}}
@@ -366,21 +350,21 @@ anterior/posterior, and z as the dorsal/ventral.
 We built the Qmodel function to fit a quadratic model to the data in
 order to capture the shape of the commissure as well as evaluating model
 fit. The quadratic model fits on the xy plane. Our goal is to have the
-best model fit. Qmodel outputs model statistics including: r square,
-adjusted r square, sigmal (RSE), statistic, p.value, df, logLik, AIC,
-BIC, deviance, df.residual, num.signal, quad.coeff, RMSE. \#\#\# R
-square: Also called the coefficient of determination or the coefficient
-of multiple determination for multiple regression. R square ranges from
-0 to 1. It is calculated from the variance explained by the model
-divided by total variance. Higher r square values represent smaller
-differences between the observed data and the fitted values, indicating
-a better fit of the model. Note that R square is a relative scale of
-model fit.
+best model fit. Qmodel outputs model statistics including: \(r^2\) ,
+adjusted \(r^2\) , sigmal (RSE), statistic, p.value, df, logLik, AIC,
+BIC, deviance, df.residual, num.signal, quad.coeff, RMSE. \#\#\# \(r^2\)
+: Also called the coefficient of determination or the coefficient of
+multiple determination for multiple regression. \(r^2\) ranges from 0 to
+1. It is calculated from the variance explained by the model divided by
+total variance. Higher \(r^2\) values represent smaller differences
+between the observed data and the fitted values, indicating a better fit
+of the model. Note that \(r^2\) is a relative scale of model fit.
 
-\hypertarget{adjusted-r-square}{%
-\subsubsection{Adjusted r square:}\label{adjusted-r-square}}
+\hypertarget{adjusted-r2}{%
+\subsubsection{\texorpdfstring{Adjusted \(r^2\)
+:}{Adjusted r\^{}2 :}}\label{adjusted-r2}}
 
-Based on r square, adjusted r square--adjusts for the number of terms in
+Based on \(r^2\) , adjusted \(r^2\) --adjusts for the number of terms in
 the model, the degrees of freedom.
 
 \hypertarget{rmse-root-mean-squared-error}{%
@@ -478,23 +462,105 @@ threshold = \{0.6, 0.62, 0.64, 0.66, 0.69, 0.7, 0.72, 0.75, 0.78, 0.8,
 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.90, 0.91, 0.92, 0.93,
 0.96, 0.99\}. Next, we fit the qmodel to each sample and for each
 threshold value. We are able to find the threshold for each sample that
-gives the highest adjusted r square. 4 (16.3\%) sample achieved their
-highest adjusted r square when setting threshold 0.87; 11 (25.6\%)
-samples achieved their highest adjusted r square when setting threshold
-0.9; 6 (14.0\%) samples achieved their highest adjusted r square when
+gives the highest adjusted \(r^2\) . 4 (16.3\%) sample achieved their
+highest adjusted \(r^2\) when setting threshold 0.87; 11 (25.6\%)
+samples achieved their highest adjusted \(r^2\) when setting threshold
+0.9; 6 (14.0\%) samples achieved their highest adjusted \(r^2\) when
 setting threshold 0.92; 9 (20.9\%) samples achieved their highest
-adjusted r square when setting threshold 0.93. Boxplots in Figure XXX
-show the adjusted r square for each threshold value. We had good model
-fit for all thresholds, and the mean adjusted r square is 0.9. The
-adjusted r square is slightly higher for threshold 0.87 and 0.9. Thus,
-we conclude that the range of optimal thresholds for wild type is
-between 0.87 and 0.9
+adjusted \(r^2\) when setting threshold 0.93. Boxplots in Figure 2 show
+the adjusted \(r^2\) for each threshold value. We had good model fit for
+all thresholds, and the mean adjusted \(r^2\) is 0.9. The adjusted
+\(r^2\) is slightly higher for threshold 0.87 and 0.9. Thus, we conclude
+that the range of optimal thresholds for wild type is between 0.87 and
+0.9
 
-{[}Viz{]} (final paper/visualization\_paper/threshold\_boxplot\_wt.png)
+{[}Figure 2{]} (final
+paper/visualization\_paper/threshold\_boxplot\_wt.png)
+
+\hypertarget{mutant}{%
+\subsubsection{Mutant}\label{mutant}}
+
+For mutant sample, we tested 29 different thresholds: threshold = \{0.4,
+0.42, 0.44, 0.46, 0.48, 0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62, 0.64,
+0.66, 0.7, 0.75, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88,
+0.89, 0.9, 0.91, 0.92\}. Next, we fit the qmodel to each sample and for
+each threshold value. We are then able to find the optimal threshold for
+each sample that gives the highest adjusted \(r^2\) value. According to
+Figure 2, x-axis is showing different thresholds and y-axis gives us the
+adjusted \(r^2\) . Each line represents a mutant sample. The range of
+the adjusted \(r^2\) is very large, indicating large number of samples
+having poor model fit.
+
+{[}Figure 2{]} (final
+paper/visualization\_paper/threshold\_yt\_sample\_level.png)
+
+According to Figure 3, we show the boxplots of adjusted \(r^2\) for each
+threshold value. Changing threshold is not improving model fit
+significantly. Thus we can't conclude an optimal threshold for the
+mutant samples.
+
+{[}Figure 3{]} (final
+paper/visualization\_paper/threshold\_boxplot\_yt.png)
+
+\hypertarget{threshold-optimization}{%
+\subsubsection{Threshold Optimization}\label{threshold-optimization}}
+
+And then we compared model fit of wild type and mutant sample by
+comparing their average adjusted \(r^2\) for each threshold. For each
+threshold, we computed the average adjusted \(r^2\) for 43 wild type
+samples and the average adjusted \(r^2\) for 35 mutant samples. As shown
+in Figure 4, x-axis represents the average adjusted \(r^2\) for wild
+type and the y-axis represents the average adjusted \(r^2\) for mutant
+type. A perfect model fit will have x=1 and y=1, and our goal is to
+identify the point that has the smallest Euclidean distance to (1,1).
+
+{[}Figure 4{]} (final paper/visualization\_paper/optimal\_threshold.png)
+
+\hypertarget{pca-transformation-model-fit-evaluation}{%
+\subsection{2. PCA Transformation Model Fit
+Evaluation}\label{pca-transformation-model-fit-evaluation}}
+
+We compared the adjusted \(r^2\) of the model before and after PCA
+transformation, and found out that PCA transformation significantly
+improved the model fit.
+
+\hypertarget{wild-type-1}{%
+\subsubsection{Wild Type}\label{wild-type-1}}
+
+We performed paired sample t-test on the wild type samples by setting
+default threshold 0.9. It was found that the average adjusted \(r^2\)
+after PCA transformation is significantly higher than the average
+adjusted \(r^2\) before PCA transformation with a p-value =\$
+5.765\^{}\{-10\}\$. The result ensures the importance of PCA
+transformation.\\
+{[}Figure 5{]} (final
+paper/visualization\_paper/r2\_ro\_comparison\_wt.png)
+
+\hypertarget{mutant-1}{%
+\subsubsection{Mutant}\label{mutant-1}}
+
+We performed paired sample t-test on the wild type sample by setting
+optimal threshold 0.8. It was found that the average adjusted \(r^2\)
+after PCA transformation is significantly higher than the average
+adjusted \(r^2\) before PCA transformation with a p-value =
+\(1.863^{-4}\). The result ensures the importance of PCA transformation.
+
+{[}Figure 6{]} (final
+paper/visualization\_paper/r2\_ro\_comparison\_yt.png)
 
 \hypertarget{references}{%
 \section*{References}\label{references}}
 \addcontentsline{toc}{section}{References}
+
+\hypertarget{refs}{}
+\leavevmode\hypertarget{ref-Schwartz18}{}%
+1. M. Schwartz BB J. Schnab. A new computational method to quantify
+3D383image data and to detail changes in morphological structure and
+spatial384relationships during nervous system development. 2018;
+
+\leavevmode\hypertarget{ref-Hu18}{}%
+2. S. Hu DT W. Li. Classification of wild type and mutant zebrafish
+brains viaComputational method. 2018;
 
 \nolinenumbers
 

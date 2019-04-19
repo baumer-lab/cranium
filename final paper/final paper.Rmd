@@ -14,27 +14,25 @@ address:
   - address: Statistical and Data Sciences, Northampton, MA
 
 abstract: |
-  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eget porta erat. Morbi consectetur est vel gravida pretium. Suspendisse ut dui eu ante cursus gravida non sed sem. Nullam sapien tellus, commodo id velit id, eleifend volutpat quam. Phasellus mauris velit, dapibus finibus elementum vel, pulvinar non tellus. Nunc pellentesque pretium diam, quis maximus dolor faucibus id. Nunc convallis sodales ante, ut ullamcorper est egestas vitae. Nam sit amet enim ultrices, ultrices elit pulvinar, volutpat risus.
+  Collaborated with the Barresi Lab, we continued $\Delta$ SCOPE by extending to R package Cranium. 
   
 author_summary: |
-  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eget porta erat. Morbi consectetur est vel gravida pretium. Suspendisse ut dui eu ante cursus gravida non sed sem. Nullam sapien tellus, commodo id velit id, eleifend volutpat quam. Phasellus mauris velit, dapibus finibus elementum vel, pulvinar non tellus. Nunc pellentesque pretium diam, quis maximus dolor faucibus id. Nunc convallis sodales ante, ut ullamcorper est egestas vitae. Nam sit amet enim ultrices, ultrices elit pulvinar, volutpat risus.
+  This is our first draft.
 
 bibliography: mybibfile.bib
 output: rticles::plos_article
 csl: plos.csl
 ---
 
-_Text based on plos sample manuscript, see [http://journals.plos.org/ploscompbiol/s/latex](http://journals.plos.org/ploscompbiol/s/latex)_
-
 # Introduction
 
 The current study serves as an enhancement to Dr. Michael Barresi’s research at Smith College on categorizing zebrafish brains. The goal of his research is to use the commissure, an axonal bridge formed to connect the two hemispheres of the brain, to classify whether a certain zebrafish belongs to wild type or mutant group. 
 
-! [Alt text] (/tufte.book.jpg)
+! [Figure 1] (/tufte.book.jpg)
 
 The difference between wildtype and you-too is shown above. Wild type zebrafish has a smooth parabolic-shaped commissure, where as in mutant (you-too) zebrafish, the commissure is either not fully developed or highly distorted.
 
-During the classification process, instead of following a systematic approach, Dr. Barresi’s lab could only perform categorization based on empirical knowledge. As a result, Morgan Schwartz, a former lab member wrote a Python program called deltascope to: 1. Align crooked 3D biological images so they could compare between samples; 2. Generate descriptive graphs with sample statistics; 3. Classify samples into either wild type or mutant group based on the statistics. Our goal is to “transfer” the Python program into R while maintaining and improving as many features as possible. We build new packages and optimize parameters so that evaluating sample alignments is no longer vulnerable to subjective biases. Additionally, alignments will be able to run automatically without labor-intensive manual correction that would introduce more researcher biases.
+During the classification process, instead of following a systematic approach, Dr. Barresi’s lab could only perform categorization based on empirical knowledge. As a result, Morgan Schwartz, a former lab member wrote a Python program called deltascope to: 1. Align crooked 3D biological images so they could compare between samples; 2. Generate descriptive graphs with sample statistics; 3. Classify samples into either wild type or mutant group based on the statistics[@Schwartz18] [@Hu18]. Our goal is to “transfer” the Python program into R while maintaining and improving as many features as possible. We build new packages and optimize parameters so that evaluating sample alignments is no longer vulnerable to subjective biases. Additionally, alignments will be able to run automatically without labor-intensive manual correction that would introduce more researcher biases.
 
 # Data
 We received our data from Dr. Jake Schnabl: 43 wild type samples and 35 mutant samples. The data files are in HDF5 (.h5) format. The data points stored within those files are marked using by fluorescence microscopy, indicating neuronal signals. The data is processed by an open-source software, Ilastik, before being read into R. We are working with the data after processed in Ilastik.    
@@ -70,12 +68,12 @@ PCA assigns the axis with the most amount of variation as PC1 (first principal c
 
 
 ### 4. Qmodel
-We built the Qmodel function to fit a quadratic model to the data in order to capture the shape of the commissure as well as evaluating model fit. The quadratic model fits on the xy plane. Our goal is to have the best model fit. Qmodel outputs model statistics including: r square, adjusted r square, sigmal (RSE), statistic, p.value, df, logLik, AIC, BIC, deviance, df.residual, num.signal, quad.coeff, RMSE. 
-### R square: 
-Also called the coefficient of determination or the coefficient of multiple determination for multiple regression. R square ranges from 0 to 1.  It is calculated from the variance explained by the model divided by total variance. Higher r square values represent smaller differences between the observed data and the fitted values, indicating a better fit of the model. Note that R square is a relative scale of model fit. 
+We built the Qmodel function to fit a quadratic model to the data in order to capture the shape of the commissure as well as evaluating model fit. The quadratic model fits on the xy plane. Our goal is to have the best model fit. Qmodel outputs model statistics including: $r^2$ , adjusted $r^2$ , sigmal (RSE), statistic, p.value, df, logLik, AIC, BIC, deviance, df.residual, num.signal, quad.coeff, RMSE. 
+### $r^2$ : 
+Also called the coefficient of determination or the coefficient of multiple determination for multiple regression. $r^2$  ranges from 0 to 1.  It is calculated from the variance explained by the model divided by total variance. Higher $r^2$  values represent smaller differences between the observed data and the fitted values, indicating a better fit of the model. Note that $r^2$  is a relative scale of model fit. 
 
-### Adjusted r square: 
-Based on r square, adjusted r square--adjusts for the number of terms in the model, the degrees of freedom.
+### Adjusted $r^2$ : 
+Based on $r^2$ , adjusted $r^2$ --adjusts for the number of terms in the model, the degrees of freedom.
 
 ### RMSE (Root Mean Squared Error)
 gives the difference between observed data and model’s predicted values. Lower RMSE values represent smaller difference between observed data and model’s predicted values.
@@ -125,9 +123,38 @@ A good PCA transformation will result in mean z value to be zero. Thus, we build
 ## 1. Threshold optimization evaluation
 
 ### Wild Type
-For wild type sample, we tested threshold 24 different threshold: threshold = {0.6, 0.62, 0.64, 0.66, 0.69, 0.7, 0.72, 0.75, 0.78, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.90, 0.91, 0.92, 0.93, 0.96, 0.99}. Next, we fit the qmodel to each sample and for each threshold value. We are able to find the threshold for each sample that gives the highest adjusted r square. 4 (16.3%)  sample achieved their highest adjusted r square when setting threshold 0.87; 11 (25.6%) samples achieved their highest adjusted r square when setting threshold 0.9; 6 (14.0%) samples achieved their highest adjusted r square when setting threshold 0.92; 9 (20.9%) samples achieved their highest adjusted r square when setting threshold 0.93.  Boxplots in Figure XXX show the  adjusted r square for each threshold value. We had good model fit for all thresholds, and the mean adjusted r square is 0.9. The adjusted r square is slightly higher for threshold 0.87 and 0.9. Thus, we conclude that the range of optimal thresholds for wild type is between 0.87 and 0.9
+For wild type sample, we tested threshold 24 different threshold: threshold = {0.6, 0.62, 0.64, 0.66, 0.69, 0.7, 0.72, 0.75, 0.78, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.90, 0.91, 0.92, 0.93, 0.96, 0.99}. Next, we fit the qmodel to each sample and for each threshold value. We are able to find the threshold for each sample that gives the highest adjusted $r^2$ . 4 (16.3%)  sample achieved their highest adjusted $r^2$  when setting threshold 0.87; 11 (25.6%) samples achieved their highest adjusted $r^2$  when setting threshold 0.9; 6 (14.0%) samples achieved their highest adjusted $r^2$  when setting threshold 0.92; 9 (20.9%) samples achieved their highest adjusted $r^2$  when setting threshold 0.93.  Boxplots in Figure 2 show the  adjusted $r^2$  for each threshold value. We had good model fit for all thresholds, and the mean adjusted $r^2$  is 0.9. The adjusted $r^2$  is slightly higher for threshold 0.87 and 0.9. Thus, we conclude that the range of optimal thresholds for wild type is between 0.87 and 0.9
 
-![Viz] (final paper/visualization_paper/threshold_boxplot_wt.png)
+![Figure 2] (final paper/visualization_paper/threshold_boxplot_wt.png)
 
+### Mutant 
+For mutant sample, we tested 29 different thresholds: threshold = {0.4, 0.42, 0.44, 0.46, 0.48,  0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62, 0.64, 0.66,  0.7, 0.75, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.9, 0.91, 0.92}. Next, we fit the qmodel to each sample and for each threshold value. We are then able to find the optimal threshold for each sample that gives the highest adjusted $r^2$  value. According to Figure 2,  x-axis is showing different thresholds and y-axis gives us the adjusted $r^2$ . Each line represents a mutant sample. The range of the adjusted $r^2$  is very large, indicating large number of  samples having poor model fit. 
+
+![Figure 2] (final paper/visualization_paper/threshold_yt_sample_level.png)
+
+According to Figure 3, we show the boxplots of adjusted $r^2$  for each threshold value. Changing threshold is not improving model fit significantly. Thus we can’t conclude an optimal threshold for the mutant samples.
+
+![Figure 3] (final paper/visualization_paper/threshold_boxplot_yt.png)
+
+
+### Threshold Optimization
+And then we compared model fit of wild type and mutant sample by comparing their average adjusted $r^2$  for each threshold. For each threshold, we computed the average adjusted $r^2$  for 43 wild type samples and the average adjusted $r^2$  for 35 mutant samples. 
+As shown in Figure 4, x-axis represents the average adjusted $r^2$  for wild type and the y-axis represents the average adjusted $r^2$  for mutant type. A perfect model fit will have x=1 and y=1, and our goal is to identify the point that has the smallest Euclidean distance to (1,1).
+
+![Figure 4] (final paper/visualization_paper/optimal_threshold.png)
+
+
+## 2. PCA Transformation Model Fit Evaluation
+We compared the adjusted $r^2$  of the model before and after PCA transformation, and found out that PCA transformation significantly improved the model fit. 
+
+### Wild Type
+We performed paired sample t-test on the wild type samples by setting default threshold 0.9. It was found that the average adjusted $r^2$ after PCA transformation is significantly higher than the average adjusted $r^2$  before PCA transformation with a p-value =$ 5.765^{-10}$. The result ensures the importance of PCA transformation.    
+![Figure 5] (final paper/visualization_paper/r2_ro_comparison_wt.png)
+
+
+### Mutant 
+We performed paired sample t-test on the wild type sample by setting optimal threshold 0.8. It was found that the average adjusted $r^2$ after PCA transformation is significantly higher than the average adjusted $r^2$ before PCA transformation with a p-value = $1.863^{-4}$. The result ensures the importance of PCA transformation.
+
+![Figure 6] (final paper/visualization_paper/r2_ro_comparison_yt.png)
 
 # References {#references .unnumbered}
