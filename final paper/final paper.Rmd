@@ -30,4 +30,37 @@ _Text based on plos sample manuscript, see [http://journals.plos.org/ploscompbio
 
 The current study serves as an enhancement to Dr. Michael Barresi’s research at Smith College on categorizing zebrafish brains. The goal of his research is to use the commissure, an axonal bridge formed to connect the two hemispheres of the brain, to classify whether a certain zebrafish belongs to wild type or mutant group. 
 
+
+# Data
+
+
+# Methods
+
+
+## Programming Languages
+
+## Package `Cranium`
+
+### 1. API
+
+
+### 2. Tidy Data and Threshold
+
+
+### 3. Principal Component Analysis Transformation
+
+
+### 4. Qmodel
+
+
+### 5. Linear Model
+
+
+### 6. Plotting
+
+
+
+# Results
+
+
 # References {#references .unnumbered}

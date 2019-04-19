@@ -59,7 +59,7 @@ num_signal_tb <- threshold_yt%>%
 #boxplot for each threshold y:r2
 ggplot(data =threshold_yt, aes(x = threshold, y = adj.r.squared)) +
   geom_boxplot()  + 
-  labs(title = "Optimal threshold for You Too Mutatnt type")
+  labs(title = "Optimal threshold for Mutatnt (You Too) type")
 ```
 
 #Mode fit comparison: before PCA and after PCA (adj.r.square)
@@ -280,7 +280,6 @@ for (i in (1:length(file_names))){
 
 # selecting common threshold levels
 ```{r}
-
 table(threshold_wt$threshold)
 table(threshold_yt$threshold)
 
@@ -321,7 +320,11 @@ threshold_both <- threshold_both %>%
   rename(threshold=wt_threshold)
 
 threshold_both$threshold <- as.character(threshold_both$threshold)
-ggplot(threshold_both, aes(x=wt_avg_adjr2, y=yt_avg_adjr2, color=threshold))+geom_point()
+ggplot(threshold_both, aes(x=wt_avg_adjr2, y=yt_avg_adjr2, color=threshold, 
+                           size = yt_avg_numsignal))+
+  geom_point()+
+  scale_color_viridis_d() + 
+  coord_fixed()
 
 
 ```
