@@ -239,41 +239,262 @@ pulvinar, volutpat risus.
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eget
-porta erat. Morbi consectetur est vel gravida pretium. Suspendisse ut
-dui eu ante cursus gravida non sed sem. Phasellus mauris velit, dapibus
-finibus elementum vel, pulvinar non tellus. Nunc pellentesque pretium
-diam, quis maximus dolor faucibus id. Nunc convallis sodales ante, ut
-ullamcorper est egestas vitae. Nam sit amet enim ultrices, ultrices elit
-pulvinar, volutpat risus.
+The current study serves as an enhancement to Dr.~Michael Barresi's
+research at Smith College on categorizing zebrafish brains. The goal of
+his research is to use the commissure, an axonal bridge formed to
+connect the two hemispheres of the brain, to classify whether a certain
+zebrafish belongs to wild type or mutant group.
 
-A list
+! {[}Alt text{]} (/tufte.book.jpg)
 
-\begin{itemize}
-\tightlist
-\item
-  Item 1
-\item
-  Item 2
-\end{itemize}
+The difference between wildtype and you-too is shown above. Wild type
+zebrafish has a smooth parabolic-shaped commissure, where as in mutant
+(you-too) zebrafish, the commissure is either not fully developed or
+highly distorted.
 
-Here are two sample references: {[}1,2{]}.
+During the classification process, instead of following a systematic
+approach, Dr.~Barresi's lab could only perform categorization based on
+empirical knowledge. As a result, Morgan Schwartz, a former lab member
+wrote a Python program called deltascope to: 1. Align crooked 3D
+biological images so they could compare between samples; 2. Generate
+descriptive graphs with sample statistics; 3. Classify samples into
+either wild type or mutant group based on the statistics. Our goal is to
+``transfer'' the Python program into R while maintaining and improving
+as many features as possible. We build new packages and optimize
+parameters so that evaluating sample alignments is no longer vulnerable
+to subjective biases. Additionally, alignments will be able to run
+automatically without labor-intensive manual correction that would
+introduce more researcher biases.
+
+\hypertarget{data}{%
+\section{Data}\label{data}}
+
+We received our data from Dr.~Jake Schnabl: 43 wild type samples and 35
+mutant samples. The data files are in HDF5 (.h5) format. The data points
+stored within those files are marked using by fluorescence microscopy,
+indicating neuronal signals. The data is processed by an open-source
+software, Ilastik, before being read into R. We are working with the
+data after processed in Ilastik.
+
+Raw image data was processed in Illastik. Each sample is composed of
+data points, which are pixels of the image. Each pixel has a frequency,
+which represents the probability of being a real signal. Each data point
+in our dataset represents one signal, and the signals have different
+frequencies.
+
+\hypertarget{methods}{%
+\section{Methods}\label{methods}}
+
+\hypertarget{programming-languages}{%
+\subsection{Programming Languages}\label{programming-languages}}
+
+In this study, we used R in order to run algorithms, manipulate data,
+and generate visualizations. For accessibility and reproducibility of
+this research, we have stored our work on Github.
+
+\hypertarget{package-cranium}{%
+\subsection{\texorpdfstring{Package
+\texttt{Cranium}}{Package Cranium}}\label{package-cranium}}
+
+The package \texttt{Cranium} contains several major functionalities
+listed below:
+
+\hypertarget{api}{%
+\subsubsection{1. API}\label{api}}
+
+The sample datasets for You Too and Wild Type are saved as *.h5 files.
+In order to share the data efficiently amongst users, the data is hosted
+on Amazon s3 with a readonly link to each sample. Rather than users
+individually grabbing each sample, there were functions created in the
+cranium R package that allows users to download a bundle of samples per
+type (i.e., You Too and Wild Type). Each function downloads all existing
+files onto the user's machine in a designated folder the user decides in
+addition to outputting the list of samples of type brain class. Prior to
+these new functions, the Barresi lab had to share the samples through a
+hard drive, thus the new features solve the issue on how to share data
+efficiently.
+
+\hypertarget{tidy-data-and-threshold}{%
+\subsubsection{2. Tidy Data and
+Threshold}\label{tidy-data-and-threshold}}
+
+After reading in the data, tidy function not only converts the original
+data to x, y, z coordinates of each signal, but also includes the
+signal's frequency. Now the data is assigned as a tidy brain class.
+
+Frequency represents the probability of each pixel being a real signal.
+We want to include as many ``real'' signals as possible while getting
+rid of signals that are very likely to be ``background noise.'' To do
+this, we tested different thresholds and examined model fit. Signals
+with frequency lower than the threshold are pruned out, leaving us with
+``real'' signals in our data. For example, before we attempted to
+optimize threshold level, deltascope treated 0.9 as the standard
+threshold. After setting the threshold, individual signals undergo a
+binary classification procedure: signals that have frequencies higher
+than 0.9 are considered as ``real'' signals whereas signals that have
+frequencies lower than 0.9 are pruned out as ``background noise.''
+
+We tested different thresholds for both wild type and mutant (you-too),
+separately. Since wild type commissures more or less follow a parabolic
+pattern, setting a high threshold would not result in too few data
+points (i.e., signals). However, setting a high threshold for mutant
+type data would result in a very restricted sample size, thus increasing
+the chance of our model overfitting the data. At the same time, setting
+a low threshold for mutant type data, while increases the sample size,
+allows more noise to creep into the dataset.
+
+\hypertarget{principal-component-analysis-transformation}{%
+\subsubsection{3. Principal Component Analysis
+Transformation}\label{principal-component-analysis-transformation}}
+
+We can't ensure the samples are mounted exactly the same. Therefore, the
+pictures taken are of different angles and coordinates. In order for us
+to do further analyses and compare between samples, we need to re-orient
+them using Principal Component Analysis (PCA) and identify a consistent
+set of axes across all samples. PCA assigns the axis with the most
+amount of variation as PC1 (first principal component), the axis with
+the second-most variation as PC2, and the axis with least amount of
+variation as PC3. Since we are performing the PCA in a 3D space, PCA
+would output three 2D planes from three perspectives: xy; yz; xz planes.
+For the commissure, we would get 3 views: lateral; dorsal/ventral;
+anterior/posterior. We set x axis as the lateral, y axis as the
+anterior/posterior, and z as the dorsal/ventral.
+
+\hypertarget{qmodel}{%
+\subsubsection{4. Qmodel}\label{qmodel}}
+
+We built the Qmodel function to fit a quadratic model to the data in
+order to capture the shape of the commissure as well as evaluating model
+fit. The quadratic model fits on the xy plane. Our goal is to have the
+best model fit. Qmodel outputs model statistics including: r square,
+adjusted r square, sigmal (RSE), statistic, p.value, df, logLik, AIC,
+BIC, deviance, df.residual, num.signal, quad.coeff, RMSE. \#\#\# R
+square: Also called the coefficient of determination or the coefficient
+of multiple determination for multiple regression. R square ranges from
+0 to 1. It is calculated from the variance explained by the model
+divided by total variance. Higher r square values represent smaller
+differences between the observed data and the fitted values, indicating
+a better fit of the model. Note that R square is a relative scale of
+model fit.
+
+\hypertarget{adjusted-r-square}{%
+\subsubsection{Adjusted r square:}\label{adjusted-r-square}}
+
+Based on r square, adjusted r square--adjusts for the number of terms in
+the model, the degrees of freedom.
+
+\hypertarget{rmse-root-mean-squared-error}{%
+\subsubsection{RMSE (Root Mean Squared
+Error)}\label{rmse-root-mean-squared-error}}
+
+gives the difference between observed data and model's predicted values.
+Lower RMSE values represent smaller difference between observed data and
+model's predicted values.
+
+\hypertarget{sigma}{%
+\subsubsection{Sigma}\label{sigma}}
+
+It is the square root of the estimated variance of the residuals
+
+\hypertarget{statistic}{%
+\subsubsection{Statistic}\label{statistic}}
+
+A piece of data that is related to a larger set of data
+
+\hypertarget{p.value}{%
+\subsubsection{P.value}\label{p.value}}
+
+It is the probability that chance alone would produce a test statistic
+as extreme as the observed test statistic.
+
+\hypertarget{df}{%
+\subsubsection{Df}\label{df}}
+
+Degrees of freedom
+
+\hypertarget{loglik}{%
+\subsubsection{logLik}\label{loglik}}
+
+A function in R that determines the log likelihood of a fitted model.
+
+\hypertarget{aic}{%
+\subsubsection{AIC}\label{aic}}
+
+Akaike information criterion represents the estimate in quality of model
+relative to other models.
+
+\hypertarget{bic}{%
+\subsubsection{BIC}\label{bic}}
+
+Bayesian information criterion (BIC) or Schwarz information criterion
+
+\hypertarget{deviance}{%
+\subsubsection{Deviance}\label{deviance}}
+
+A value of goodness-of-fit for a statistical model.
+
+\hypertarget{df.residual}{%
+\subsubsection{df.residual}\label{df.residual}}
+
+Residual degree of freedom
+
+\hypertarget{num.signal}{%
+\subsubsection{num.signal}\label{num.signal}}
+
+It gives the number of signals being captured for the sample after
+filter out the signals that are less than the threshold.
+
+\hypertarget{quad.coeff}{%
+\subsubsection{Quad.coeff}\label{quad.coeff}}
+
+The quadratic coefficient of the model \(y=x^2+x\).
+
+\hypertarget{linear-model}{%
+\subsubsection{5. Linear Model}\label{linear-model}}
+
+A good PCA transformation will result in mean z value to be zero. Thus,
+we build linear model \(z=0\) to evaluate the PCA transformation.
+Visually, we will observe the line at \(z=0\) on the xz plane and yz
+plane if PCA is transformed correctly. A bad fitted linear model is
+indicated by having a curvature in the xz plane and yz plane, which
+could cause by rotation around x axis or an incorrectly selected PC1
+(first principal component).
+
+\hypertarget{plotting}{%
+\subsubsection{6. Plotting}\label{plotting}}
+
+\hypertarget{results}{%
+\section{Results}\label{results}}
+
+\hypertarget{threshold-optimization-evaluation}{%
+\subsection{1. Threshold optimization
+evaluation}\label{threshold-optimization-evaluation}}
+
+\hypertarget{wild-type}{%
+\subsubsection{Wild Type}\label{wild-type}}
+
+For wild type sample, we tested threshold 24 different threshold:
+threshold = \{0.6, 0.62, 0.64, 0.66, 0.69, 0.7, 0.72, 0.75, 0.78, 0.8,
+0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.90, 0.91, 0.92, 0.93,
+0.96, 0.99\}. Next, we fit the qmodel to each sample and for each
+threshold value. We are able to find the threshold for each sample that
+gives the highest adjusted r square. 4 (16.3\%) sample achieved their
+highest adjusted r square when setting threshold 0.87; 11 (25.6\%)
+samples achieved their highest adjusted r square when setting threshold
+0.9; 6 (14.0\%) samples achieved their highest adjusted r square when
+setting threshold 0.92; 9 (20.9\%) samples achieved their highest
+adjusted r square when setting threshold 0.93. Boxplots in Figure XXX
+show the adjusted r square for each threshold value. We had good model
+fit for all thresholds, and the mean adjusted r square is 0.9. The
+adjusted r square is slightly higher for threshold 0.87 and 0.9. Thus,
+we conclude that the range of optimal thresholds for wild type is
+between 0.87 and 0.9
+
+{[}Viz{]} (final paper/visualization\_paper/threshold\_boxplot\_wt.png)
 
 \hypertarget{references}{%
 \section*{References}\label{references}}
 \addcontentsline{toc}{section}{References}
-
-\hypertarget{refs}{}
-\leavevmode\hypertarget{ref-Feynman1963118}{}%
-1. Feynman RP, Vernon Jr. FL. The theory of a general quantum system
-interacting with a linear dissipative system. Annals of Physics.
-1963;24: 118--173.
-doi:\href{https://doi.org/10.1016/0003-4916(63)90068-X}{10.1016/0003-4916(63)90068-X}
-
-\leavevmode\hypertarget{ref-Dirac1953888}{}%
-2. Dirac PA. The lorentz transformation and absolute time. Physica.
-1953;19: 888--896.
-doi:\href{https://doi.org/10.1016/S0031-8914(53)80099-6}{10.1016/S0031-8914(53)80099-6}
 
 \nolinenumbers
 

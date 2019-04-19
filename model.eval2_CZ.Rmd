@@ -31,7 +31,7 @@ threshold_yt <- read_csv("visualization_results/threshold_yt_all_final.csv")%>%
 threshold_wt <- read_csv("visualization_results/threshold_wt_all_final.csv")%>%
   select(-X1)
 
-table(threshold_wt)
+table(threshold_wt$threshold)
 
 test<-threshold_wt%>%
   group_by(Sampl)%>% 
@@ -108,6 +108,35 @@ favstats(threshold_yt_all_0.8$adj.r.squared.original)
 ```
 
 # Finding optimal threshold
+Wild Type
+```{r}
+#find optimal threshold
+optimal_threshold <- data.frame()
+m <- list()
+for (i in (1:43)){
+  m <- threshold_wt%>%
+  filter(Sample==i)%>%
+  filter(adj.r.squared == max(adj.r.squared))%>%
+    mutate(optimal_threshold = threshold)%>%
+    select(-threshold)
+  optimal_threshold <- rbind(optimal_threshold,m)
+}
+
+#optimal threhsold table
+table(optimal_threshold$optimal_threshold)
+
+threshold_0.92 <- threshold_yt%>%
+  filter(threshold==0.92)
+
+threshold_wt$threshold <- as.character(threshold_wt$threshold)
+#mplot(threshold_wt)
+ggplot(data = threshold_wt, aes(x = threshold, y = adj.r.squared)) + geom_boxplot()  + labs(title = "Optimal threshold--Adjusted R sqrae (Wildtype)")
+
+ggplot(data = threshold_wt, aes(x = threshold, y = RMSE)) + geom_boxplot()  + labs(title = "Optimal threshold--RMSE--Mutant (Wildtype)")
+
+
+ggplot(data = threshold_wt, aes(x = threshold, y = adj.r.squared)) + geom_point()  + facet_wrap(~Sample, ncol = 5) + labs(title = "Sample level optimal threshold--r^2--Wildtype")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
 You Too
 ```{r}
 #find optimal threshold
@@ -125,12 +154,14 @@ for (i in (1:35)){
 #optimal threhsold table
 table(optimal_threshold$optimal_threshold)
 
-threshold_0.92 <- threshold_yt%>%
-  filter(threshold==0.92)
+#threshold_0.92 <- threshold_yt%>%
+#  filter(threshold==0.92)
 
 threshold_yt$threshold <- as.character(threshold_yt$threshold)
 #mplot(threshold_yt)
-ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared)) + geom_boxplot()  + labs(title = "Optimal threshold--Adjusted R sqrae--Mutant (YouToo)")
+ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared)) + geom_boxplot()  + 
+  labs(title = "Optimal threshold--Adjusted R sqrae--Mutant (YouToo)")+ 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggplot(data = threshold_yt, aes(x = threshold, y = RMSE)) + geom_boxplot()  + labs(title = "Optimal threshold--RMSE--Mutant (YouToo)")
 
@@ -324,9 +355,10 @@ ggplot(threshold_both, aes(x=wt_avg_adjr2, y=yt_avg_adjr2, color=threshold,
                            size = yt_avg_numsignal))+
   geom_point()+
   scale_color_viridis_d() + 
-  coord_fixed()
-
-
+  coord_fixed() +
+  xlab("wild type adjusted.r2")+
+  ylab("mutant adjusted.r2")+
+  ggtitle("Optimal Threshold")
 ```
 
 # plot
