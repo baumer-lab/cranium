@@ -487,16 +487,16 @@ correctionA.brain<- function(data, type="wildtype", threshold.n=0.9){
     reorient(correction = TRUE)
   ro_model <- attr(c_ro_tidy_brain, "quad_mod")  #model applied on reoriented data
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
-  sum_tb=as.data.frame(quad.coeff)
+  #sum_tb=as.data.frame(quad.coeff)
 
   if (quad.coeff <0){
     message("Y Axis is flipped")
-    sum_tb <- sum_tb%>%
-      mutate(y_flipped = 1)
+    #sum_tb <- sum_tb%>%
+    #  mutate(y_flipped = 1)
   }else{
     message("Correct alignment")
-    sum_tb <- sum_tb%>%
-      mutate(y_flipped = 0)
+    #sum_tb <- sum_tb%>%
+    #  mutate(y_flipped = 0)
   }
   return(c_ro_tidy_brain)
 }
