@@ -47,3 +47,73 @@ table(optimal_threshold$optimal_threshold)
 
 ```
 
+# Apply Correction A to all wildtype
+```{r}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+correctionA_df <- data.frame()
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(file_names))){
+    name <- sub("_Probabilities.h5", "", file_names[i])
+    name <- sub("Sample/WildType/", "WildType_", name) 
+    m <- file_names[i]%>%
+        read_h5()%>%
+        correctionA.brain(type="wildtype", threshold.n=0.9)%>%
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = i)%>%
+        mutate(threshold=0.9)
+     correctionA_df <- rbind(correctionA_df, m) 
+}
+```
+
+
+#Run Overnight:
+# Apply Correction A to all wildtype
+```{r}
+#part 1: wildtype, threshold=0.6
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+errorA_df <- data.frame()
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(file_names))){
+    name <- sub("_Probabilities.h5", "", file_names[i])
+    name <- sub("Sample/WildType/", "WildType_", name) 
+    m <- file_names[i]%>%
+        read_h5()%>%
+        errorA.brain(type="wildtype", threshold.n=0.6)%>%
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = i)%>%
+        mutate(threshold=0.6)
+     errorA_df <- rbind(errorA_df, m) 
+}
+write.csv(errorA_df, file = "correction_results/correctionA_wt_0.6.csv")
+
+
+
+
+
+#part 2: youtoo, threshold=0.6
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+errorA_df <- data.frame()
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(file_names))){
+    name <- sub("_Probabilities.h5", "", file_names[i])
+    name <- sub("Sample/YouToo/", "YouToo_", name) 
+    m <- file_names[i]%>%
+        read_h5()%>%
+        errorA.brain(threshold.n=0.6)%>%
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = i)%>%
+        mutate(threshold=0.6)
+     errorA_df <- rbind(errorA_df, m) 
+}
+write.csv(errorA_df, file = "correction_results/correctionA_yt_0.6.csv")
+
+```

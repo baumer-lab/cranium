@@ -7,24 +7,109 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(hdf5r)
+library(dplyr)
+library(readr)
+library(rlang)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+
+#new packages
+library(sjstats)
+library(grDevices)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r}
+#Model evaluation
+#Requires: brain class type.
+correctionA.brain<- function(data, type="wildtype", threshold.n=0.9){
+  ro_tidy_brain <- data%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient()
+  ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
+  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
 
-```{r cars}
-summary(cars)
+  if (quad.coeff <0){
+  message("Y Axis is flipped")
+  sum_tb <- sum_tb%>%
+    mutate(y_flipped = 1)
+}else{
+  message("Correct alignment")
+  sum_tb <- sum_tb%>%
+    mutate(y_flipped = 0)
+}
+  return(sum_tb)
+}
+
+
+#test
+correctionA.brain(data, type="wildtype", threshold.n=0.9)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+#before callying the function
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+#input
+data <- read_h5(file_names[11])
+
+ro_tidy_brain <- data%>%
+    tidy("wildtype", threshold = 0.6) %>%
+    reorient()
+
+ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
+quad.coeff =round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
+sum_tb=as.data.frame(quad.coeff)
+
+if (quad.coeff <0){
+  message("Y Axis is flipped")
+  sum_tb <- sum_tb%>%
+    mutate(y_flipped = 1)
+}else{
+  message("Correct alignment")
+  sum_tb <- sum_tb%>%
+    mutate(y_flipped = 0)
+}
+  return(quad.coeff)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+correctionA_wt_0.9 <- read_csv("correction_results/correctionA_wt_0.9.csv")%>%
+  select(-X1)
+
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+
+correctionA_wt_0.9_y <- correctionA_wt_0.9 %>%
+  filter(y_flipped == 1)
+for (i in (1:length(correctionA_wt_0.9_y))){
+  j=Sample_id
+  c_ro_tidy_brain <- file_names[j]%>%
+    read_h5()%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient(correction=TRUE)
+  
+}
+
+
+
+ro_tidy_brain<-file_names[j]%>%
+    read_h5()%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient()
+
+data<-read_h5(file_names[20])
+correctionA.brain(data)
+
+```
+

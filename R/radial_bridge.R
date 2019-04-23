@@ -377,7 +377,7 @@ get_jawbone <- function(xyz, ...) {
 #' }
 #' }
 
-reorient <- function(x, ...) {
+reorient <- function(x, correctionA = FALSE, ...) {
   pca <- stats::prcomp(~ x + y + z, data = x, scale = FALSE, ...)
   out <- pca$x %>%
     tibble::as_tibble() %>%
@@ -394,8 +394,13 @@ reorient <- function(x, ...) {
   z_mean <- out %>%
     filter(abs(x) < 50) %>%
     summarize(z_mean = mean(z))
-  out <- out %>%
-    mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
+  if (correctionA==FALSE){
+    out <- out %>%
+      mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
+  }else{
+    out <- out %>%
+      mutate(x = x - vertex[1], y =  vertex[2] - y , z = z - z_mean$z_mean)
+  }
   out[, c("Freq", "gray_val")] <- x[, c("Freq", "gray_val")]
   class(out) <- append("tbl_brain", class(out))
   # recompute model after translation
@@ -453,3 +458,45 @@ qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
   return(sum_tb)
 }
 
+#PCA alignment error identification
+#Correction A: y-axis flipped
+errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
+  ro_tidy_brain <- data%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient()
+  ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
+  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
+  sum_tb=as.data.frame(quad.coeff)
+
+  if (quad.coeff <0){
+    message("Y Axis is flipped")
+    sum_tb <- sum_tb%>%
+      mutate(y_flipped = 1)
+  }else{
+    message("Correct alignment")
+    sum_tb <- sum_tb%>%
+      mutate(y_flipped = 0)
+  }
+  return(sum_tb)
+}
+
+
+correctionA.brain<- function(data, type="wildtype", threshold.n=0.9){
+  c_ro_tidy_brain <- data%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient(correction = TRUE)
+  ro_model <- attr(c_ro_tidy_brain, "quad_mod")  #model applied on reoriented data
+  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
+  sum_tb=as.data.frame(quad.coeff)
+
+  if (quad.coeff <0){
+    message("Y Axis is flipped")
+    sum_tb <- sum_tb%>%
+      mutate(y_flipped = 1)
+  }else{
+    message("Correct alignment")
+    sum_tb <- sum_tb%>%
+      mutate(y_flipped = 0)
+  }
+  return(c_ro_tidy_brain)
+}
