@@ -25,10 +25,10 @@ library(grDevices)
 
 # You Too 
 ```{r}
-threshold_yt <- read_csv("visualization_results/threshold_yt_all_final.csv")%>%
+threshold_yt <- read_csv("~/Desktop/cranium/visualization_results/threshold__all_final.csv")%>%
   select(-X1)
 
-threshold_wt <- read_csv("visualization_results/threshold_wt_all_final.csv")%>%
+threshold_wt <- read_csv("~/Desktop/cranium/visualization_results/threshold_wt_all_final.csv")%>%
   select(-X1)
 
 table(threshold_wt$threshold)
@@ -382,5 +382,15 @@ mplot(threshold_both)
 
 #e distance and yt num signals
 ggplot(data = threshold_both, aes(x = e_distance, y = yt_avg_numsignal)) + geom_point()  + aes(colour = threshold) + theme(legend.position = "right") + labs(title = "")
+```
+
+
+
+```{r}
+wildtype <- download_wildtype_data("folder") #where folder is the location you want to store the Wild Type data
+brain <- read_h5(wildtype[[1]])#first wildtype data sample
+
+
+
 ```
 
