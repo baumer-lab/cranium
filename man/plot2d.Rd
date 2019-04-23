@@ -7,11 +7,11 @@
 \alias{plot2d_plane}
 \title{Plot a 2D projection of a 3D image}
 \usage{
-plot2d(x, show_max = FALSE, ...)
+plot2d(x, title = "Sample", show_max = FALSE, ...)
 
-\method{plot2d}{brain}(x, show_max = FALSE, ...)
+\method{plot2d}{brain}(x, title = "Sample", show_max = FALSE, ...)
 
-\method{plot2d}{tbl_brain}(x, show_max = FALSE, ...)
+\method{plot2d}{tbl_brain}(x, title = "Sample", show_max = FALSE, ...)
 
 plot2d_plane(x, plane = c("x", "z"), show_max = FALSE, ...)
 }
