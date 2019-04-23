@@ -109,7 +109,8 @@ ro_tidy_brain<-file_names[j]%>%
     reorient()
 
 data<-read_h5(file_names[20])
-correctionA.brain(data)
 
+correctionA.brain(data)
+class(data)
 ```
 
