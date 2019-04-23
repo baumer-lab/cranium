@@ -11,7 +11,7 @@ path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
 threshold_df <- data.frame()
-threshold.list <- list(0.6, 0.62,0.64,0.66,0.7,0.8,0.82,0.83,0.85,0.86,0.88,0.89,0.91,0.92)
+threshold.list <- list(0.42, 0.46, 0.50, 0.54,  0.58)
 
 #apply qmodel to all sample, testing for each threshold
 for (i in (1:length(threshold.list))){ 
@@ -28,6 +28,7 @@ for (i in (1:length(threshold.list))){
       threshold_df <- rbind(threshold_df, m) 
   }
 }
+
 
 #find optimal threshold
 optimal_threshold <- data.frame()

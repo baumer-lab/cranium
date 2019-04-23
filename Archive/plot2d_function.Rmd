@@ -42,9 +42,6 @@ class(ro_tidy_wt_sample)
 model <- attr(ro_tidy_wt_sample, "quad_mod")
 
 
-
-
-
 x <- seq(-50, 50, by=0.1)
 
 y_hat <- predict(model)

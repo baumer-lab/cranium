@@ -34,7 +34,7 @@ threshold_wt <- read_csv("visualization_results/threshold_wt_all_final.csv")%>%
 table(threshold_wt$threshold)
 
 test<-threshold_wt%>%
-  group_by(Sampl)%>% 
+  group_by(Sample)%>% 
   summarize(N=n())
 
 
@@ -315,7 +315,7 @@ table(threshold_wt$threshold)
 table(threshold_yt$threshold)
 
 temp_wt <- threshold_wt %>% 
-  filter(threshold %in% c(0.6,0.62,0.64,0.66,0.7,0.75, 0.8,0.81,0.82,0.83, 0.84,0.85,0.86, 0.87,0.88,0.89, 0.9,0.91,0.92)) %>% 
+  filter(threshold %in% c(0.4,0.42,0.44,0.46,0.48,0.5,0.52,0.54,0.56,0.58,0.6,0.62,0.64,0.66,0.7,0.75, 0.8,0.81,0.82,0.83, 0.84,0.85,0.86, 0.87,0.88,0.89, 0.9,0.91,0.92)) %>% 
   select(threshold, num.signal, adj.r.squared) %>% 
   rename(wt_threshold=threshold, wt_numsignal=num.signal,
          wt_adjr2=adj.r.squared) 
@@ -331,7 +331,7 @@ temp_wt <- temp_wt %>%
 temp_wt <- temp_wt[with(temp_wt, order(wt_threshold)), ]
 
 temp_yt <- threshold_yt %>% 
- filter(threshold %in% c(0.6,0.62,0.64,0.66,0.7,0.75, 0.8,0.81,0.82,0.83, 0.84,0.85,0.86, 0.87,0.88,0.89, 0.9,0.91,0.92))%>% 
+ filter(threshold %in% c(0.4,0.42,0.44,0.46,0.48,0.5,0.52,0.54,0.56,0.58,0.6,0.62,0.64,0.66,0.7,0.75, 0.8,0.81,0.82,0.83, 0.84,0.85,0.86, 0.87,0.88,0.89, 0.9,0.91,0.92))%>% 
   select(threshold, num.signal, adj.r.squared) %>% 
   rename(yt_threshold=threshold, yt_numsignal=num.signal, yt_adjr2=adj.r.squared)
 
@@ -344,27 +344,43 @@ temp_yt <- temp_yt %>%
 # reordering thresholds in ascd order
 temp_yt <- temp_yt[with(temp_yt, order(yt_threshold)), ]
 
-threshold_both <- cbind(temp_wt, temp_yt)
-# get rid of repeated cols
-threshold_both <- threshold_both %>% 
-  select(-yt_threshold) %>% 
-  rename(threshold=wt_threshold)
+threshold_both <- cbind(temp_wt, temp_yt)%>% 
+  select(-yt_threshold) %>%   # get rid of repeated cols
+  rename(threshold=wt_threshold)%>%
+  mutate(e_distance = sqrt((1-wt_avg_adjr2)^2 + (1-yt_avg_adjr2)^2))
+
+
+# 0.4: 
+# 0.58:
+
+mplot(threshold_both)
 
 threshold_both$threshold <- as.character(threshold_both$threshold)
 ggplot(threshold_both, aes(x=wt_avg_adjr2, y=yt_avg_adjr2, color=threshold, 
                            size = yt_avg_numsignal))+
   geom_point()+
-  scale_color_viridis_d() + 
+#  scale_color_viridis_d(option="plasma") + 
   coord_fixed() +
   xlab("wild type adjusted.r2")+
   ylab("mutant adjusted.r2")+
   ggtitle("Optimal Threshold")
-```
 
-# plot
-```{r}
-threshold_both %>% 
-  filter(wt_threshold==yt_threshold) %>% 
-  ggplot2(aes(x=wt_adjr2, y=yt_adjr2))+geom_point()
+
+
+
+threshold_both$threshold <- as.character(threshold_both$threshold)
+ggplot(threshold_both, aes(x=wt_avg_adjr2, y=yt_avg_adjr2, color=threshold, 
+                           size = e_distance))+
+  geom_point()+
+  scale_color_cividis_d() + 
+  coord_fixed() +
+  xlab("wild type adjusted.r2")+
+  ylab("mutant adjusted.r2")+
+  ggtitle("Optimal Threshold")
+
+mplot(threshold_both)
+
+#e distance and yt num signals
+ggplot(data = threshold_both, aes(x = e_distance, y = yt_avg_numsignal)) + geom_point()  + aes(colour = threshold) + theme(legend.position = "right") + labs(title = "")
 ```
 
