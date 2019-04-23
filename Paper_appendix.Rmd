@@ -92,11 +92,24 @@ for (i in (1:length(file_names))){
 }
 write.csv(errorA_df, file = "correction_results/correctionA_wt_0.6.csv")
 
+#part 2 plot wt threshold= 0.6
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+for (i in (1:length(file_names))){
+  name <- sub("_Probabilities.h5", "", file_names[i])
+  name <- sub("Sample/WildType/", "WildType_", name)
+  png(filename = paste("visualization_results/wt_plots_0.6/", name, ".png", sep= ""))
+    mytitle = paste("plot_",name)
+    file_names[i] %>%
+    read_h5()%>%
+    tidy(threshold.n = 0.6)%>%
+    reorient()%>%
+    plot2d(title=name)
+  dev.off()
+}
 
 
-
-
-#part 2: youtoo, threshold=0.6
+#part 3: youtoo, threshold=0.6
 path = "Sample/YouToo"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
