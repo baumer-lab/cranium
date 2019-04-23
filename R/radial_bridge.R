@@ -10,7 +10,6 @@
 #' raw <- read_h5(file)
 #' class(raw)
 #' dim(raw)
-
 read_h5 <- function(file, name = NULL, ...) {
   if (requireNamespace("hdf5r", quietly = TRUE)) {
     objs <- hdf5r::H5File$new(file, mode = "r")
@@ -47,6 +46,52 @@ read_h5 <- function(file, name = NULL, ...) {
 
   stop("Could not read file. Do you have a HDF5 library available?")
 }
+
+
+#' Download You Too sample data
+#' @param folder where downloaded data will be stored
+#' @return a list of class \code{brain}
+#' youtoo <- download_youtoo_data('folder')
+#' plot2d(youtoo[[1]], title=name)
+#input: folder - location where one wants to store the downloaded data of You Too
+#output: list of You Too data of class Brain
+download_youtoo_data <- function(folder) {
+  youtoo_samples <- c("01", "02", "03", "04", "05", "06", "112", "19", "21", "24")
+  dir.create(folder)
+  youtoo <- list()
+  for(i in (1:length(youtoo_samples))){
+    #youtoo
+    url <- paste("https://s3.us-east-2.amazonaws.com/deltascope/AT_",youtoo_samples[[i]],"_Probabilities.h5", sep="")
+    filePath = paste("./",folder,"/AT_", youtoo_samples[[i]], "_Probabilites.h5", sep="")
+    filePath
+    download.file(url ,destfile = filePath)
+    currFile <- read_h5(filePath)
+    youtoo[[i]] <- currFile
+  }
+  return(youtoo)
+}
+
+#' Download Wild Type sample data
+#' @param folder where downloaded data will be stored
+#' @return a list of class \code{brain}
+#' wildtype <- download_ wildtype_data('folder')
+#' plot2d(wildtype[[1]], title=name)
+download_wildtype_data <- function(folder) {
+  wildtype_samples <- c("101", "102", "103", "104", "105", "106", "107", "108", "109", "110")
+  dir.create(folder)
+  wildtype <- list()
+  for(i in (1:length(wildtype_samples))){
+    #wildtype
+    url <- paste("https://s3.us-east-2.amazonaws.com/deltascope/AT_wildtype_",wildtype_samples[[i]],"_Probabilities.h5", sep="")
+    filePath = paste("./",folder,"/AT_wildtype", wildtype_samples[[i]], "_Probabilites.h5", sep="")
+    filePath
+    download.file(url ,destfile = filePath)
+    currFile <- read_h5(filePath)
+    wildtype[[i]] <- currFile
+  }
+  return(wildtype)
+}
+
 
 #' Tidy 3D brain image data
 #' @inheritParams broom::tidy.lm
@@ -179,19 +224,26 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
     filter(var %in% plane)
   titles <- data.frame(depth_var = c("x", "y", "z"),
                        title = c("Side View", "Front View", "Top View"))
-  ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
+
+
+  plot <- ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
     geom_point(alpha = 0.1, size = 0.5) +
-    geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red") +
-    geom_smooth(method = "lm", color = "red") +
     annotate("text", x = 0, y = 0, label = "origin", size = 5) +
     annotate("text", x = 0, y = 0,
-             label = paste0("min_prob: ", round(min(pull(ungroup(gg_data), "min_freq")), 2))) +
+             label = paste0("min_prob: ", round(min(pull(ungroup(gg_data), "min_freq")), 2)))+
     scale_color_continuous(guide = FALSE) +
     scale_x_continuous(filter(labels, var == plane[1])$label) +
     scale_y_continuous(filter(labels, var == plane[2])$label) +
     ggtitle(filter(titles, depth_var == depth)$title)
-}
 
+  if (plane == c("x", "y")){
+    plot + geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red")
+  } else {
+    plot + geom_smooth(method = "lm", color = "red")
+  }
+
+
+}
 #' Plot a 3D image of a brain
 #' @inheritParams rgl::plot3d
 #' @export
@@ -325,7 +377,7 @@ get_jawbone <- function(xyz, ...) {
 #' }
 #' }
 
-reorient <- function(x, ...) {
+reorient <- function(x, correctionA = FALSE, ...) {
   pca <- stats::prcomp(~ x + y + z, data = x, scale = FALSE, ...)
   out <- pca$x %>%
     tibble::as_tibble() %>%
@@ -342,8 +394,13 @@ reorient <- function(x, ...) {
   z_mean <- out %>%
     filter(abs(x) < 50) %>%
     summarize(z_mean = mean(z))
-  out <- out %>%
-    mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
+  if (correctionA==FALSE){
+    out <- out %>%
+      mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
+  }else{
+    out <- out %>%
+      mutate(x = x - vertex[1], y =  vertex[2] - y , z = z - z_mean$z_mean)
+  }
   out[, c("Freq", "gray_val")] <- x[, c("Freq", "gray_val")]
   class(out) <- append("tbl_brain", class(out))
   # recompute model after translation
@@ -383,6 +440,8 @@ change_coordinates <- function(obj, ...) {
 #Model evaluation
 #Requires: brain class type.
 qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
+  tidy_brain<-data%>%
+    tidy(type, threshold = threshold.n)
   ro_tidy_brain <- data%>%
     tidy(type, threshold = threshold.n)%>%
     reorient()
@@ -399,3 +458,39 @@ qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
   return(sum_tb)
 }
 
+#PCA alignment error identification
+#Correction A: y-axis flipped
+errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
+  ro_tidy_brain <- data%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient()
+  ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
+  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
+  sum_tb=as.data.frame(quad.coeff)
+
+  if (quad.coeff <0){
+    message("Y Axis is flipped")
+    sum_tb <- sum_tb%>%
+      mutate(y_flipped = 1)
+  }else{
+    message("Correct alignment")
+    sum_tb <- sum_tb%>%
+      mutate(y_flipped = 0)
+  }
+  return(sum_tb)
+}
+
+
+correctionA.brain<- function(data, type="wildtype", threshold.n=0.9){
+  c_ro_tidy_brain <- data%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient(correctionA = TRUE)
+  ro_model <- attr(c_ro_tidy_brain, "quad_mod")
+  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
+  if (quad.coeff <0){
+    message("Y Axis is flipped")
+  }else{
+    message("Correct alignment")
+  }
+  return(c_ro_tidy_brain)
+}
