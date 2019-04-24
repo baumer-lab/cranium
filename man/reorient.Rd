@@ -2,35 +2,25 @@
 % Please edit documentation in R/radial_bridge.R
 \name{reorient}
 \alias{reorient}
-\title{PCA}
+\title{Reorientation: PCA (Principal Component Analysis)}
 \usage{
-reorient(x, ...)
+reorient(x, correctionA = FALSE, ...)
 }
 \arguments{
 \item{x}{a \code{\link{tbl_brain}}}
 
+\item{correctionA}{identify PCA alignment error type A and make correction \link[cranium]{is_errorA}}
+
 \item{...}{arguments passed to \code{\link[stats]{prcomp}}}
 }
 \description{
-PCA
+Principal component analysis (PCA) is a statistical procedure that uses an
+orthogonal transformation to convert a set of observations of possibly correlated variables
+(entities each of which takes on various numerical values) into a set of values of linearly
+uncorrelated variables called principal components.\url{https://en.wikipedia.org/wiki/Principal_component_analysis}
 }
 \examples{
-file <- "~/Data/barresi/AT_1_Probabilities.h5"
-\dontrun{
-if (require(dplyr)) {
-  tidy_brain <- file \%>\%
-    read_h5() \%>\%
-    tidy()
-  plot3d(tidy_brain)
-  tidy_flat <- reorient(tidy_brain)
-  plot3d(tidy_flat)
-
-  # compare before and after reorientation
-  plot2d(tidy_brain)
-  plot2d(tidy_flat)
-
-  # retrieve coefficients
-  coef(attr(tidy_flat, "quad_mod"))
-}
-}
+tidy_brain <- read_h5(download_brains(tempdir(), pattern = "101"))\%>\%
+       tidy(type="wildtype", threshold = 0.9)
+ro_tidy_brin <- reorient(tidy_brain)
 }
