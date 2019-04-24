@@ -308,7 +308,7 @@ get_jawbone <- function(xyz, ...) {
   return(list(bent_plane, flat_plane, f))
 }
 
-#' @title Reorientation: PCA (Principal Component Analysis)
+#' @title Reorientation: applying PCA (Principal Component Analysis)
 #' @description Principal component analysis (PCA) is a statistical procedure that uses an
 #' orthogonal transformation to convert a set of observations of possibly correlated variables
 #' (entities each of which takes on various numerical values) into a set of values of linearly
@@ -494,3 +494,5 @@ correct_errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
   }
   return(c_ro_tidy_brain)
 }
+
+
