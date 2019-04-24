@@ -32,13 +32,15 @@ download_brains <- function(path = ".", type = "wildtype", pattern = NULL, ...) 
     "_Probabilities.h5"),
     lcl = fs::path(path, basename(src)),
     exists = fs::file_exists(lcl)
-  ) %>%
-    filter(grepl(pattern, src))
-
+  )
+  if (!is.null(pattern)) {
+    x <- x %>%
+      filter(grepl(pattern, src))
+  }
   fs::dir_create(path)
 
-  message(paste("Downloading", sum(x$exists), "new files. ",
-                sum(!x$exists), "untouched."))
+  message(paste("Downloading", sum(!x$exists), "new files. ",
+                sum(x$exists), "untouched."))
   x %>%
     filter(!exists) %>%
     group_split(src) %>%
@@ -54,3 +56,4 @@ download_brains <- function(path = ".", type = "wildtype", pattern = NULL, ...) 
 read_brains <- function(file) {
   purrr::map(file, read_h5)
 }
+
