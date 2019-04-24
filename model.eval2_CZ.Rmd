@@ -23,26 +23,34 @@ library(sjstats)
 library(grDevices)
 ```
 
-# You Too 
+# Part I.
 ```{r}
-threshold_yt <- read_csv("~/Desktop/cranium/visualization_results/threshold__all_final.csv")%>%
-  select(-X1)
+threshold_yt <- read_csv("~/Desktop/cranium/visualization_results/threshold_yt_all_final.csv")%>%
+  select(-X1)%>%
+  mutate(type = "Mutant")
 
 threshold_wt <- read_csv("~/Desktop/cranium/visualization_results/threshold_wt_all_final.csv")%>%
-  select(-X1)
+  select(-X1)%>%
+  mutate(type = "Wild Type")
 
-table(threshold_wt$threshold)
-
-test<-threshold_wt%>%
-  group_by(Sample)%>% 
-  summarize(N=n())
+threshold_all <- rbind(threshold_wt, threshold_yt)
 
 
-table(threshold_yt$Sample)
+threshold_all$Sample_id <- as.character(threshold_all$Sample_id)
+threshold_all$threshold <- as.character(threshold_all$threshold )
 
-threshold_yt$Sample_id <- as.character(threshold_yt$Sample_id)
-threshold_yt$threshold <- as.character(threshold_yt$threshold )
+ggplot(data =threshold_all, aes(x = threshold, y = adj.r.squared)) +
+  geom_boxplot()  +
+  facet_wrap(~type, ncol = 1)+
+  ylab("Adjusted R-Squared")+
+  scale_x_discrete(name ="Threshold", 
+                    breaks=c("0.4", "0.5", "0.6", "0.7", "0.8", "0.9"))+ 
+  coord_flip()
+```
 
+
+
+```{r}
 #lineplot for each sample 
 ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared, group=Sample)) + 
   geom_line()  + 
@@ -56,17 +64,14 @@ num_signal_tb <- threshold_yt%>%
   group_by(threshold)%>%
   summarize(min=min(num.signal),mean_num_signal = mean(num.signal), max=max(num.signal), sd=sd(num.signal))
 
-#boxplot for each threshold y:r2
-ggplot(data =threshold_yt, aes(x = threshold, y = adj.r.squared)) +
-  geom_boxplot()  + 
-  labs(title = "Optimal threshold for Mutatnt (You Too) type")
+
 ```
 
 #Mode fit comparison: before PCA and after PCA (adj.r.square)
 ```{r}
 
-threshold_wt_all_0.9 <- threshold_wt_all%>%
-  filter(threshold == 0.90)
+threshold_all_0.6 <- threshold_wt_all%>%
+  filter(threshold == 0.60)
 
 #t test
 tttest_pca <- t.test(threshold_wt_all_0.9$adj.r.squared.original, threshold_wt_all_0.9$adj.r.squared, paired = TRUE, alternative = "two.sided")
@@ -308,8 +313,7 @@ for (i in (1:length(file_names))){
 
 
 #Optimization
-
-# selecting common threshold levels
+# Generate threshold_both dataframe
 ```{r}
 table(threshold_wt$threshold)
 table(threshold_yt$threshold)
@@ -348,23 +352,24 @@ threshold_both <- cbind(temp_wt, temp_yt)%>%
   select(-yt_threshold) %>%   # get rid of repeated cols
   rename(threshold=wt_threshold)%>%
   mutate(e_distance = sqrt((1-wt_avg_adjr2)^2 + (1-yt_avg_adjr2)^2))
+```
 
-
-# 0.4: 
-# 0.58:
-
+# plots
+```{r}
 mplot(threshold_both)
+threshold_both$threshold <- as.character(threshold_both$threshold)
 
 threshold_both$threshold <- as.character(threshold_both$threshold)
 ggplot(threshold_both, aes(x=wt_avg_adjr2, y=yt_avg_adjr2, color=threshold, 
                            size = yt_avg_numsignal))+
   geom_point()+
-#  scale_color_viridis_d(option="plasma") + 
+  scale_color_viridis_d(option="plasma") + 
   coord_fixed() +
-  xlab("wild type adjusted.r2")+
-  ylab("mutant adjusted.r2")+
-  ggtitle("Optimal Threshold")
-
+  xlab("Wild Type Adjusted R-Squared")+
+  ylab("Mutant Adjusted R-Squared") +
+  scale_x_continuous(breaks=c(0.875,0.88, 0.885, 0.89, 0.895))+
+  scale_y_continuous(breaks=c(0.325,0.33,0.335,0.34,0.345,0.35))+ 
+  scale_size_continuous(name = "Number of Signals_Mutant", limits=c(10000,30000,40000))
 
 
 
@@ -387,10 +392,9 @@ ggplot(data = threshold_both, aes(x = e_distance, y = yt_avg_numsignal)) + geom_
 
 
 ```{r}
-wildtype <- download_wildtype_data("folder") #where folder is the location you want to store the Wild Type data
+wildtype <- download_wildtype_data("data/folder") #where folder is the location you want to store the Wild Type data
 brain <- read_h5(wildtype[[1]])#first wildtype data sample
-
-
-
+class(wildtype)
+errorA(wildtype[[1]])
 ```
 
