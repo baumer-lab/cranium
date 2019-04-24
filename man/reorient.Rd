@@ -2,7 +2,7 @@
 % Please edit documentation in R/radial_bridge.R
 \name{reorient}
 \alias{reorient}
-\title{Reorientation: PCA (Principal Component Analysis)}
+\title{Reorientation: applying PCA (Principal Component Analysis)}
 \usage{
 reorient(x, correctionA = FALSE, ...)
 }
