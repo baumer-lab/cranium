@@ -308,30 +308,22 @@ get_jawbone <- function(xyz, ...) {
   return(list(bent_plane, flat_plane, f))
 }
 
-#' PCA
+#' @title Reorientation: PCA (Principal Component Analysis)
+#' @description Principal component analysis (PCA) is a statistical procedure that uses an
+#' orthogonal transformation to convert a set of observations of possibly correlated variables
+#' (entities each of which takes on various numerical values) into a set of values of linearly
+#' uncorrelated variables called principal components.\url{https://en.wikipedia.org/wiki/Principal_component_analysis}
+
 #' @param x a \code{\link{tbl_brain}}
+#' @param correctionA identify PCA alignment error type A and make correction \link[cranium]{is_errorA}
 #' @param ... arguments passed to \code{\link[stats]{prcomp}}
 #' @importFrom tibble as_tibble
 #' @export
 #' @examples
-#' file <- "~/Data/barresi/AT_1_Probabilities.h5"
-#' \dontrun{
-#' if (require(dplyr)) {
-#'   tidy_brain <- file %>%
-#'     read_h5() %>%
-#'     tidy()
-#'   plot3d(tidy_brain)
-#'   tidy_flat <- reorient(tidy_brain)
-#'   plot3d(tidy_flat)
-#'
-#'   # compare before and after reorientation
-#'   plot2d(tidy_brain)
-#'   plot2d(tidy_flat)
-#'
-#'   # retrieve coefficients
-#'   coef(attr(tidy_flat, "quad_mod"))
-#' }
-#' }
+#' tidy_brain <- read_h5(download_brains(tempdir(), pattern = "101"))%>%
+#'        tidy(type="wildtype", threshold = 0.9)
+#' ro_tidy_brin <- reorient(tidy_brain)
+
 
 reorient <- function(x, correctionA = FALSE, ...) {
   pca <- stats::prcomp(~ x + y + z, data = x, scale = FALSE, ...)
@@ -393,8 +385,25 @@ change_coordinates <- function(obj, ...) {
 
 }
 
-#Model evaluation
-#Requires: brain class type.
+#' @title Quadratic model evaluation
+#' @description Fit quadratic model y=x^2 + x to the data and evaluate how well the model fit the data using adjusted
+#' R-Squared, RMSE, number of signals being captured
+#' @param data a brain image or a tidy brain
+#' @param type wild type or mutant type of zebrafish embryo brain
+#' @param threshold.n threshld for signal frequency. Any signal with frequency below threshold value is exluded
+#' @export
+#' @examples
+#' brain <- read_h5(download_brains(tempdir(), pattern = "101"))
+#' qmodel(brain)
+#'
+#' #If you have already tidied your brain
+#' tidy_brain <- tidy(brain, type = "wildtype", threshold.n = 0.9)
+#' qmodel(tidy_brain)
+
+qmodel <- function(data, type="wildtype", threshold.n=0.9) UseMethod("qmodel")
+
+#' @export
+#' @rdname qmodel
 qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
   tidy_brain<-data%>%
     tidy(type, threshold = threshold.n)
@@ -414,13 +423,36 @@ qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
   return(sum_tb)
 }
 
-#' @title PCA alignment error identification
-#' @description Correction A: y-axis flipped
+#' @export
+#' @importFrom gridExtra grid.arrange
+#' @rdname qmodel
+qmodel.tbl_brain<- function(tidy_brain, type="wildtype", threshold.n=0.9){
+  ro_tidy_brain <- tidy_brain%>%
+    reorient()
+  model <- lm(y ~ I(x^2) + x, data = tidy_brain) #model applied on original data
+  ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
+  mean.fitted <- mean(ro_model$fitted.values)
+  #sigma=sjstats::rse(ro_model). RSE: residual standard error
+  sum_tb<- ro_model %>%
+    broom::glance() %>%
+    mutate(num.signal = nrow(tidy_brain),
+           adj.r.squared.original = round(summary(model)$adj.r.squared, 3),#original r square
+           quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4),
+           RMSE = sjstats::rmse(ro_model) )
+  return(sum_tb)
+}
+
+
+#' @title PCA alignment error type A identification and correction
+#' @description Identify Error Type A that the y-axis is flipped y-axis and make correction
 #' @param data a brain image
+#' @param type wild type or mutant type of zebrafish embryo brain
+#' @param threshold.n threshld for signal frequency. Any signal with frequency below threshold value is exluded
 #' @export
 #' @examples
-#' x <- read_h5(download_brains(tempdir(), pattern = "101"))
-#' is_errorA(x)
+#' brain <- read_h5(download_brains(tempdir(), pattern = "101"))
+#' is_errorA(brain)
+#' corrected_brain <- correct_errorA(brain)
 
 is_errorA <- function(data, type="wildtype", threshold.n=0.9) UseMethod("is_errorA")
 
@@ -441,6 +473,7 @@ is_errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
     return(FALSE)
   }
 }
+
 
 #' @export
 #' @rdname is_errorA

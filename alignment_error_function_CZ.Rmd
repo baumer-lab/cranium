@@ -20,6 +20,7 @@ library(mosaic)
 #new packages
 library(sjstats)
 library(grDevices)
+library(skimr)
 ```
 
 
@@ -101,17 +102,17 @@ class(data)
 
 # Error B 
 ```{r}
+path = "Sample/WildType"
+file_names <- list.ficles(path, pattern=".h5", full.names=TRUE)
 
 #ONE SAMPLE
-data<-read_h5(file_names[8])%>%
+data<-read_h5(file_names[29])%>%
   tidy(threshold=0.6)
+plot2d(data)
 errorB<-data%>%
-  favstats(x=data$z)
-
-
-errorB<-read_h5(file_names[8])%>%
-  tidy(threshold=0.6)%>%
-  favstats(x=z)
+  skim(z)%>%
+  select(stat, formatted)%>%
+  spread(stat, formatted)
 
 
 #LOOP

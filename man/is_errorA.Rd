@@ -5,7 +5,7 @@
 \alias{is_errorA.brain}
 \alias{correct_errorA}
 \alias{correct_errorA.brain}
-\title{PCA alignment error identification}
+\title{PCA alignment error type A identification and correction}
 \usage{
 is_errorA(data, type = "wildtype", threshold.n = 0.9)
 
@@ -18,11 +18,16 @@ correct_errorA(data, type = "wildtype", threshold.n = 0.9)
 }
 \arguments{
 \item{data}{a brain image}
+
+\item{type}{wild type or mutant type of zebrafish embryo brain}
+
+\item{threshold.n}{threshld for signal frequency. Any signal with frequency below threshold value is exluded}
 }
 \description{
-Correction A: y-axis flipped
+Identify Error Type A that the y-axis is flipped y-axis and make correction
 }
 \examples{
-x <- read_h5(download_brains(tempdir(), pattern = "101"))
-is_errorA(x)
+brain <- read_h5(download_brains(tempdir(), pattern = "101"))
+is_errorA(brain)
+corrected_brain <- correct_errorA(brain)
 }
