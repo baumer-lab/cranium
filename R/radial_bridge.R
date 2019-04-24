@@ -414,30 +414,41 @@ qmodel.brain<- function(data, type="wildtype", threshold.n=0.9){
   return(sum_tb)
 }
 
-#PCA alignment error identification
-#Correction A: y-axis flipped
-errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
+#' @title PCA alignment error identification
+#' @description Correction A: y-axis flipped
+#' @param data a brain image
+#' @export
+#' @examples
+#' x <- read_h5(download_brains(tempdir(), pattern = "101"))
+#' is_errorA(x)
+
+is_errorA <- function(data, type="wildtype", threshold.n=0.9) UseMethod("is_errorA")
+
+#' @export
+#' @rdname is_errorA
+is_errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
   ro_tidy_brain <- data%>%
     tidy(type, threshold = threshold.n)%>%
     reorient()
   ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
-  sum_tb=as.data.frame(quad.coeff)
 
-  if (quad.coeff <0){
+  if (quad.coeff < 0) {
     message("Y Axis is flipped")
-    sum_tb <- sum_tb%>%
-      mutate(y_flipped = 1)
-  }else{
+    return(TRUE)
+  } else{
     message("Correct alignment")
-    sum_tb <- sum_tb%>%
-      mutate(y_flipped = 0)
+    return(FALSE)
   }
-  return(sum_tb)
 }
 
+#' @export
+#' @rdname is_errorA
+correct_errorA <- function(data, type="wildtype", threshold.n=0.9) UseMethod("correct_errorA")
 
-correctionA.brain<- function(data, type="wildtype", threshold.n=0.9){
+#' @export
+#' @rdname is_errorA
+correct_errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
   c_ro_tidy_brain <- data%>%
     tidy(type, threshold = threshold.n)%>%
     reorient(correctionA = TRUE)

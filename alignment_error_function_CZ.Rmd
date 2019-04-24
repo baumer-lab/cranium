@@ -23,11 +23,11 @@ library(grDevices)
 ```
 
 
-
+# Error A function 
 ```{r}
 #Model evaluation
 #Requires: brain class type.
-correctionA.brain<- function(data, type="wildtype", threshold.n=0.9){
+errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
   ro_tidy_brain <- data%>%
     tidy(type, threshold = threshold.n)%>%
     reorient()
@@ -45,45 +45,32 @@ correctionA.brain<- function(data, type="wildtype", threshold.n=0.9){
 }
   return(sum_tb)
 }
-
-
-#test
-correctionA.brain(data, type="wildtype", threshold.n=0.9)
 ```
 
 
-
+# ErrorA function test sample
 ```{r}
-#before callying the function
 path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
 #input
-data <- read_h5(file_names[11])
+data <- read_h5(file_names[10])
 
-ro_tidy_brain <- data%>%
-    tidy("wildtype", threshold = 0.6) %>%
-    reorient()
+class(data)
 
-ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
-quad.coeff =round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
-sum_tb=as.data.frame(quad.coeff)
+errorA.brain(data, type="wildtype", threshold.n=0.6)
 
-if (quad.coeff <0){
-  message("Y Axis is flipped")
-  sum_tb <- sum_tb%>%
-    mutate(y_flipped = 1)
-}else{
-  message("Correct alignment")
-  sum_tb <- sum_tb%>%
-    mutate(y_flipped = 0)
-}
-  return(quad.coeff)
+c.brain<-correctionA.brain(data, type="wildtype", threshold.n=0.6)
 ```
 
 
+# Compare error A for two wt thresholds:
+0.9: #error = 6
+0.6: #error = 5
 ```{r}
 correctionA_wt_0.9 <- read_csv("correction_results/correctionA_wt_0.9.csv")%>%
+  select(-X1)
+correctionA_wt_0.6 <- read_csv("correction_results/correctionA_wt_0.6.csv")%>%
   select(-X1)
 
 path = "Sample/WildType"
@@ -97,11 +84,8 @@ for (i in (1:length(correctionA_wt_0.9_y))){
   c_ro_tidy_brain <- file_names[j]%>%
     read_h5()%>%
     tidy(type, threshold = threshold.n)%>%
-    reorient(correction=TRUE)
-  
+    reorient(correctionA=TRUE)
 }
-
-
 
 ro_tidy_brain<-file_names[j]%>%
     read_h5()%>%
@@ -110,7 +94,47 @@ ro_tidy_brain<-file_names[j]%>%
 
 data<-read_h5(file_names[20])
 
-correctionA.brain(data)
+errorA.brain(data)
 class(data)
 ```
+
+
+# Error B 
+```{r}
+
+#ONE SAMPLE
+data<-read_h5(file_names[8])%>%
+  tidy(threshold=0.6)
+errorB<-data%>%
+  favstats(x=data$z)
+
+
+errorB<-read_h5(file_names[8])%>%
+  tidy(threshold=0.6)%>%
+  favstats(x=z)
+
+
+#LOOP
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+errorB_df <- data.frame()
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(file_names))){
+    name <- sub("_Probabilities.h5", "", file_names[i])
+    name <- sub("Sample/WildType/", "WildType_", name) 
+    m <- file_names[i]%>%
+        read_h5()%>%
+        tidy(threshold=0.6)%>%
+        favstats(x=)
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = i)%>%
+        mutate(threshold=0.6)
+     errorB_df <- rbind(errorA_df, m) 
+}
+```
+
+
+
 

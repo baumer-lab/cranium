@@ -47,7 +47,7 @@ table(optimal_threshold$optimal_threshold)
 
 ```
 
-# Apply Correction A to all wildtype
+# Apply Error A to all wildtype
 ```{r}
 path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
