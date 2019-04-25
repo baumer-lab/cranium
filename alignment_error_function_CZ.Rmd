@@ -102,22 +102,61 @@ class(data)
 
 # Error B 
 ```{r}
+path = "Sample/YouToo"
 path = "Sample/WildType"
-file_names <- list.ficles(path, pattern=".h5", full.names=TRUE)
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
 #ONE SAMPLE
-data<-read_h5(file_names[29])%>%
+data<-read_h5(file_names[5])%>%
+  tidy(threshold=0.6)%>%
+  reorient()
+
+brain<-read_h5(file_names[5])
+
+tidy_brain <- brain%>%
   tidy(threshold=0.6)
-plot2d(data)
-errorB<-data%>%
+
+ro_tidy_brain<-tidy_brain%>%
+  reorient()
+
+
+##wt
+brain_wt<-read_h5(file_names[2])
+
+tidy_brain_wt <- brain%>%
+  tidy(threshold=0.6)
+
+ro_tidy_brain_wt<-tidy_brain%>%
+  reorient()
+
+attr(ro_tidy_brain, "linear_mod")
+attr(ro_tidy_brain, "quad_mod")
+
+
+plot2d(ro_tidy_brain)
+image(data)
+
+z_statistics<-ro_tidy_brain%>%
   skim(z)%>%
   select(stat, formatted)%>%
   spread(stat, formatted)
 
+y_statistics<-data%>%
+  skim(y)%>%
+  select(stat, formatted)%>%
+  spread(stat, formatted)
+
+y_stats<-read_h5(file_names[22])%>%
+  tidy(threshold=0.6)%>%
+  reorient()%>%
+  skim(z)%>%
+  select(stat, formatted)%>%
+  spread(stat, formatted)
 
 #LOOP
 path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
 
 errorB_df <- data.frame()
 
@@ -128,12 +167,116 @@ for (i in (1:length(file_names))){
     m <- file_names[i]%>%
         read_h5()%>%
         tidy(threshold=0.6)%>%
-        favstats(x=)
+        reorient()%>%
+        skim(z)%>%
+        select(stat, formatted)%>%
+        spread(stat, formatted)%>%
         mutate(Sample = name)%>% 
         mutate(Sample_id = i)%>%
         mutate(threshold=0.6)
-     errorB_df <- rbind(errorA_df, m) 
+     errorB_df <- rbind(errorB_df, m) 
 }
+
+
+#function
+#apply qmodel to all sample, testing for each threshold
+is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
+    mean <- data%>%
+        tidy(threshold=threshold.n)%>%
+        reorient()%>%
+        skim(z)%>%
+        select(stat, formatted)%>%
+        spread(stat, formatted)%>%
+        pull(mean)
+    if (abs(mean) >0.1){
+      message("Curve in xz plane")
+      return(TURE)
+    }else{
+      message("Correct alignment")
+      return(FALSE)
+    }
+}
+is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
+    mean <- data%>%
+        tidy(threshold=threshold.n)%>%
+        reorient()%>%
+        skim(z)%>%
+        select(stat, formatted)%>%
+        spread(stat, formatted)%>%
+        pull(mean)
+    if (abs(mean) >0.1){
+      message("Curve in xz plane")
+      return(TURE)
+    }else{
+      message("Correct alignment")
+      return(FALSE)
+    }
+}
+
+is_errorB.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
+    mean <- data%>%
+        reorient()%>%
+        skim(z)%>%
+        select(stat, formatted)%>%
+        spread(stat, formatted)%>%
+        pull(mean)%>%
+      as.numeric()
+    if (abs(mean) >0.1){
+      message("Curve in xz plane")
+      return(TURE)
+    }else{
+      message("Correct alignment")
+      return(FALSE)
+    }
+}
+
+mean <- mean%>%
+  as.numeric()
+
+is_errorB.tbl_brain(tidy_brain)
+
+mean <- data%>%
+        reorient()%>%
+        skim(z)%>%
+        select(stat, formatted)%>%
+        spread(stat, formatted)%>%
+        pull(mean)
+
+
+
+
+is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
+  ro_tidy_brain <- data%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient()
+  ro_model <- attr(ro_tidy_brain, "linear_mod")  #model applied on reoriented data
+  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
+
+  if (quad.coeff < 0) {
+    message("Y Axis is flipped")
+    return(TRUE)
+  } else{
+    message("Correct alignment")
+    return(FALSE)
+  }
+}
+
+```
+
+
+```{r}
+class(brain)
+library(pracma)
+rotate_counter_clockwise <- function(x){ apply(t(x),2, rev)}
+brain_matrix <- as.matrix(brain)
+brain_rotate <- rotate_counter_clockwise(brain_matrix)
+
+
+brain_rotate_array<-as.array(brain_rotate)
+
+tidy_brain<-tidy(brain_rotate_array)
+ro_tidy_brain
+
 ```
 
 

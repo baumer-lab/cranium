@@ -353,6 +353,7 @@ reorient <- function(x, correctionA = FALSE, ...) {
   class(out) <- append("tbl_brain", class(out))
   # recompute model after translation
   attr(out, "quad_mod") <- stats::lm(y ~ x + I(x^2), data = out)
+  attr(out, "linear_mod") <- stats::lm(y ~ x, data=out)
   return(out)
 }
 
