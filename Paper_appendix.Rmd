@@ -69,8 +69,7 @@ for (i in (1:length(file_names))){
 ```
 
 
-#Run Overnight:
-# Apply Correction A to all wildtype
+# Archive
 ```{r}
 #part 1: wildtype, threshold=0.6
 path = "Sample/WildType"
@@ -127,6 +126,83 @@ for (i in (1:length(file_names))){
         mutate(threshold=0.6)
      errorA_df <- rbind(errorA_df, m) 
 }
-write.csv(errorA_df, file = "correction_results/correctionA_yt_0.6.csv")
+#write.csv(errorA_df, file = "correction_results/correctionA_yt_0.6.csv")
 
 ```
+
+
+# Apply Curve test to all wildtype
+
+# Emma, please run this tonight! (April.26)
+Please copy the following chunks to your own rmd. Please don't edit anything on this file.
+
+#steop1: open radial_bridge.R, copy all the code there are run in you console.
+
+#step2: run 1 sample to see if the new function works for you
+
+```{r}
+brain<-read_h5(file_names[5])%>%
+  tidy(threshold=0.6)
+class(brain)
+
+tb <- is_z_curve(brain)
+View(tb)
+```
+
+#step3: run a loop 
+```{r}
+#wild type
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+curve_df_wt <- data.frame()
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(file_names))){
+    old <- Sys.time()
+    
+    name <- sub("_Probabilities.h5", "", file_names[i])
+    name <- sub("Sample/WildType/", "WildType_", name) 
+    m <- file_names[i]%>%
+        read_h5()%>%
+        tidy(type="wildtype", threshold.n=0.6)%>%
+        is_z_curve(type="wildtype", threshold.n=0.6)%>%
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = i)%>%
+        mutate(threshold= 0.6)
+     curve_df_wt <- rbind(curve_df_wt, m) 
+    
+    new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
+}
+
+#write.csv(curve_df_wt, file = "correction_results/curve_wt_0.6.csv")
+
+#youtoo
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+curve_df_yt <- data.frame()
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(file_names))){
+    old <- Sys.time()
+
+    name <- sub("_Probabilities.h5", "", file_names[i])
+    name <- sub("Sample/YouToo/", "YouToo_", name) 
+    m <- file_names[i]%>%
+        read_h5()%>%
+        tidy(threshold.n=0.6)%>%
+        is_z_curve(threshold.n=0.6)%>%
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = i)%>%
+        mutate(threshold= 0.6)
+     curve_df_yt <- rbind(curve_df_yt, m) 
+     
+    new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
+}
+
+#write.csv(curve_df_yt, file = "correction_results/curve_yt_0.6.csv")
+```
+

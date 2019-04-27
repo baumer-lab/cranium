@@ -352,8 +352,15 @@ reorient <- function(x, correctionA = FALSE, ...) {
   out[, c("Freq", "gray_val")] <- x[, c("Freq", "gray_val")]
   class(out) <- append("tbl_brain", class(out))
   # recompute model after translation
-  attr(out, "quad_mod") <- stats::lm(y ~ x + I(x^2), data = out)
-  attr(out, "linear_mod") <- stats::lm(y ~ x, data=out)
+  #xz plane
+  attr(out, "quad_mod_xy") <- stats::lm(y ~ x + I(x^2), data = out)
+  attr(out, "linear_mod_xy") <- stats::lm(y ~ x, data=out)
+  #xz plane
+  attr(out, "quad_mod_xz") <- stats::lm(z ~ x + I(x^2), data = out)
+  attr(out, "linear_mod_xz") <- stats::lm(z ~ x, data=out)
+  #yz plane
+  attr(out, "quad_mod_yz") <- stats::lm(z ~ y + I(y^2), data = out)
+  attr(out, "linear_mod_yz") <- stats::lm(z ~ y, data=out)
   return(out)
 }
 
@@ -463,7 +470,7 @@ is_errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
   ro_tidy_brain <- data%>%
     tidy(type, threshold = threshold.n)%>%
     reorient()
-  ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
+  ro_model <- attr(ro_tidy_brain, "quad_mod_xy")  #model applied on reoriented data
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
 
   if (quad.coeff < 0) {
@@ -486,7 +493,7 @@ correct_errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
   c_ro_tidy_brain <- data%>%
     tidy(type, threshold = threshold.n)%>%
     reorient(correctionA = TRUE)
-  ro_model <- attr(c_ro_tidy_brain, "quad_mod")
+  ro_model <- attr(c_ro_tidy_brain, "quad_mod_xy")
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
   if (quad.coeff <0){
     message("Y Axis is flipped")
@@ -496,4 +503,104 @@ correct_errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
   return(c_ro_tidy_brain)
 }
 
+
+
+
+#' @title Identify Curve in yz plane and xz plane
+#' @description Identify Curve in yz plane and xz plane
+#' @param data a brain image
+#' @param type wild type or mutant type of zebrafish embryo brain
+#' @param threshold.n threshld for signal frequency. Any signal with frequency below threshold value is exluded
+#' @export
+#' @examples
+
+#' @export
+#' @rdname is_z_curve
+is_z_curve<- function(data, type="wildtype", threshold.n=0.9) UseMethod("is_z_curve")
+
+# @export
+# @rdname is_z_curve
+#'
+#is_z_curve.brain <- function(data, type="wildtype", threshold.n=0.9){
+ # ro_tidy_brain <- data%>%
+ #   tidy(threshold=threshold.n)
+ # sum_tb <- is_z_curve(ro_tidy_brain, type = "wildtype", threshold = threshold.n)
+ # return(sum_tb)
+#}
+
+#' @export
+#' @rdname is_z_curve
+is_z_curve.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
+  ro_tidy_brain <- data %>%
+    reorient()
+  z_mean <- ro_tidy_brain %>%
+    skim(z)%>%
+    select(stat, formatted)%>%
+    spread(stat, formatted)%>%
+    pull(mean)
+
+  #Fit models after reorient
+  #xz plane
+  lm_model_xz <- attr(ro_tidy_brain, "linear_mod_xz") #linear model y = x
+  quad_model_xz <- attr(ro_tidy_brain, "quad_mod_xz") #quadratic model y = x^2 + x
+  #xy plane
+  lm_model_xy <- attr(ro_tidy_brain, "linear_mod_xy")
+  quad_model_xy <- attr(ro_tidy_brain, "quad_mod_xy")
+  #yz plane
+  lm_model_yz <- attr(ro_tidy_brain, "linear_mod_yz")
+  quad_model_yz <- attr(ro_tidy_brain, "quad_mod_yz")
+
+
+  sum_tb <- data.frame(threshold = threshold.n)%>%
+    mutate(z_mean = z_mean)%>%
+    #xz plane
+    mutate(lm.intercept_xz = round((summary(lm_model_xz)$coefficients["(Intercept)", "Estimate"]), 4)) %>%
+    mutate(lm.slope_xz = round((summary(lm_model_xz)$coefficients["x", "Estimate"]), 10))%>%
+    mutate(quad.slope_xz = round((summary(quad_model_xz)$coefficients["I(x^2)", "Estimate"]), 5)) %>%
+
+    #xy plane
+    mutate(lm.intercept_xy= round((summary(lm_model_xy)$coefficients["(Intercept)", "Estimate"]), 4)) %>%
+    mutate(lm.slope_xy = round((summary(lm_model_xy)$coefficients["x", "Estimate"]), 10))%>%
+    mutate(quad.slope_xy = round((summary(quad_model_xy)$coefficients["I(x^2)", "Estimate"]), 5)) %>%
+
+    #yz plane
+    mutate(lm.intercept_yz = round((summary(lm_model_yz)$coefficients["(Intercept)", "Estimate"]), 4)) %>%
+    mutate(lm.slope_yz = round((summary(lm_model_yz)$coefficients["y", "Estimate"]), 10))%>%
+    mutate(quad.slope_yz = round((summary(quad_model_yz)$coefficients["I(y^2)", "Estimate"]), 5))
+
+  return(sum_tb)
+}
+
+
+
+#' @title Identify Error B: Curve in yz plane
+#' @description Identify Curve in yz plane
+#' @param data a brain image
+#' @param type wild type or mutant type of zebrafish embryo brain
+#' @param threshold.n threshld for signal frequency. Any signal with frequency below threshold value is exluded
+#' @export
+#' @examples
+
+
+#' @export
+#' @rdname is_errorB
+is_errorB <- function(data, type="wildtype", threshold.n=0.9) UseMethod("is_errorB")
+
+#' @export
+#' @rdname is_errorB
+is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
+  ro_tidy_brain <- data%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient()
+  quad_model_xz <- attr(ro_tidy_brain, "quad_mod_xz") #quadratic model y = x^2 + x
+  quad.slope_xz = round((summary(quad_model_xz)$coefficients["I(x^2)", "Estimate"]), 5)
+
+  if (quad.slope_xz < -0.00202 | quad.slope_xz > 0.00182) {
+    message("Curve in xz plane")
+    return(TRUE)
+  } else{
+    message("Correct alignment")
+    return(FALSE)
+  }
+}
 

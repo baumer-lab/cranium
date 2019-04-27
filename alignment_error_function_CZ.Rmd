@@ -67,9 +67,9 @@ path = "Sample/YouToo"
 path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
-#ONE SAMPLE
+#youtoo sample
 data<-read_h5(file_names[5])%>%
-  tidy(threshold=0.6)%>%
+  tidy(threshold=0.9)%>%
   reorient()
 
 brain<-read_h5(file_names[5])
@@ -79,23 +79,29 @@ tidy_brain <- brain%>%
 
 ro_tidy_brain<-tidy_brain%>%
   reorient()
+attr(ro_tidy_brain, "linear_mod_yz")
 
 
 ##wt
-brain_wt<-read_h5(file_names[2])
+brain_wt_2<-read_h5(file_names[2])
 
-tidy_brain_wt <- brain%>%
-  tidy(threshold=0.6)
+tidy_brain_wt_2 <- brain_wt_2%>%
+  tidy(threshold=0.9)
 
-ro_tidy_brain_wt<-tidy_brain%>%
+ro_tidy_brain_wt_2 <- tidy_brain_wt_2%>%
   reorient()
 
-attr(ro_tidy_brain, "linear_mod")
-attr(ro_tidy_brain, "quad_mod")
+att_lm<-attr(ro_tidy_brain_wt_2, "linear_mod")
+att_quad<-attr(ro_tidy_brain_wt_2, "quad_mod")
 
+
+summary(att_lm)
+summary(att_quad)
+lm.intercept = round((summary(att_lm)$coefficients["(Intercept)", "Estimate"]), 4)
+lm.slope = round((summary(att_lm)$coefficients["x", "Estimate"]), 10)
+quad.slope = round((summary(att_quad)$coefficients["I(x^2)", "Estimate"]), 5)
 
 plot2d(data)
-image(data)
 
 z_statistics<-ro_tidy_brain%>%
   skim(z)%>%
@@ -107,71 +113,48 @@ y_statistics<-data%>%
   select(stat, formatted)%>%
   spread(stat, formatted)
 
-y_stats<-read_h5(file_names[22])%>%
-  tidy(threshold=0.6)%>%
-  reorient()%>%
-  skim(z)%>%
-  select(stat, formatted)%>%
-  spread(stat, formatted)
-
 #LOOP
-path = "Sample/WildType"
-file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-
 
 errorB_df <- data.frame()
 
 #function
+#########start of function
 #apply qmodel to all sample, testing for each threshold
-is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
-    mean <- data%>%
-        tidy(threshold=threshold.n)%>%
-        reorient()%>%
-        skim(z)%>%
-        select(stat, formatted)%>%
-        spread(stat, formatted)%>%
-        pull(mean)
-    if (abs(mean) >0.1){
-      message("Curve in xz plane")
-      return(TURE)
-    }else{
-      message("Correct alignment")
-      return(FALSE)
-    }
-}
-is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
-    mean <- data%>%
-        tidy(threshold=threshold.n)%>%
-        reorient()%>%
-        skim(z)%>%
-        select(stat, formatted)%>%
-        spread(stat, formatted)%>%
-        pull(mean)
-    if (abs(mean) >0.1){
-      message("Curve in xz plane")
-      return(TURE)
-    }else{
-      message("Correct alignment")
-      return(FALSE)
-    }
+is.z.curve<- function(data, type="wildtype", threshold.n=0.9) UseMethod("is.z.curve")
+
+
+is.z.curve.brain <- function(data, type="wildtype", threshold.n=0.9){
+    ro_tidy_brain <- data%>%
+        tidy(threshold=threshold.n)
+    is_errorB(ro_tidy_brain, type = "wildtype", threshold=0.9)
+    return(sum_tb)
 }
 
-is_errorB.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
-    mean <- data%>%
-        reorient()%>%
+is.z.curve.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
+    ro_tidy_brain <- data %>%
+        reorient()
+    z_mean <- ro_tidy_brain %>%
         skim(z)%>%
         select(stat, formatted)%>%
         spread(stat, formatted)%>%
-        pull(mean)%>%
-      as.numeric()
-    if (abs(mean) >0.1){
-      message("Curve in xz plane")
-      return(TURE)
-    }else{
-      message("Correct alignment")
-      return(FALSE)
-    }
+        pull(mean)
+    
+    #Fit models after reorient
+    lm_model <- attr(ro_tidy_brain, "linear_mod") #linear model y = x
+    quad_model <- attr(ro_tidy_brain, "quad_mod") #quadratic model y = x^2 + x
+    
+    sum_tb <- data.frame(threshold = threshold.n)%>%
+          mutate(z_mean = z_mean)%>%
+          #linear model: intercept and slope
+          mutate(lm.intercept = round((summary(lm_model)$coefficients["(Intercept)", "Estimate"]), 4)) %>%
+          mutate(lm.slope = round((summary(lm_model)$coefficients["x", "Estimate"]), 10))%>%
+          #quad model: slope
+          mutate(quad.slope = round((summary(quad_model)$coefficients["I(x^2)", "Estimate"]), 5))
+    return(sum_tb)
 }
+
+is.z.curve.tbl_brain(ro_tidy_brain)
+#########end of function
 
 mean <- mean%>%
   as.numeric()
@@ -208,20 +191,87 @@ is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
 
 
 ```{r}
-class(brain)
-library(pracma)
-rotate_counter_clockwise <- function(x){ apply(t(x),2, rev)}
-brain_matrix <- as.matrix(brain)
-brain_rotate <- rotate_counter_clockwise(brain_matrix)
+curve_wt_0_6 <- read_csv("correction_results/curve_wt_0.6.csv")%>%
+  select(-X1) %>%
+   mutate(type = "wildtype")
+curve_yt_0_6 <- read_csv("correction_results/curve_yt_0.6.csv")%>%
+  select(-X1)%>%
+  mutate(type = "youtoo")
 
-
-brain_rotate_array<-as.array(brain_rotate)
-
-tidy_brain<-tidy(brain_rotate_array)
-ro_tidy_brain
+curve_all_0.6 <- rbind(curve_wt_0_6, curve_yt_0_6)
 
 ```
 
+
+#curve at xz plane
+```{r}
+#identify curve at xz plot
+ggplot( data = curve_all_0.6, aes(x = quad.slope_xz)) + geom_histogram(binwidth = 0.0033) + facet_wrap(~type, ncol = 4) + labs(title = "Quadratic slpe for xz plane") 
+
+favstats(curve_wt_0_6$quad.slope_xz)
+favstats(curve_yt_0_6$quad.slope_xz)
+
+mplot(curve_all_0.6)
+
+#wt normal range for quadratic slope in xz plane
+Q3 <- quantile(curve_wt_0_6$quad.slope_xz, 0.75) 
+Q1 <- quantile(curve_wt_0_6$quad.slope_xz, 0.25)
+IQR = Q3-Q1
+normal_range_lb = Q1-1.5*IQR
+normal_range_ub = Q3+1.5*IQR
+class(normal_range_ub)
+normal_range<-c(normal_range_lb,normal_range_ub)
+normal_range
+
+curve_all_0.6_curve <- curve_all_0.6 %>%
+  mutate(is_curve = if_else(quad.slope_xz < -0.00202 | quad.slope_xz > 0.00182, "curve", "not curve"))
+
+mplot(curve_all_0.6_curve)
+
+tb<-curve_all_0.6_curve%>%
+  group_by(type, is_curve)%>%
+  summarize(N=n())
+
+yt_curve<- curve_all_0.6_curve%>%
+  filter(is_curve=="curve")
+yt_not_curve<- curve_all_0.6_curve%>%
+  filter(type=="youtoo" & is_curve=="not curve")
+
+
+# test is_errorB function
+is_errorB
+
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+#youtoo sample
+brain_wt_1<-read_h5(file_names[1])
+tidy_brain_wt_1 <- tidy(brain_wt_1, threshold.n=0.6)
+plot3d(tidy_brain_wt_1)
+
+if (is_errorB(data, threshold.n=0.6)==FALSE){
+  message("you are right")
+}else{
+  message("bye")
+}
+
+```
+
+# Correction for errorB
+```{r}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+brain_yt_01 <-read_h5(file_names[1])
+tidy_brain_yt_01<-tidy(brain_yt_01, threshold.n = 0.6)
+
+is_errorA.brain(brain_yt_01, threshold.n = 0.6)
+
+
+n <- nrow(tidy_brain_yt_01)
+matrix <- matrix(0, nrow=5, ncol=5)
+for i in (1:nrow)
+```
 
 
 
