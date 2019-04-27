@@ -604,3 +604,20 @@ is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
   }
 }
 
+#' @export
+#' @rdname is_errorB
+is_errorB.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
+  ro_tidy_brain <- data%>%
+    reorient()
+  quad_model_xz <- attr(ro_tidy_brain, "quad_mod_xz") #quadratic model y = x^2 + x
+  quad.slope_xz = round((summary(quad_model_xz)$coefficients["I(x^2)", "Estimate"]), 5)
+
+  if (quad.slope_xz < -0.00202 | quad.slope_xz > 0.00182) {
+    message("Curve in xz plane")
+    return(TRUE)
+  } else{
+    message("Correct alignment")
+    return(FALSE)
+  }
+}
+
