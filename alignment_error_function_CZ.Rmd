@@ -3,6 +3,8 @@ title: "alignment_error_function_CZ"
 author: "Crystal Zang"
 date: "4/22/2019"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -21,47 +23,6 @@ library(mosaic)
 library(sjstats)
 library(grDevices)
 library(skimr)
-```
-
-
-# Error A function 
-```{r}
-#Model evaluation
-#Requires: brain class type.
-errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
-  ro_tidy_brain <- data%>%
-    tidy(type, threshold = threshold.n)%>%
-    reorient()
-  ro_model <- attr(ro_tidy_brain, "quad_mod")  #model applied on reoriented data
-  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
-
-  if (quad.coeff <0){
-  message("Y Axis is flipped")
-  sum_tb <- sum_tb%>%
-    mutate(y_flipped = 1)
-}else{
-  message("Correct alignment")
-  sum_tb <- sum_tb%>%
-    mutate(y_flipped = 0)
-}
-  return(sum_tb)
-}
-```
-
-
-# ErrorA function test sample
-```{r}
-path = "Sample/WildType"
-file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-
-#input
-data <- read_h5(file_names[10])
-
-class(data)
-
-errorA.brain(data, type="wildtype", threshold.n=0.6)
-
-c.brain<-correctionA.brain(data, type="wildtype", threshold.n=0.6)
 ```
 
 
@@ -133,7 +94,7 @@ attr(ro_tidy_brain, "linear_mod")
 attr(ro_tidy_brain, "quad_mod")
 
 
-plot2d(ro_tidy_brain)
+plot2d(data)
 image(data)
 
 z_statistics<-ro_tidy_brain%>%
@@ -159,24 +120,6 @@ file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
 
 errorB_df <- data.frame()
-
-#apply qmodel to all sample, testing for each threshold
-for (i in (1:length(file_names))){
-    name <- sub("_Probabilities.h5", "", file_names[i])
-    name <- sub("Sample/WildType/", "WildType_", name) 
-    m <- file_names[i]%>%
-        read_h5()%>%
-        tidy(threshold=0.6)%>%
-        reorient()%>%
-        skim(z)%>%
-        select(stat, formatted)%>%
-        spread(stat, formatted)%>%
-        mutate(Sample = name)%>% 
-        mutate(Sample_id = i)%>%
-        mutate(threshold=0.6)
-     errorB_df <- rbind(errorB_df, m) 
-}
-
 
 #function
 #apply qmodel to all sample, testing for each threshold

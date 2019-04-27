@@ -191,15 +191,15 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
     scale_x_continuous(filter(labels, var == plane[1])$label) +
     scale_y_continuous(filter(labels, var == plane[2])$label) +
     ggtitle(filter(titles, depth_var == depth)$title)
+  #+ coord_fixed()
 
   if (plane == c("x", "y")){
     plot + geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red")
   } else {
     plot + geom_smooth(method = "lm", color = "red")
   }
-
-
 }
+
 #' Plot a 3D image of a brain
 #' @inheritParams rgl::plot3d
 #' @export
