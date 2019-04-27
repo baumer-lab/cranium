@@ -200,13 +200,16 @@ curve_yt_0_6 <- read_csv("correction_results/curve_yt_0.6.csv")%>%
 
 curve_all_0.6 <- rbind(curve_wt_0_6, curve_yt_0_6)
 
+mplot(curve_all_0.6)
 ```
 
 
 #curve at xz plane
 ```{r}
+
+
 #identify curve at xz plot
-ggplot( data = curve_all_0.6, aes(x = quad.slope_xz)) + geom_histogram(binwidth = 0.0033) + facet_wrap(~type, ncol = 4) + labs(title = "Quadratic slpe for xz plane") 
+ggplot( data = curve_all_0.6, aes(x = quad.slope_xz)) + geom_histogram(binwidth = 0.0033) + facet_wrap(~type, ncol = 4) + labs(title = "Quadratic slope for xz plane") 
 
 favstats(curve_wt_0_6$quad.slope_xz)
 favstats(curve_yt_0_6$quad.slope_xz)
@@ -257,22 +260,99 @@ if (is_errorB(data, threshold.n=0.6)==FALSE){
 
 ```
 
+# degrees.to.radians function
+```{r}
+degrees.to.radians<-function(degrees=45,minutes=30){
+    if(!is.numeric(minutes)) stop("Please enter a numeric value for minutes!\n")
+    if(!is.numeric(degrees)) stop("Please enter a numeric value for degrees!\n")
+        decimal<-minutes/60
+        c.num<-degrees+decimal
+        radians<-c.num*pi/180
+        radians
+}
+# example
+degrees.to.radians(degrees=90)
+```
+
+
 # Correction for errorB
 ```{r}
 path = "Sample/YouToo"
+
+path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
-brain_yt_01 <-read_h5(file_names[1])
+brain_yt_334 <-read_h5(file_names[29])
+brain_wt_03 <-read_h5(file_names[3])
 
-tidy_brain_yt_01<-tidy(brain_yt_01, threshold.n = 0.6)
+tidy_brain_yt_334<- tidy.brain(brain_yt_334, threshold.n = 0.75)
+tidy_brain_wt_03<- tidy.brain(brain_wt_03, threshold.n = 0.6)
 
-is_errorA.brain(brain_yt_01, threshold.n = 0.6)
+
+ro_tidy_brain_yt_334 <- reorient(tidy_brain_yt_334)
+ro_tidy_brain_wt_03 <- reorient(tidy_brain_wt_03)
+
+plot2d(ro_tidy_brain_yt_334)
+
+rgl::plot3d(ro_tidy_brain_yt_334)
+
+favstats(ro_tidy_brain_yt_334$x)
+is_errorA(brain_yt_01, threshold.n = 0.6)
+#FALSE
+
+rgl::plot3d(ro_tidy_brain_yt_01)
+
+degree_input = 300
+n <- nrow(ro_tidy_brain_yt_334)
+n
+matrix <- matrix(0, nrow=n, ncol=n)
+dim(matrix)
+
+for (i in (1:n)){
+  matrix[i,i] = 1
+  matrix[1,1] <- cos(degrees.to.radians(degrees=degree_input))
+  matrix[1,2] <- -sin(degrees.to.radians(degrees=degree_input))
+  matrix[2,1] <- sin(degrees.to.radians(degrees=degree_input))
+  matrix[2,2] <- cos(degrees.to.radians(degrees=degree_input))
+}
+matrix[10,10]
+
+ro_tidy_brain_yt_334_xyz<-ro_tidy_brain_yt_334%>%
+  select(x,y,z)%>%
+  t()
+
+yt_334_freq <- ro_tidy_brain_yt_334%>%
+  select(Freq,gray_val)
+  
+dim(ro_tidy_brain_yt_334_xyz)
+dim(matrix)
+
+C <- ro_tidy_brain_yt_334_xyz %*% matrix 
 
 
-n <- nrow(tidy_brain_yt_01)
-matrix <- matrix(0, nrow=5, ncol=5)
-for i in (1:nrow)
+D <- t(C)
+dim(D)
+class(D)
+D <- as.data.frame(D)
+
+D_freq <- cbind(D, yt_334_freq)
+
+#colnames(D)[colnames(D) == "D"] <- "x"
+
+class(D_freq) <- append("tbl_brain", class(D_freq)) 
+mean(D_freq$x)
+
+plot2d(D_freq)
+
+
+rgl::plot3d(D_freq)
+
+is_z_curve(D,type = "youtoo", threshold.n = 0.6)
+
+
+class(ro_tidy_brain_wt_03)
+plot2d(ro_tidy_brain_yt_01)
+
 ```
-
 
 

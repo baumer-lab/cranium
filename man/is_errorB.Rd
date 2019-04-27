@@ -3,11 +3,15 @@
 \name{is_errorB}
 \alias{is_errorB}
 \alias{is_errorB.brain}
+\alias{is_errorB.tbl_brain}
 \title{Identify Error B: Curve in yz plane}
 \usage{
 is_errorB(data, type = "wildtype", threshold.n = 0.9)
 
 \method{is_errorB}{brain}(data, type = "wildtype", threshold.n = 0.9)
+
+\method{is_errorB}{tbl_brain}(data, type = "wildtype",
+  threshold.n = 0.9)
 }
 \arguments{
 \item{data}{a brain image}
