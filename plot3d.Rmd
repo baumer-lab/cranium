@@ -45,6 +45,8 @@ ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04)
 
 plot<-plot3d(ro_tidy_brain_wt_04)
 browsable(objids= plot)
+
+rglwidget(x = scene3d(ro_tidy_brain_wt_04), width=figWidth, height=figHeight())
 ```
 
 
@@ -56,5 +58,7 @@ lineid <- plot3d(xyz, type="l", alpha = 1:0,
 
 
 browsable(objids = lineid)
+
+
 ```
 
