@@ -285,17 +285,18 @@ file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 brain_yt_334 <-read_h5(file_names[29])
 brain_wt_04 <-read_h5(file_names[4])
 
-tidy_brain_yt_334<- tidy.brain(brain_yt_334, threshold.n = 0.6)
-tidy_brain_wt_04<- tidy.brain(brain_wt_04, threshold.n = 0.6)
+tidy_brain_yt_334<- tidy(brain_yt_334, threshold.n = 0.6)
+tidy_brain_wt_04<- tidy(brain_wt_04, threshold.n = 0.9)
 
 
 ro_tidy_brain_yt_334 <- reorient(tidy_brain_yt_334)
 ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04)
 
+
 plot2d(ro_tidy_brain_wt_04)
 plot2d(ro_tidy_brain_yt_334)
 
-rgl::plot3d(ro_tidy_brain_yt_334)
+rgl::plot3d(ro_tidy_brain_wt_04)
 
 favstats(ro_tidy_brain_yt_334$x)
 is_errorA(brain_yt_01, threshold.n = 0.6)
@@ -303,8 +304,8 @@ is_errorA(brain_yt_01, threshold.n = 0.6)
 
 rgl::plot3d(ro_tidy_brain_yt_01)
 
-degree_input = 300
-n <- nrow(ro_tidy_brain_yt_334)
+degree_input = 180
+n <- nrow(ro_tidy_brain_wt_04)
 n
 matrix <- matrix(0, nrow=n, ncol=n)
 dim(matrix)
@@ -316,6 +317,7 @@ for (i in (1:n)){
   matrix[2,1] <- sin(degrees.to.radians(degrees=degree_input))
   matrix[2,2] <- cos(degrees.to.radians(degrees=degree_input))
 }
+
 matrix[10,10]
 
 ro_tidy_brain_yt_334_xyz<-ro_tidy_brain_yt_334%>%

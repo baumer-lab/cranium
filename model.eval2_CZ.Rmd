@@ -34,7 +34,7 @@ threshold_wt <- read_csv("~/Desktop/cranium/visualization_results/threshold_wt_a
   mutate(type = "Wild Type")
 
 threshold_all <- rbind(threshold_wt, threshold_yt)
-
+mplot(threshold_all)
 
 threshold_all$Sample_id <- as.character(threshold_all$Sample_id)
 threshold_all$threshold <- as.character(threshold_all$threshold )
@@ -46,6 +46,11 @@ ggplot(data =threshold_all, aes(x = threshold, y = adj.r.squared)) +
   scale_x_discrete(name ="Threshold", 
                     breaks=c("0.4", "0.5", "0.6", "0.7", "0.8", "0.9"))+ 
   coord_flip()
+
+
+
+ggplot(data = threshold_all, aes(x = threshold, y = num.signal)) + geom_boxplot()  + facet_wrap(~type, ncol = 2) + labs(title = "")+ 
+  scale_x_discrete(limits=c("0.4", "0.5", "0.6", "0.7", "0.8", "0.9"))
 ```
 
 

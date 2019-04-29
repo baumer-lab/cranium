@@ -194,7 +194,7 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   #+ coord_fixed()
 
   if (plane == c("x", "y")){
-    plot + geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red")
+   plot + geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red")
   } else{
    plot + geom_smooth(method = "lm", color = "red")
   }
