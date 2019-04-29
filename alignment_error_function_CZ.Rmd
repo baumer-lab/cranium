@@ -283,15 +283,16 @@ path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 
 brain_yt_334 <-read_h5(file_names[29])
-brain_wt_03 <-read_h5(file_names[3])
+brain_wt_04 <-read_h5(file_names[4])
 
-tidy_brain_yt_334<- tidy.brain(brain_yt_334, threshold.n = 0.75)
-tidy_brain_wt_03<- tidy.brain(brain_wt_03, threshold.n = 0.6)
+tidy_brain_yt_334<- tidy.brain(brain_yt_334, threshold.n = 0.6)
+tidy_brain_wt_04<- tidy.brain(brain_wt_04, threshold.n = 0.6)
 
 
 ro_tidy_brain_yt_334 <- reorient(tidy_brain_yt_334)
-ro_tidy_brain_wt_03 <- reorient(tidy_brain_wt_03)
+ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04)
 
+plot2d(ro_tidy_brain_wt_04)
 plot2d(ro_tidy_brain_yt_334)
 
 rgl::plot3d(ro_tidy_brain_yt_334)
