@@ -307,30 +307,25 @@ rgl::plot3d(ro_tidy_brain_yt_01)
 degree_input = 180
 n <- nrow(ro_tidy_brain_wt_04)
 n
-matrix <- matrix(0, nrow=n, ncol=n)
-dim(matrix)
-
-for (i in (1:n)){
-  matrix[i,i] = 1
-  matrix[1,1] <- cos(degrees.to.radians(degrees=degree_input))
-  matrix[1,2] <- -sin(degrees.to.radians(degrees=degree_input))
-  matrix[2,1] <- sin(degrees.to.radians(degrees=degree_input))
-  matrix[2,2] <- cos(degrees.to.radians(degrees=degree_input))
-}
-
-matrix[10,10]
+matrix <- matrix(0, nrow=3, ncol=3)
+matrix[3,3] = 1
+matrix[1,1] <- cos(degrees.to.radians(degrees=degree_input))
+matrix[1,2] <- -sin(degrees.to.radians(degrees=degree_input))
+matrix[2,1] <- sin(degrees.to.radians(degrees=degree_input))
+matrix[2,2] <- cos(degrees.to.radians(degrees=degree_input))
 
 ro_tidy_brain_yt_334_xyz<-ro_tidy_brain_yt_334%>%
-  select(x,y,z)%>%
-  t()
+  select(x,y,z)
 
-yt_334_freq <- ro_tidy_brain_yt_334%>%
+ro_tidy_brain_wt_04_xyz<-ro_tidy_brain_wt_04%>%
+  select(x,y,z)
+
+wt_04_freq <- ro_tidy_brain_wt_04%>%
   select(Freq,gray_val)
   
-dim(ro_tidy_brain_yt_334_xyz)
-dim(matrix)
 
 C <- ro_tidy_brain_yt_334_xyz %*% matrix 
+C <- ro_tidy_brain_wt_04_xyz %*% matrix 
 
 
 D <- t(C)
