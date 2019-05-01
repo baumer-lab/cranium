@@ -23,6 +23,10 @@ library(mosaic)
 library(sjstats)
 library(grDevices)
 library(skimr)
+library(gmodels)
+library(spatstat.utils)
+library(REdaS)
+
 ```
 
 
@@ -169,8 +173,6 @@ mean <- data%>%
         pull(mean)
 
 
-
-
 is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
   ro_tidy_brain <- data%>%
     tidy(type, threshold = threshold.n)%>%
@@ -193,41 +195,86 @@ is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
 ```{r}
 curve_wt_0_6 <- read_csv("correction_results/curve_wt_0.6.csv")%>%
   select(-X1) %>%
-   mutate(type = "wildtype")
+   mutate(type = "Wild Type")
 curve_yt_0_6 <- read_csv("correction_results/curve_yt_0.6.csv")%>%
   select(-X1)%>%
-  mutate(type = "youtoo")
+  mutate(type = "Mutant")
 
 curve_all_0.6 <- rbind(curve_wt_0_6, curve_yt_0_6)
 
-mplot(curve_all_0.6)
+#mplot(curve_all_0.6)
 ```
 
+```{r}
+ci <- ci(curve_wt_0_6$quad.slope_xz, confidence=0.95)
+
+ci_ub <- ci["CI upper"]
+ci_ub 
+ci_lb <- ci["CI lower"]
+ci_lb
+ci_range <- c(ci_lb, ci_ub)
+ci_range
+
+ci_range<-c(-0.0003206473, 0.0001243682)
+
+Q3 <- quantile(curve_wt_0_6$quad.slope_xz, 0.75) 
+Q1 <- quantile(curve_wt_0_6$quad.slope_xz, 0.25)
+quantil_range <- c(Q1, Q3)
+quantil_range
+
+
+IQR = Q3-Q1
+outlier_lb = Q1-1.5*IQR
+outlier_ub = Q3+1.5*IQR
+
+outlier_range<-c(outlier_lb, outlier_ub)
+outlier_range
+
+range <- rbind(ci_range, quantil_range, outlier_range)
+range
+```
 
 #curve at xz plane
 ```{r}
-
-
 #identify curve at xz plot
-ggplot( data = curve_all_0.6, aes(x = quad.slope_xz)) + geom_histogram(binwidth = 0.0033) + facet_wrap(~type, ncol = 4) + labs(title = "Quadratic slope for xz plane") 
+ggplot( data = curve_all_0.6, aes(x = quad.slope_xz)) + geom_histogram(binwidth = 0.001) + facet_wrap(~type, ncol = 1) + 
+  xlab("Quadratic Coefficient in x-z plane")+
+  scale_x_continuous(breaks=c(-0.02, -0.015,-0.01,-0.005, 0, 0.005))+
+  geom_vline(xintercept = ci_lb, color= "green")+
+  geom_vline(xintercept = ci_ub, color="green") +
+   geom_vline(xintercept = Q1, color= "red")+
+  geom_vline(xintercept = Q3, color="red") +
+   geom_vline(xintercept = outlier_lb , color= "blue")+
+  geom_vline(xintercept = outlier_ub , color="blue") 
 
 favstats(curve_wt_0_6$quad.slope_xz)
 favstats(curve_yt_0_6$quad.slope_xz)
 
-mplot(curve_all_0.6)
+#mplot(curve_all_0.6)
+
+#calculate 95% CI interval
+ci <- ci(curve_wt_0_6$quad.slope_xz, confidence=0.95)
+ci_lb<-ci["CI lower"]
+ci_ub<-ci["CI upper"]
+
+curve_wt_0_6_error <- curve_wt_0_6%>%
+  mutate(is_errorB = if_else(quad.slope_xz < ci_lb, "is_errorB",
+                        if_else(quad.slope_xz > ci_ub, "is_errorB", "no_errorB")))
+
+table(curve_wt_0_6_error$is_errorB)
 
 #wt normal range for quadratic slope in xz plane
 Q3 <- quantile(curve_wt_0_6$quad.slope_xz, 0.75) 
 Q1 <- quantile(curve_wt_0_6$quad.slope_xz, 0.25)
 IQR = Q3-Q1
-normal_range_lb = Q1-1.5*IQR
-normal_range_ub = Q3+1.5*IQR
+outlier_lb = Q1-1.5*IQR
+outlier_ub = Q3+1.5*IQR
 class(normal_range_ub)
 normal_range<-c(normal_range_lb,normal_range_ub)
 normal_range
 
-curve_all_0.6_curve <- curve_all_0.6 %>%
-  mutate(is_curve = if_else(quad.slope_xz < -0.00202 | quad.slope_xz > 0.00182, "curve", "not curve"))
+curve_wt_0.6_curve <- curve_wt_0.6 %>%
+  mutate(is_curve = if_else(quad.slope_xz < -0.000337671 | quad.slope_xz > 0.000141392, "curve", "not curve"))
 
 mplot(curve_all_0.6_curve)
 
@@ -277,36 +324,44 @@ degrees.to.radians(degrees=90)
 
 # Correction for errorB
 ```{r}
+#read youtoo sample
 path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_yt_24 <-read_h5(file_names[12])
 
+#read wildtype sample
 path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-
-brain_yt_334 <-read_h5(file_names[29])
 brain_wt_04 <-read_h5(file_names[4])
 
-tidy_brain_yt_334<- tidy(brain_yt_334, threshold.n = 0.6)
-tidy_brain_wt_04<- tidy(brain_wt_04, threshold.n = 0.9)
+#tidy both samples
+tidy_brain_yt_24<- tidy(brain_yt_24, threshold.n = 0.6)
+tidy_brain_wt_04<- tidy(brain_wt_04, threshold.n = 0.6)
 
+#reorient both samples
+ro_tidy_brain_yt_24 <- reorient(tidy_brain_yt_24, correctionA = TRUE, correctionB=TRUE)
+ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04, correctionA = TRUE)
 
-ro_tidy_brain_yt_334 <- reorient(tidy_brain_yt_334)
-ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04)
-
-
+#plot 2d
 plot2d(ro_tidy_brain_wt_04)
-plot2d(ro_tidy_brain_yt_334)
+plot2d(ro_tidy_brain_yt_24)
 
+#plot 3d
 rgl::plot3d(ro_tidy_brain_wt_04)
+rgl::plot3d(ro_tidy_brain_yt_24)
+
+
 
 favstats(ro_tidy_brain_yt_334$x)
 is_errorA(brain_yt_01, threshold.n = 0.6)
 #FALSE
 
-rgl::plot3d(ro_tidy_brain_yt_01)
+rgl::plot3d(ro_tidy_brain_yt_334)
+rgl::plot3d(ro_tidy_brain_wt_04)
 
-degree_input = 180
-n <- nrow(ro_tidy_brain_wt_04)
-n
+
+degree_input = 90
+
 matrix <- matrix(0, nrow=3, ncol=3)
 matrix[3,3] = 1
 matrix[1,1] <- cos(degrees.to.radians(degrees=degree_input))
@@ -314,17 +369,36 @@ matrix[1,2] <- -sin(degrees.to.radians(degrees=degree_input))
 matrix[2,1] <- sin(degrees.to.radians(degrees=degree_input))
 matrix[2,2] <- cos(degrees.to.radians(degrees=degree_input))
 
+matrix_original <- matrix(1, nrow=1, ncol=3)
+
+
+degree_input = 180
+matrix.x <- matrix(0, nrow=3, ncol=3)
+matrix.x[1,1] = 1
+matrix.x[2,2] <- cos(degrees.to.radians(degrees=degree_input))
+matrix.x[2,3] <- -sin(degrees.to.radians(degrees=degree_input))
+matrix.x[3,2] <- sin(degrees.to.radians(degrees=degree_input))
+matrix.x[3,3] <- cos(degrees.to.radians(degrees=degree_input))
+matrix.x
+
+matrix.after <- matrix_original %*% matrix.x
+matrix.after
+
+
 ro_tidy_brain_yt_334_xyz<-ro_tidy_brain_yt_334%>%
   select(x,y,z)
 
 ro_tidy_brain_wt_04_xyz<-ro_tidy_brain_wt_04%>%
   select(x,y,z)
 
-wt_04_freq <- ro_tidy_brain_wt_04%>%
+
+yt_334_freq <- ro_tidy_brain_yt_334%>%
   select(Freq,gray_val)
   
 
-C <- ro_tidy_brain_yt_334_xyz %*% matrix 
+yt_334_xyz <- as.matrix(ro_tidy_brain_yt_334_xyz)
+
+C <- yt_334_xyz %*% matrix 
 C <- ro_tidy_brain_wt_04_xyz %*% matrix 
 
 
@@ -353,4 +427,91 @@ plot2d(ro_tidy_brain_yt_01)
 
 ```
 
+
+
+# Find rotation angle
+```{r}
+#read youtoo sample
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+c <-read_h5(file_names[12])
+tidy_brain_yt_24<- tidy(brain_yt_24, threshold.n = 0.6)
+ro_tidy_brain_yt_24 <- reorient(tidy_brain_yt_24)
+#plot2d(ro_tidy_brain_yt_24)
+ro_tidy_brain_yt_24 <- reorient(tidy_brain_yt_24, correctionA = TRUE)
+plot2d(ro_tidy_brain_yt_24)
+
+#read wildtype sample
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_wt_04 <-read_h5(file_names[4])
+tidy_brain_wt_04<- tidy(brain_wt_04, threshold.n = 0.6)
+ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04, correctionA = TRUE)
+
+
+rotation_angle.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
+ # ro_tidy_brain <- data%>%
+ #   tidy(type, threshold = threshold.n)%>%
+  #  reorient()
+  
+  #extract quadratic model coefficients from xy plane 
+  ro_model <- attr(data, "quad_mod_xy")
+  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
+  x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
+  intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
+  # y intercept
+  y_intercept <- intercept
+  # x intercept
+  x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
+  
+  #vertex (x)
+#  vertex.x <- -x.coeff/(2*quad.coeff)
+ # vertex.y <- quad.coeff * (vertex.x ^ 2) + x.coeff * vertex.x + intercept
+ # vertex <- c(vertex.x, vertex.y)
+  
+  #slope of the line connecting m and n
+  slope <- abs(y_intercept/x_intercept)
+  #slope to angle (radian)
+  rotation_angle_radian <- atan(slope)
+  #radian to degree
+  rotation_angle_degree <- rad2deg(radian)
+  return(rotation_angle_degree)
+}
+
+data <- ro_tidy_brain_yt_24
+rotation_angle.brain(ro_tidy_brain_yt_24, threshold.n = 0.8)
+```
+
+# rotate data points 
+```{r}
+correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
+ # ro_tidy_brain <- data%>%
+ #   tidy(type, threshold = threshold.n)%>%
+  #  reorient()
+  
+  #extract quadratic model coefficients from xy plane 
+  ro_model <- attr(data, "quad_mod_xy")
+  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
+  x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
+  intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
+  # y intercept
+  y_intercept <- intercept
+  # x intercept
+  x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
+  
+  #vertex (x)
+#  vertex.x <- -x.coeff/(2*quad.coeff)
+ # vertex.y <- quad.coeff * (vertex.x ^ 2) + x.coeff * vertex.x + intercept
+ # vertex <- c(vertex.x, vertex.y)
+  
+  #slope of the line connecting m and n
+  slope <- abs(y_intercept/x_intercept)
+  #slope to angle (radian)
+  rotation_angle_radian <- atan(slope)
+  #radian to degree
+  rotation_angle_degree <- rad2deg(radian)
+  
+  
+}
+```
 

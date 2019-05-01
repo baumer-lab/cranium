@@ -325,7 +325,7 @@ get_jawbone <- function(xyz, ...) {
 #' ro_tidy_brin <- reorient(tidy_brain)
 
 
-reorient <- function(x, correctionA = FALSE, ...) {
+reorient <- function(x, correctionA = FALSE, correctionB = FALSE,...) {
   pca <- stats::prcomp(~ x + y + z, data = x, scale = FALSE, ...)
   out <- pca$x %>%
     tibble::as_tibble() %>%
@@ -342,13 +342,20 @@ reorient <- function(x, correctionA = FALSE, ...) {
   z_mean <- out %>%
     filter(abs(x) < 50) %>%
     summarize(z_mean = mean(z))
-  if (correctionA==FALSE){
-    out <- out %>%
-      mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
-  }else{
+  if (correctionA == TRUE){
     out <- out %>%
       mutate(x = x - vertex[1], y =  vertex[2] - y , z = z - z_mean$z_mean)
   }
+  if (correctionB == TRUE){
+    out <- out %>%
+      mutate(y.change = z, z=y)%>%
+      mutate(y=y.change)%>%
+      select(-y.change)
+  } else {
+    out <- out %>%
+      mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
+  }
+
   out[, c("Freq", "gray_val")] <- x[, c("Freq", "gray_val")]
   class(out) <- append("tbl_brain", class(out))
   # recompute model after translation
@@ -584,25 +591,34 @@ is_z_curve.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
 
 #' @export
 #' @rdname is_errorB
-is_errorB <- function(data, type="wildtype", threshold.n=0.9) UseMethod("is_errorB")
+is_errorB <- function(data, type="wildtype", threshold.n=0.9, ref = "outlier") UseMethod("is_errorB")
 
 #' @export
 #' @rdname is_errorB
-is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
+is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9, ref = "outlier"){
   ro_tidy_brain <- data%>%
     tidy(type, threshold = threshold.n)%>%
     reorient()
   quad_model_xz <- attr(ro_tidy_brain, "quad_mod_xz") #quadratic model y = x^2 + x
   quad.slope_xz = round((summary(quad_model_xz)$coefficients["I(x^2)", "Estimate"]), 5)
-
-  if (quad.slope_xz < -0.00202 | quad.slope_xz > 0.00182) {
-    message("Curve in xz plane")
-    return(TRUE)
-  } else{
+  range <- c(-0.00202, 0.00182)
+#  if (ref = "outlier"){
+#    range <- c(-0.00202, 0.00182)
+ # }if (ref = "quantile"){
+#    range <- c(-0.00058, 0.00038)
+#  }if (ref= "ci"){
+#    range <- c(-0.0003206473, 0.0001243682)
+#  }
+  if (inside.range(quad.slope_xz, range) == TRUE) {
     message("Correct alignment")
     return(FALSE)
+  } else {
+    message("Curve in xz plane")
+    return(TRUE)
   }
 }
+
+
 
 #' @export
 #' @rdname is_errorB
@@ -611,13 +627,19 @@ is_errorB.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
     reorient()
   quad_model_xz <- attr(ro_tidy_brain, "quad_mod_xz") #quadratic model y = x^2 + x
   quad.slope_xz = round((summary(quad_model_xz)$coefficients["I(x^2)", "Estimate"]), 5)
-
-  if (quad.slope_xz < -0.00202 | quad.slope_xz > 0.00182) {
-    message("Curve in xz plane")
-    return(TRUE)
-  } else{
+  range <- c(-0.00202, 0.00182)
+  #  if (ref = "outlier"){
+  #    range <- c(-0.00202, 0.00182)
+  # }if (ref = "quantile"){
+  #    range <- c(-0.00058, 0.00038)
+  #  }if (ref= "ci"){
+  #    range <- c(-0.0003206473, 0.0001243682)
+  #  }
+  if (inside.range(quad.slope_xz, range) == TRUE) {
     message("Correct alignment")
     return(FALSE)
+  } else {
+    message("Curve in xz plane")
+    return(TRUE)
   }
 }
-
