@@ -643,3 +643,75 @@ is_errorB.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
     return(TRUE)
   }
 }
+
+
+
+
+
+#' @export
+#' @rdname is_errorB
+correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9) UseMethod("correct_errorB")
+
+#' @export
+#' @rdname is_errorB
+correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
+  # ro_tidy_brain <- data%>%
+  #   tidy(type, threshold = threshold.n)%>%
+  #  reorient()
+
+  #extract quadratic model coefficients from xy plane
+  ro_model <- attr(data, "quad_mod_xy")
+  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
+  x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
+  intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
+  # y intercept
+  y_intercept <- intercept
+  # x intercept
+  x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
+
+  #vertex (x)
+  #  vertex.x <- -x.coeff/(2*quad.coeff)
+  # vertex.y <- quad.coeff * (vertex.x ^ 2) + x.coeff * vertex.x + intercept
+  # vertex <- c(vertex.x, vertex.y)
+
+  #slope of the line connecting m and n
+  slope <- abs(y_intercept/x_intercept)
+  #slope to angle (radian)
+  rotation_angle_radian <- atan(slope)
+  #radian to degree
+  rotation_angle_degree <- rad2deg(radian)
+
+  matrix.x <- matrix(0, nrow=3, ncol=3)
+  matrix.x[1,1] = 1
+  matrix.x[2,2] <- cos(rotation_angle_radian)
+  matrix.x[2,3] <- -sin(rotation_angle_radian)
+  matrix.x[3,2] <- sin(rotation_angle_radian)
+  matrix.x[3,3] <- cos(rotation_angle_radian)
+
+  data.matrix<-data%>%
+    select(x,y,z)%>%
+    as.matrix()
+
+  data_freq_gray<- data%>%
+    select(Freq,gray_val)
+
+  C <- data.matrix %*% matrix.x
+
+  C.df <- as.data.frame(C)
+
+  colnames(C.df)[1] <- "x"
+  colnames(C.df)[2] <- "y"
+  colnames(C.df)[3] <- "z"
+
+  data_rotate <- cbind(C.df, data_freq_gray)
+
+  class(data_rotate) <- append("tbl_brain", class(data_rotate))
+
+  return(data_rotate)
+}
+
+
+
+
+
+
