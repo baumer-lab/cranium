@@ -192,6 +192,7 @@ is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
 ```
 
 
+# Correction Result
 ```{r}
 curve_wt_0_6 <- read_csv("correction_results/curve_wt_0.6.csv")%>%
   select(-X1) %>%
@@ -226,7 +227,6 @@ quantil_range
 IQR = Q3-Q1
 outlier_lb = Q1-1.5*IQR
 outlier_ub = Q3+1.5*IQR
-
 outlier_range<-c(outlier_lb, outlier_ub)
 outlier_range
 

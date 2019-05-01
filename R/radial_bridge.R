@@ -646,8 +646,6 @@ is_errorB.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
 
 
 
-
-
 #' @export
 #' @rdname is_errorB
 correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9) UseMethod("correct_errorB")
@@ -660,14 +658,14 @@ correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
   #  reorient()
 
   #extract quadratic model coefficients from xy plane
-  ro_model <- attr(data, "quad_mod_xy")
+  ro_model <- attr(data, "quad_mod_xz")
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
   x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
   intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
   # y intercept
-  y_intercept <- intercept
+ # z_intercept <- intercept
   # x intercept
-  x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
+  #x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
 
   #vertex (x)
   #  vertex.x <- -x.coeff/(2*quad.coeff)
@@ -675,11 +673,11 @@ correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
   # vertex <- c(vertex.x, vertex.y)
 
   #slope of the line connecting m and n
-  slope <- abs(y_intercept/x_intercept)
+  slope <- abs(intercept/(-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff))
   #slope to angle (radian)
   rotation_angle_radian <- atan(slope)
   #radian to degree
-  rotation_angle_degree <- rad2deg(radian)
+  #rotation_angle_degree <- rad2deg(radian)
 
   matrix.x <- matrix(0, nrow=3, ncol=3)
   matrix.x[1,1] = 1
