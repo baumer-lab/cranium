@@ -430,7 +430,7 @@ plot2d(ro_tidy_brain_yt_01)
 #read youtoo sample
 path = "Sample/YouToo"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-c <-read_h5(file_names[12])
+brain_yt_24 <-read_h5(file_names[12])
 tidy_brain_yt_24<- tidy(brain_yt_24, threshold.n = 0.6)
 ro_tidy_brain_yt_24 <- reorient(tidy_brain_yt_24)
 #plot2d(ro_tidy_brain_yt_24)
@@ -486,7 +486,7 @@ correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
   #  reorient()
   
   #extract quadratic model coefficients from xy plane 
-  ro_model <- attr(data, "quad_mod_xy")
+  ro_model <- attr(data, "quad_mod_xz")
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
   x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
   intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
@@ -505,15 +505,14 @@ correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
   #slope to angle (radian)
   rotation_angle_radian <- atan(slope)
   #radian to degree
-  rotation_angle_degree <- rad2deg(radian)
+  rotation_angle_degree <- rad2deg(rotation_angle_radian)
   
-  matrix.x <- matrix(0, nrow=3, ncol=3)
-  matrix.x[1,1] = 1
+  matrix.x <- diag(3)
   matrix.x[2,2] <- cos(rotation_angle_radian)
   matrix.x[2,3] <- -sin(rotation_angle_radian)
   matrix.x[3,2] <- sin(rotation_angle_radian)
   matrix.x[3,3] <- cos(rotation_angle_radian)
-
+  
   data.matrix<-data%>%
     select(x,y,z)%>%
     as.matrix()
@@ -521,23 +520,28 @@ correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
   data_freq_gray<- data%>%
     select(Freq,gray_val)
   
-  C <- data.matrix %*% matrix.x
-
-  C.df <- as.data.frame(C)
+  C <- data.matrix %*% matrix.x %>%
+    tibble::as_tibble() %>%
+    bind_cols(data_freq_gray)
   
-  colnames(C.df)[1] <- "x"
-  colnames(C.df)[2] <- "y"
-  colnames(C.df)[3] <- "z"
+  names(C) <- names(data)
   
-  data_rotate <- cbind(C.df, data_freq_gray)
-
   class(data_rotate) <- append("tbl_brain", class(data_rotate)) 
   
   return(data_rotate)
 }
 
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_tidy <- read_h5(file_names[1])%>%
+  tidy(threshold=0.6)%>%
+  reorient()
 
-data <- ro_tidy_brain_yt_24
-c.data <- rotation_angle.brain(ro_tidy_brain_yt_24, threshold.n = 0.8)
+
+plot2d(brain,title="before PCA")
+
+plot2d(data,title="before error B correction")
+c.data <- correct_errorB.tbl_brain(data, threshold.n = 0.6)
+plot2d(c.data, title="after error B correction")
 ```
 
