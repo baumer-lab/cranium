@@ -489,6 +489,22 @@ is_errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
   }
 }
 
+#' @export
+#' @rdname is_errorA
+is_errorA.tbl_brain<- function(data, type="wildtype", threshold.n=0.9){
+  ro_tidy_brain <- data%>%
+    reorient()
+  ro_model <- attr(ro_tidy_brain, "quad_mod_xy")  #model applied on reoriented data
+  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
+
+  if (quad.coeff < 0) {
+    message("Y Axis is flipped")
+    return(TRUE)
+  } else{
+    message("Correct alignment")
+    return(FALSE)
+  }
+}
 
 #' @export
 #' @rdname is_errorA
@@ -663,9 +679,9 @@ correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
   x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
   intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
   # y intercept
- # z_intercept <- intercept
+  y_intercept <- intercept
   # x intercept
-  #x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
+  x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
 
   #vertex (x)
   #  vertex.x <- -x.coeff/(2*quad.coeff)
@@ -673,14 +689,13 @@ correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
   # vertex <- c(vertex.x, vertex.y)
 
   #slope of the line connecting m and n
-  slope <- abs(intercept/(-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff))
+  slope <- abs(y_intercept/x_intercept)
   #slope to angle (radian)
   rotation_angle_radian <- atan(slope)
   #radian to degree
-  #rotation_angle_degree <- rad2deg(radian)
+  rotation_angle_degree <- rad2deg(rotation_angle_radian)
 
-  matrix.x <- matrix(0, nrow=3, ncol=3)
-  matrix.x[1,1] = 1
+  matrix.x <- diag(3)
   matrix.x[2,2] <- cos(rotation_angle_radian)
   matrix.x[2,3] <- -sin(rotation_angle_radian)
   matrix.x[3,2] <- sin(rotation_angle_radian)
@@ -693,22 +708,16 @@ correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
   data_freq_gray<- data%>%
     select(Freq,gray_val)
 
-  C <- data.matrix %*% matrix.x
+  C <- data.matrix %*% matrix.x %>%
+    tibble::as_tibble() %>%
+    bind_cols(data_freq_gray)
 
-  C.df <- as.data.frame(C)
-
-  colnames(C.df)[1] <- "x"
-  colnames(C.df)[2] <- "y"
-  colnames(C.df)[3] <- "z"
-
-  data_rotate <- cbind(C.df, data_freq_gray)
+  names(C) <- names(data)
 
   class(data_rotate) <- append("tbl_brain", class(data_rotate))
 
   return(data_rotate)
 }
-
-
 
 
 

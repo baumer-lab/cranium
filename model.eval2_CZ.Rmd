@@ -34,11 +34,11 @@ threshold_wt <- read_csv("~/Desktop/cranium/visualization_results/threshold_wt_a
   mutate(type = "Wild Type")
 
 threshold_all <- rbind(threshold_wt, threshold_yt)
-mplot(threshold_all)
+#mplot(threshold_all)
 
 threshold_all$Sample_id <- as.character(threshold_all$Sample_id)
 threshold_all$threshold <- as.character(threshold_all$threshold )
-
+#wt yt comparison plot (in paper)
 ggplot(data =threshold_all, aes(x = threshold, y = adj.r.squared)) +
   geom_boxplot()  +
   facet_wrap(~type, ncol = 1)+
@@ -48,13 +48,13 @@ ggplot(data =threshold_all, aes(x = threshold, y = adj.r.squared)) +
   coord_flip()
 
 
-
+# threshold wt yt (in presentation)
 ggplot(data = threshold_all, aes(x = threshold, y = num.signal)) + geom_boxplot()  + facet_wrap(~type, ncol = 2) + labs(title = "")+ 
   scale_x_discrete(limits=c("0.4", "0.5", "0.6", "0.7", "0.8", "0.9"))
 ```
 
 
-
+# old plots (not in the paper)
 ```{r}
 #lineplot for each sample 
 ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared, group=Sample)) + 
@@ -72,14 +72,24 @@ num_signal_tb <- threshold_yt%>%
 
 ```
 
+#
+#
+#
+#
+#
+#
+#
+#
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 #Mode fit comparison: before PCA and after PCA (adj.r.square)
-```{r}
 
-threshold_all_0.6 <- threshold_wt_all%>%
+```{r}
+c<- threshold_wt%>%
   filter(threshold == 0.60)
 
 #t test
 tttest_pca <- t.test(threshold_wt_all_0.9$adj.r.squared.original, threshold_wt_all_0.9$adj.r.squared, paired = TRUE, alternative = "two.sided")
+
 tttest_pca
 
 # printing the p-value
@@ -87,8 +97,11 @@ tttest_pca$p.value
 
 
 #Re orientation improved model fit
-ggplot(data = threshold_wt_all, aes(x = adj.r.squared.original, y = adj.r.squared)) + geom_point()  + labs(title = "Adjusted R square before and after reorientation")+ 
-  scale_y_continuous(limits=c(0.2,1))
+ggplot(data = threshold_wt_0.6 , aes(x = adj.r.squared.original, y = adj.r.squared)) + geom_point()  + labs(title = "Adjusted R square before and after reorientation")+ 
+  scale_y_continuous(limits=c(0.2,1))+
+  geom_abline(intercept=0, slope=1, color = "red")
+
+  
 
 favstats(threshold_wt_all_0.9$adj.r.squared)
 favstats(threshold_wt_all_0.9$adj.r.squared.original)
@@ -100,8 +113,8 @@ table(threshold_yt_all_final$threshold)
 
 #Mode fit comparison: before PCA and after PCA (adj.r.square) -- Youtoo
 ```{r}
-threshold_yt_all_0.8 <- threshold_yt_all_final%>%
-  filter(threshold == 0.80)
+threshold_yt_0.6<- threshold_all%>%
+  filter(threshold == 0.60)
 
 #t test
 tttest_pca <- t.test(threshold_yt_all_0.8$adj.r.squared.original, threshold_yt_all_0.8$adj.r.squared, paired = TRUE, alternative = "two.sided")
@@ -111,7 +124,13 @@ tttest_pca
 tttest_pca$p.value
 
 #Re orientation improved model fit
-ggplot(data = threshold_yt_all_final, aes(x = adj.r.squared.original, y = adj.r.squared)) + geom_point()  + labs(title = "Adjusted R square before and after reorientation for You Too Mutant")
+
+#Re orientation improved model fit
+ggplot(data = threshold_yt_0.6, aes(x = adj.r.squared.original, y = adj.r.squared)) + geom_point()  + labs(title = "Adjusted R square before and after reorientation for mutant type")+ 
+  scale_y_continuous(limits=c(0.2,1))+
+  geom_abline(intercept=0, slope=1, color = "red")
+
+
 
 favstats(threshold_yt_all_0.8$adj.r.squared)
 favstats(threshold_yt_all_0.8$adj.r.squared.original)
@@ -199,10 +218,6 @@ yt_badfit <- threshold_yt %>%
 # Plot: You Too.
 threshold = 0.5
 ```{r eval=FALSE, include=FALSE}
-path = "Sample/YouToo"
-file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-
-  
 for (i in (1:length(file_names))){
   name <- sub("_Probabilities.h5", "", file_names[i])
   name <- sub("Sample/YouToo/", "Youtoo_", name)

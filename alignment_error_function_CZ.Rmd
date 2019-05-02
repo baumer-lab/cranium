@@ -26,7 +26,6 @@ library(skimr)
 library(gmodels)
 library(spatstat.utils)
 library(REdaS)
-
 ```
 
 
@@ -307,21 +306,6 @@ if (is_errorB(data, threshold.n=0.6)==FALSE){
 
 ```
 
-# degrees.to.radians function
-```{r}
-degrees.to.radians<-function(degrees=45,minutes=30){
-    if(!is.numeric(minutes)) stop("Please enter a numeric value for minutes!\n")
-    if(!is.numeric(degrees)) stop("Please enter a numeric value for degrees!\n")
-        decimal<-minutes/60
-        c.num<-degrees+decimal
-        radians<-c.num*pi/180
-        radians
-}
-# example
-degrees.to.radians(degrees=90)
-```
-
-
 # Correction for errorB
 ```{r}
 #read youtoo sample
@@ -425,9 +409,9 @@ plot2d(ro_tidy_brain_yt_01)
 
 
 
-# Find rotation angle
+# Sample
 ```{r}
-#read youtoo sample
+#read youtoo sample #24
 path = "Sample/YouToo"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 brain_yt_24 <-read_h5(file_names[12])
@@ -437,6 +421,24 @@ ro_tidy_brain_yt_24 <- reorient(tidy_brain_yt_24)
 ro_tidy_brain_yt_24 <- reorient(tidy_brain_yt_24, correctionA = TRUE)
 plot2d(ro_tidy_brain_yt_24)
 
+#read youtoo sample #1
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_yt_1 <-read_h5(file_names[1])
+tidy_brain_yt_1<- tidy(brain_yt_1, threshold.n = 0.6)
+#is_errorA(tidy_brain_yt_1) #false
+ro_tidy_brain_yt_1 <- reorient(tidy_brain_yt_1)
+#plot2d(ro_tidy_brain_yt_24)
+plot2d(ro_tidy_brain_yt_1)
+
+#read youtoo sample #2
+brain_yt_2 <-read_h5(file_names[2])
+tidy_brain_yt_2<- tidy(brain_yt_2, threshold.n = 0.6)
+#is_errorA(tidy_brain_yt_1) #false
+ro_tidy_brain_yt_2 <- reorient(tidy_brain_yt_2)
+#plot2d(ro_tidy_brain_yt_24)
+plot2d(ro_tidy_brain_yt_1)
+
 #read wildtype sample
 path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
@@ -445,48 +447,20 @@ tidy_brain_wt_04<- tidy(brain_wt_04, threshold.n = 0.6)
 ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04, correctionA = TRUE)
 
 
-rotation_angle.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
- # ro_tidy_brain <- data%>%
- #   tidy(type, threshold = threshold.n)%>%
-  #  reorient()
-  
-  #extract quadratic model coefficients from xy plane 
-  ro_model <- attr(data, "quad_mod_xy")
-  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
-  x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
-  intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
-  # y intercept
-  y_intercept <- intercept
-  # x intercept
-  x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
-  
-  #vertex (x)
-#  vertex.x <- -x.coeff/(2*quad.coeff)
- # vertex.y <- quad.coeff * (vertex.x ^ 2) + x.coeff * vertex.x + intercept
- # vertex <- c(vertex.x, vertex.y)
-  
-  #slope of the line connecting m and n
-  slope <- abs(y_intercept/x_intercept)
-  #slope to angle (radian)
-  rotation_angle_radian <- atan(slope)
-  #radian to degree
-  rotation_angle_degree <- rad2deg(radian)
-  return(rotation_angle_degree)
-}
 
-data <- ro_tidy_brain_yt_24
-rotation_angle.brain(ro_tidy_brain_yt_24, threshold.n = 0.8)
+
 ```
 
 # correction B: rotate all data points with a rotation angle about x-axis
 ```{r}
+#xy plane
 correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
  # ro_tidy_brain <- data%>%
  #   tidy(type, threshold = threshold.n)%>%
   #  reorient()
   
   #extract quadratic model coefficients from xy plane 
-  ro_model <- attr(data, "quad_mod_xz")
+  ro_model <- attr(data, "quad_mod_xy")
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
   x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
   intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
@@ -526,22 +500,32 @@ correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
   
   names(C) <- names(data)
   
-  class(data_rotate) <- append("tbl_brain", class(data_rotate)) 
+  class(C) <- append("tbl_brain", class(C)) 
   
-  return(data_rotate)
+  return(C)
 }
 
-path = "Sample/YouToo"
-file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-brain_tidy <- read_h5(file_names[1])%>%
-  tidy(threshold=0.6)%>%
-  reorient()
 
 
+### xz plane
+c
+}
+```
+
+
+
+```{r}
 plot2d(brain,title="before PCA")
 
 plot2d(data,title="before error B correction")
+
+is_errorB(ro_tidy_brain_yt_1)
+data <- ro_tidy_brain_yt_1
+
 c.data <- correct_errorB.tbl_brain(data, threshold.n = 0.6)
 plot2d(c.data, title="after error B correction")
+plot2d(C)
+
+is_errorB(C)
 ```
 

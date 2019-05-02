@@ -1,10 +1,8 @@
 citHeader("To cite cranium in publications, please use:")
 
-citEntry(entry = "book",
-  author = "Benjamin Baumer",
-  title = "cranium: ",
-  publisher = "Northampton, MA",
+citEntry(entry = "Manual",
+  title = {Cranium: Quantifying Radial Bridge Structures}
+  author = "Benjamin Baumer, Ziwei Crystal Zang, Emma Ning, Kalynn Kosyka",
   year = "2019",
-  isbn = "",
-  url = ""
+  note = {R package version 0.0.1.9007}
 )
