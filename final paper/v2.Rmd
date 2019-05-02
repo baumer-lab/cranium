@@ -1,0 +1,105 @@
+---
+title: Cranium
+author:
+  - name: Ziwei (Crystal) Zang
+    email: czang@smith.edu
+    affiliation: Smith College
+  - name: Yujia (Emma) Ning
+    email: ening@smith.edu
+    affiliation: Smith College
+  - name: Kalynn Kosyka
+    email: kkosyka@smith.edu
+    affiliation: Smith College
+address:
+  - address: Statistical and Data Sciences, Northampton, MA
+
+abstract: |
+   Collaborated with the Barresi Lab, we continued $\Delta$ SCOPE by extending functionalities in R package--Cranium. We modified existed functions in Cranium, built new functions and optimized parameters so that evaluating sample alignments is no longer vulnerable to subjective biases. Additionally, alignments will be able to run automatically without labor-intensive manual correction that would introduce more researcher biases.
+  
+author_summary: |
+  This is our first draft.
+
+bibliography: mybibfile.bib
+output: rticles::plos_article
+csl: plos.csl
+header-includes:
+ \usepackage{float}
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+
+# Abstract
+# Introduction
+
+```{r Figure1, echo =FALSE, fig.cap="Wild Type and Mutant Commissure", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/wt_yt.png")
+```
+
+# Data
+# Programming Languages
+# Pre-Correction
+
+```{r Figure2, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/optimal_threshold2.png")
+```
+
+# Correction
+```{r Figure3, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/cranium_procedure.png")
+```
+
+```{r Figure4, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/diagram_2errors.png")
+```
+
+```{r Figure5, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/error_correctionA.png")
+```
+
+```{r Figure6, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/range_for_is_errorB.png")
+```
+
+```{r Figure7, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/error_correctionB.png")
+```
+
+```{r Figure8, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/rotation_angle.png")
+```
+
+```{r Figure9, echo =FALSE, fig.cap="", out.width='50%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/rotation_matrix.png")
+```
+
+# Results
+
+```{r Figure10, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/thresh_numsig_boxplot.png")
+```
+
+```{r Figure11, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/threshold_boxplot.png")
+```
+
+```{r Figure12, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/optimal_threshold2.png")
+```
+
+```{r Figure13, echo =FALSE, fig.cap="", out.width='80%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/adj_r2_before_after_wt.png")
+```
+
+```{r Figure14, echo =FALSE, fig.cap="", out.width='80%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/adj_r2_before_after_yt.png")
+```
+
+# Conclusion
+
+# Future Research
+```{r Figure15, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+knitr::include_graphics("visualization_paper/other_error.png")
+```
