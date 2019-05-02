@@ -141,12 +141,20 @@ Please copy the following chunks to your own rmd. Please don't edit anything on 
 #step2: run 1 sample to see if the new function works for you
 
 ```{r}
-brain<-read_h5(file_names[5])%>%
-  tidy(threshold=0.6)
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+ro_tidy_brain_wt_05<-read_h5(file_names[5])%>%
+  tidy(threshold=0.6)%>%
+  reorient(correctionA = TRUE)
+
 class(brain)
 
 tb <- is_z_curve(brain)
 View(tb)
+plot2d(ro_tidy_brain_wt_05)
+is_errorB(ro_tidy_brain_wt_05)
+
 ```
 
 #step3: run a loop 

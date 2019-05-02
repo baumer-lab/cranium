@@ -4,7 +4,7 @@
 \alias{reorient}
 \title{Reorientation: applying PCA (Principal Component Analysis)}
 \usage{
-reorient(x, correctionA = FALSE, ...)
+reorient(x, correctionA = FALSE, correctionB = FALSE, ...)
 }
 \arguments{
 \item{x}{a \code{\link{tbl_brain}}}
