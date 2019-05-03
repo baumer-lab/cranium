@@ -210,12 +210,12 @@ Kalynn Kosyka\textsuperscript{\getAff{Smith College}}\\
 % Please keep the abstract below 300 words
 \section*{Abstract}
 Collaborated with the Barresi Lab, we continued \(\Delta\) SCOPE by
-extending functionalities in R package--Cranium. We modified existed
-functions in Cranium, built new functions and optimized parameters so
-that evaluating sample alignments is no longer vulnerable to subjective
-biases. Additionally, alignments will be able to run automatically
-without labor-intensive manual correction that would introduce more
-researcher biases.
+extending functionalities in R package--Cranium{[}{\textbf{???}}{]}. We
+modified existed functions in Cranium, built new functions and optimized
+parameters so that evaluating sample alignments is no longer vulnerable
+to subjective biases. Additionally, alignments will be able to run
+automatically without labor-intensive manual correction that would
+introduce more researcher biases.
 
 % Please keep the Author Summary between 150 and 200 words
 % Use first person. PLOS ONE authors please skip this step.
@@ -226,7 +226,8 @@ This is our first draft.
 \linenumbers
 
 % Use "Eq" instead of "Equation" for equation citations.
-\section{Introduction}\label{introduction}
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
 
 The current study serves as an enhancement to Dr.~Michael Barresi's
 research at Smith College on categorizing zebrafish brains. The goal of
@@ -258,7 +259,8 @@ to subjective biases. Additionally, alignments will be able to run
 automatically without labor-intensive manual correction that would
 introduce more researcher biases.
 
-\section{Data}\label{data}
+\hypertarget{data}{%
+\section{Data}\label{data}}
 
 We received our data from Dr.~Jake Schnabl: 43 wild type samples and 35
 mutant samples. The data files are in HDF5 (.h5) format. The data points
@@ -273,21 +275,25 @@ which represents the probability of being a real signal. Each data point
 in our dataset represents one signal, and the signals have different
 frequencies.
 
-\section{Methods}\label{methods}
+\hypertarget{methods}{%
+\section{Methods}\label{methods}}
 
-\subsection{Programming Languages}\label{programming-languages}
+\hypertarget{programming-languages}{%
+\subsection{Programming Languages}\label{programming-languages}}
 
 In this study, we used R in order to run algorithms, manipulate data,
 and generate visualizations. For accessibility and reproducibility of
 this research, we have stored our work on Github. {[}3{]}
 
+\hypertarget{package-cranium}{%
 \subsection{\texorpdfstring{Package
-\texttt{Cranium}}{Package Cranium}}\label{package-cranium}
+\texttt{Cranium}}{Package Cranium}}\label{package-cranium}}
 
 The package \texttt{Cranium} contains several major functionalities
 listed below:
 
-\subsubsection{1. API}\label{api}
+\hypertarget{api}{%
+\subsubsection{1. API}\label{api}}
 
 The sample datasets for You Too and Wild Type are saved as *.h5 files.
 In order to share the data efficiently amongst users, the data is hosted
@@ -301,8 +307,9 @@ these new functions, the Barresi lab had to share the samples through a
 hard drive, thus the new features solve the issue on how to share data
 efficiently.
 
+\hypertarget{tidy-data-and-threshold}{%
 \subsubsection{2. Tidy Data and
-Threshold}\label{tidy-data-and-threshold}
+Threshold}\label{tidy-data-and-threshold}}
 
 After reading in the data, tidy function not only converts the original
 data to x, y, z coordinates of each signal, but also includes the
@@ -329,8 +336,9 @@ the chance of our model overfitting the data. At the same time, setting
 a low threshold for mutant type data, while increases the sample size,
 allows more noise to creep into the dataset.
 
+\hypertarget{principal-component-analysis-transformation}{%
 \subsubsection{3. Principal Component Analysis
-Transformation}\label{principal-component-analysis-transformation}
+Transformation}\label{principal-component-analysis-transformation}}
 
 We can't ensure the samples are mounted exactly the same. Therefore, the
 pictures taken are of different angles and coordinates. In order for us
@@ -345,7 +353,8 @@ For the commissure, we would get 3 views: lateral; dorsal/ventral;
 anterior/posterior. We set x axis as the lateral, y axis as the
 anterior/posterior, and z as the dorsal/ventral.
 
-\subsubsection{4. Qmodel}\label{qmodel}
+\hypertarget{qmodel}{%
+\subsubsection{4. Qmodel}\label{qmodel}}
 
 We built the Qmodel function to fit a quadratic model to the data in
 order to capture the shape of the commissure as well as evaluating model
@@ -360,67 +369,81 @@ total variance. Higher \(r^2\) values represent smaller differences
 between the observed data and the fitted values, indicating a better fit
 of the model. Note that \(r^2\) is a relative scale of model fit.
 
+\hypertarget{adjusted-r2}{%
 \subsubsection{\texorpdfstring{Adjusted \(r^2\)
-:}{Adjusted r\^{}2 :}}\label{adjusted-r2}
+:}{Adjusted r\^{}2 :}}\label{adjusted-r2}}
 
 Based on \(r^2\) , adjusted \(r^2\) --adjusts for the number of terms in
 the model, the degrees of freedom.
 
+\hypertarget{rmse-root-mean-squared-error}{%
 \subsubsection{RMSE (Root Mean Squared
-Error)}\label{rmse-root-mean-squared-error}
+Error)}\label{rmse-root-mean-squared-error}}
 
 gives the difference between observed data and model's predicted values.
 Lower RMSE values represent smaller difference between observed data and
 model's predicted values.
 
-\subsubsection{Sigma}\label{sigma}
+\hypertarget{sigma}{%
+\subsubsection{Sigma}\label{sigma}}
 
 It is the square root of the estimated variance of the residuals
 
-\subsubsection{Statistic}\label{statistic}
+\hypertarget{statistic}{%
+\subsubsection{Statistic}\label{statistic}}
 
 A piece of data that is related to a larger set of data
 
-\subsubsection{P.value}\label{p.value}
+\hypertarget{p.value}{%
+\subsubsection{P.value}\label{p.value}}
 
 It is the probability that chance alone would produce a test statistic
 as extreme as the observed test statistic.
 
-\subsubsection{Df}\label{df}
+\hypertarget{df}{%
+\subsubsection{Df}\label{df}}
 
 Degrees of freedom
 
-\subsubsection{logLik}\label{loglik}
+\hypertarget{loglik}{%
+\subsubsection{logLik}\label{loglik}}
 
 A function in R that determines the log likelihood of a fitted model.
 
-\subsubsection{AIC}\label{aic}
+\hypertarget{aic}{%
+\subsubsection{AIC}\label{aic}}
 
 Akaike information criterion represents the estimate in quality of model
 relative to other models.
 
-\subsubsection{BIC}\label{bic}
+\hypertarget{bic}{%
+\subsubsection{BIC}\label{bic}}
 
 Bayesian information criterion (BIC) or Schwarz information criterion
 
-\subsubsection{Deviance}\label{deviance}
+\hypertarget{deviance}{%
+\subsubsection{Deviance}\label{deviance}}
 
 A value of goodness-of-fit for a statistical model.
 
-\subsubsection{df.residual}\label{df.residual}
+\hypertarget{df.residual}{%
+\subsubsection{df.residual}\label{df.residual}}
 
 Residual degree of freedom
 
-\subsubsection{num.signal}\label{num.signal}
+\hypertarget{num.signal}{%
+\subsubsection{num.signal}\label{num.signal}}
 
 It gives the number of signals being captured for the sample after
 filter out the signals that are less than the threshold.
 
-\subsubsection{Quad.coeff}\label{quad.coeff}
+\hypertarget{quad.coeff}{%
+\subsubsection{Quad.coeff}\label{quad.coeff}}
 
 The quadratic coefficient of the model \(y=x^2+x\).
 
-\subsubsection{5. Linear Model}\label{linear-model}
+\hypertarget{linear-model}{%
+\subsubsection{5. Linear Model}\label{linear-model}}
 
 A good PCA transformation will result in mean z value to be zero. Thus,
 we build linear model \(z=0\) to evaluate the PCA transformation.
@@ -430,14 +453,18 @@ indicated by having a curvature in the xz plane and yz plane, which
 could cause by rotation around x axis or an incorrectly selected PC1
 (first principal component).
 
-\subsubsection{6. Plotting}\label{plotting}
+\hypertarget{plotting}{%
+\subsubsection{6. Plotting}\label{plotting}}
 
-\section{Results}\label{results}
+\hypertarget{results}{%
+\section{Results}\label{results}}
 
+\hypertarget{threshold-optimization-evaluation}{%
 \subsection{1. Threshold optimization
-evaluation}\label{threshold-optimization-evaluation}
+evaluation}\label{threshold-optimization-evaluation}}
 
-\subsubsection{Wild Type}\label{wild-type}
+\hypertarget{wild-type}{%
+\subsubsection{Wild Type}\label{wild-type}}
 
 For wild type sample, we tested threshold 24 different threshold:
 threshold = \{0.6, 0.62, 0.64, 0.66, 0.69, 0.7, 0.72, 0.75, 0.78, 0.8,
@@ -460,7 +487,8 @@ that the range of optimal thresholds for wild type is between 0.87 and
 \includegraphics[width=0.9\linewidth]{visualization_paper/threshold_boxplot_wt} \caption{Optimal threshold--Adjusted r2 (Wild Type)}\label{fig:Figure2}
 \end{figure}
 
-\subsubsection{Mutant}\label{mutant}
+\hypertarget{mutant}{%
+\subsubsection{Mutant}\label{mutant}}
 
 For mutant sample, we tested 29 different thresholds: threshold = \{0.4,
 0.42, 0.44, 0.46, 0.48, 0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62, 0.64,
@@ -482,7 +510,8 @@ mutant samples.
 \includegraphics[width=0.9\linewidth]{visualization_paper/threshold_boxplot_yt} \caption{Optimal threshold--Adjusted r2--Mutant(You Too)}\label{fig:Figure3}
 \end{figure}
 
-\subsubsection{Threshold Optimization}\label{threshold-optimization}
+\hypertarget{threshold-optimization}{%
+\subsubsection{Threshold Optimization}\label{threshold-optimization}}
 
 And then we compared model fit of wild type and mutant sample by
 comparing their average adjusted \(r^2\) for each threshold. For each
@@ -497,14 +526,16 @@ identify the point that has the smallest Euclidean distance to (1,1).
 \includegraphics[width=1\linewidth]{visualization_paper/optimal_threshold} \caption{Optimal Threshold}\label{fig:Figure4}
 \end{figure}
 
+\hypertarget{pca-transformation-model-fit-evaluation}{%
 \subsection{2. PCA Transformation Model Fit
-Evaluation}\label{pca-transformation-model-fit-evaluation}
+Evaluation}\label{pca-transformation-model-fit-evaluation}}
 
 We compared the adjusted \(r^2\) of the model before and after PCA
 transformation, and found out that PCA transformation significantly
 improved the model fit.
 
-\subsubsection{Wild Type}\label{wild-type-1}
+\hypertarget{wild-type-1}{%
+\subsubsection{Wild Type}\label{wild-type-1}}
 
 We performed paired sample t-test on the wild type samples by setting
 default threshold 0.9. As shown in Figure 5, the x-axis shows the
@@ -520,7 +551,8 @@ transformation.\\
 \includegraphics[width=0.9\linewidth]{visualization_paper/r2_ro_comparison_wt} \caption{Adj. r2 before and after PCA reorientation (wild type)}\label{fig:Figure5}
 \end{figure}
 
-\subsubsection{Mutant}\label{mutant-1}
+\hypertarget{mutant-1}{%
+\subsubsection{Mutant}\label{mutant-1}}
 
 We performed paired sample t-test on the wild type sample by setting
 optimal threshold 0.8. As shown in Figure 6, the x-axis shows the
@@ -535,20 +567,21 @@ average adjusted \(r^2\) before PCA transformation with a p-value =
 \includegraphics[width=0.9\linewidth]{visualization_paper/r2_ro_comparison_yt} \caption{Adj. r2 before and after PCA reorientation (mutant)}\label{fig:Figure6}
 \end{figure}
 
-\section*{References}\label{references}
+\hypertarget{references}{%
+\section*{References}\label{references}}
 \addcontentsline{toc}{section}{References}
 
 \hypertarget{refs}{}
-\hypertarget{ref-Schwartz18}{}
+\leavevmode\hypertarget{ref-Schwartz18}{}%
 1. M. Schwartz BB J. Schnab. A new computational method to quantify
 3D383image data and to detail changes in morphological structure and
 spatial384relationships during nervous system development. 2018;
 
-\hypertarget{ref-Hu18}{}
+\leavevmode\hypertarget{ref-Hu18}{}%
 2. S. Hu DT W. Li. Classification of wild type and mutant zebrafish
 brains viaComputational method. 2018;
 
-\hypertarget{ref-rticles19}{}
+\leavevmode\hypertarget{ref-rticles19}{}%
 3. Allaire J, Xie Y, R Foundation, Wickham H, Journal of Statistical
 Software, Vaidyanathan R, et al. Rticles: Article formats for r markdown
 {[}Internet{]}. 2019. Available:

@@ -14,7 +14,7 @@ address:
   - address: Statistical and Data Sciences, Northampton, MA
 
 abstract: |
-   Collaborated with the Barresi Lab, we continued $\Delta$ SCOPE by extending functionalities in R package--Cranium. We modified existed functions in Cranium, built new functions and optimized parameters so that evaluating sample alignments is no longer vulnerable to subjective biases. Additionally, alignments will be able to run automatically without labor-intensive manual correction that would introduce more researcher biases.
+   Collaborated with the Barresi Lab, we continued $\Delta$ SCOPE by extending functionalities in R package--Cranium[@cranium]. We modified existed functions in Cranium, built new functions and optimized parameters so that evaluating sample alignments is no longer vulnerable to subjective biases. Additionally, alignments will be able to run automatically without labor-intensive manual correction that would introduce more researcher biases.
   
 author_summary: |
   This is our first draft.
