@@ -105,7 +105,7 @@ file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 correctionB_num <- numeric(nrow(errorB_sample))
 
 ########## for loop: 
-for (i in (1: 1)){
+for (i in (1: nrow(errorB_sample))){
   id <- vector_errorB_id[i]
   tidy_brain <- read_h5(file_names[id])%>%
     tidy(threshold.n = 0.6)
@@ -128,8 +128,32 @@ for (i in (1: 1)){
                     ##forth check
                     if(is_errorB(c3.B.ro_tidy_brain) == TRUE){
                     c4.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6, a = 4)
+                    
+                        ##fifth check
+                        if(is_errorB(c4.B.ro_tidy_brain) == TRUE){
+                        c5.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6, a = 5)                     
+                              ##sixed check
+                               if(is_errorB(c5.B.ro_tidy_brain) == TRUE){
+                                 c6.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6, a = 6)
+                    
+                    
+                    
+          
+                    
                     correctionB_num[i] <- 99  # 99 means upper limit, not performing mroe correction
+                               } 
+                              #end after the sixed correction
+                              else{ 
+                          correctionB_num[i]  <- 6
+                           }
+                        }
+                    
+                    
+                    #end after the fifth correction
+                    else{ 
+                        correctionB_num[i]  <- 5
                     }
+                  }
                     #end after the forth correction
                    else{
                         correctionB_num[i]  <- 4
