@@ -76,29 +76,39 @@ To find the optimal threshold, we test different thresholds and examine their mo
 2. Next, we repeat step 1. for other thresholds: {0.4, 0.42, 0.44, 0.46, 0.48,  0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62, 0.64, 0.66,  0.7, 0.75, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.90, 0.91, 0.92}.      
 3. For each threshold, we generate a table of the threshold which we listed at step 2. with its corresponding average adjusted $R^2$ for wild-type samples and average adjusted $R^2$ for mutant-type samples.
 
-In order to find the threshold that optimizes the average adjusted $R^2$ for both wild- and mutant-type samples, we generate a scatterplot, as shown in Figure 2, for each threshold value, which is represented by a distinct color. The use of lighter color indicates a higher threshold. The size of each point represents the amount of signals from the mutant-type sample that were captured by the model. With x-axis representing the average mutant-type adjusted $R^2$ and y-axis representing the average wild-type adjusted $R^2$, we are able to find the optimal threshold.
+In order to find the threshold that optimizes the average adjusted $R^2$ for both wild- and mutant-type samples, we generate a scatterplot, as shown in Figure 2, for each threshold value, which is represented by a distinct color. The use of lighter color indicates a higher threshold. The size of each point represents the amount of signals from the mutant-type sample that were captured by the model. With x-axis representing the average mutant-type adjusted $R^2$ and y-axis representing the average wild-type adjusted $R^2$, we are able to find the optimal threshold.     
+
+
 
 ```{r Figure2, echo =FALSE, fig.cap="Optimization of threshold for wild- and mutant-type samples", out.width='90%', fig.show='asis'}
 knitr::include_graphics("visualization_paper/optimal_threshold2.png")
 ```
 
+
+
 We evaluate the performance of each threshold by comparing it to the perfect model fit. A perfect model-fit for both wild- and mutant-type samples should achieve an adjusted $R^2 = 1$. In a two dimensional space, we can find the Euclidean distance between the model fit of our threshold and the perfect model fit. A smaller euclidean distance indicates that we are closer to the perfect model fit. 
 
 ## 3. Principal Component Analysis (PCA) Reorientation
 During the process of data collection, researchers took pictures of the zebrafish brain under microscopes. We acknowledge that each of the brains were in different positions and were placed in different angles. Therefore, the pictures varied slightly in positioning. In order for us to do further analyses and compare between samples, we need to re-orient them using Principal Component Analysis (PCA) and identify a consistent set of axes across all samples. 
-In a three-dimensional space, PCA assigns the axis with the most amount of variation as PC1 (first principal component), then the axis with the second-most variation as PC2, and lastly the axis with least amount of variation as PC3. Afterwards, PCA picks the basis based on  PC1, PC2, and PC2, which then changes the positioning of the structure. As shown in Figure 3, we graphically output three 2D planes in three perspectives: xy; yz; xz planes. For the commissure, we would get three views: lateral; dorsal/ventral; anterior/posterior. We set x axis as the lateral, y axis as the anterior/posterior, and z as the dorsal/ventral.       
+In a three-dimensional space, PCA assigns the axis with the most amount of variation as PC1 (first principal component), then the axis with the second-most variation as PC2, and lastly the axis with least amount of variation as PC3. Afterwards, PCA picks the basis based on  PC1, PC2, and PC2, which then changes the positioning of the structure. As shown in Figure 3, we graphically output three 2D planes in three perspectives: xy; yz; xz planes. For the commissure, we would get three views: lateral; dorsal/ventral; anterior/posterior. We set x axis as the lateral, y axis as the anterior/posterior, and z as the dorsal/ventral.        
+
+
 
 ```{r Figure3, echo =FALSE, fig.cap="2-D plot of a wild-type sample #4", out.width='90%', fig.show='asis'}
 knitr::include_graphics("visualization_paper/wt_04.png")
 ```
 
-## 4. Qmodel
-We built the Qmodel function to fit a quadratic model to the data in order to capture the shape of the commissure as well as evaluating model fit. As shown in the Figure 4, the quadratic model fits on the xy-plane:  $y=x^2+x$, indicated by red color. Our goal is to achieve a better model fit. Qmodel outputs model statistics including: $R^2$, adjusted $R^2$, sigmal (RSE), statistic, p.value, df, logLik, AIC, BIC, deviance, df.residual, num.signal, quad.coeff, RMSE. 
+
+
+## 4. Qmodel   
+We built the Qmodel function to fit a quadratic model to the data in order to capture the shape of the commissure as well as evaluating model fit. As shown in the Figure 4, the quadratic model fits on the xy-plane:  $y=x^2+x$, indicated by red color. Our goal is to achieve a better model fit. Qmodel outputs model statistics including: $R^2$, adjusted $R^2$, sigmal (RSE), statistic, p.value, df, logLik, AIC, BIC, deviance, df.residual, num.signal, quad.coeff, RMSE.    
+
+
 
 ```{r Figure4, echo =FALSE, fig.cap="Model fit on a wild-type sample #4", out.width='90%', fig.show='asis'}
 knitr::include_graphics("visualization_paper/wt_04_model.png")
 ```
-
+ 
 
 ### $R^2$ : 
 R^2 is also called the coefficient of determination or the coefficient of multiple determination for multiple regression. $R^2$ ranges from 0 to 1.  It is calculated from the variance explained by the model divided by total variance. Higher $R^2$ values represent smaller differences between the observed data and the fitted values, indicating a better fit of the model. Note that $R^2$ is a relative scale of model fit.
@@ -133,13 +143,36 @@ As shown in Figure 6, error A is identified as flipped y-axis, shown as the soli
 
 
 
-```{r Figure6, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+```{r Figure6, echo =FALSE, fig.cap="Error A in 3-D", out.width='90%', fig.show='asis'}
 knitr::include_graphics("visualization_paper/error_correctionA.png")
 ```
 
-```{r Figure7, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}
+
+
+### Error A correction -- `correct_errorA` 
+If a sample data returned TRUE for error A, the function then changes the sign of the y-value of all the data points, as a result flipping the y-axis. As shown in the following code, originally y = y - vertex[2]. We flipped the y-axis by reversing its value: y =  vertex[2] - y. 
+
+```{r eval=FALSE, include=TRUE}
+if (correctionA == TRUE){
+    data <- data %>%
+      mutate(x = x - vertex[1], y =  vertex[2] - y , z = z - z_mean$z_mean)
+  } else {
+    data <- data%>%
+      mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
+  }
+```
+
+
+### Check for error B -- `is_errorB`
+Error B is identified as having curvature in the xy-plane as shown in Figure 7. A correct PCA orientation will output a horizontal, flat linear line in xz-plane, meaning that the quadratic coefficient for the quadratic model in the xz-plane is zero. However, it is not practical to expect the quadratic coefficient to be perfectly zero with no variance. Therefore, we construct a normal range for the quadratic coefficient. We achieve good quadratic model fit for wild-type samples, having adjusted $R^2 > 0.85$. Also, we do not observe an obvious curvature of the data points in the xz-plane. Thus, we use wild-type samples as our reference group to construct the normal range for the quadratic coefficient.
+
+
+```{r Figure7, echo =FALSE, fig.cap="Error B in 3-D", out.width='90%', fig.show='asis'}
 knitr::include_graphics("visualization_paper/range_for_is_errorB.png")
 ```
+
+To do this, we first identify the standard error of the quadratic coefficient for all of our wild-type samples. Then, we construct a range: (mean - standard error, mean + standard error) as the range of  “acceptable” curvature for wild-type samples. Then, we check whether the quadratic coefficient of each mutant sample is within that range. If it is, we would consider the curvature of that mutant sample acceptable, meaning that there is not an error B for that sample. If the quadratic coefficient of a mutant sample is not within the acceptable range, we would then consider that there exists an error B in the sample. 
+
 
 
 ```{r Figure8, echo =FALSE, fig.cap="", out.width='90%', fig.show='asis'}

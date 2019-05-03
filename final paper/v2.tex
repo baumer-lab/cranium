@@ -169,6 +169,46 @@
 \newcommand{\lorem}{{\bf LOREM}}
 \newcommand{\ipsum}{{\bf IPSUM}}
 
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
 
 \usepackage{float}
 
@@ -372,7 +412,7 @@ wild-type samples and average adjusted \(R^2\) for mutant-type samples.
 
 In order to find the threshold that optimizes the average adjusted
 \(R^2\) for both wild- and mutant-type samples, we generate a
-scatterplot, as shown in Figure XXX, for each threshold value, which is
+scatterplot, as shown in Figure 2, for each threshold value, which is
 represented by a distinct color. The use of lighter color indicates a
 higher threshold. The size of each point represents the amount of
 signals from the mutant-type sample that were captured by the model.
@@ -511,10 +551,59 @@ is flipped'' and return ``TRUE''. If error A does not exist, then the
 function will show ``Correct alignment'' and return ``FALSE''.
 
 \begin{figure}[H]
-\includegraphics[width=0.9\linewidth]{visualization_paper/error_correctionA} \end{figure}
+\includegraphics[width=0.9\linewidth]{visualization_paper/error_correctionA} \caption{Error A in 3-D}\label{fig:Figure6}
+\end{figure}
+
+\hypertarget{error-a-correction-correct_errora}{%
+\subsubsection{\texorpdfstring{Error A correction --
+\texttt{correct\_errorA}}{Error A correction -- correct\_errorA}}\label{error-a-correction-correct_errora}}
+
+If a sample data returned TRUE for error A, the function then changes
+the sign of the y-value of all the data points, as a result flipping the
+y-axis. As shown in the following code, originally y = y -
+vertex{[}2{]}. We flipped the y-axis by reversing its value: y =
+vertex{[}2{]} - y.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ControlFlowTok{if}\NormalTok{ (correctionA }\OperatorTok{==}\StringTok{ }\OtherTok{TRUE}\NormalTok{)\{}
+\NormalTok{    data <-}\StringTok{ }\NormalTok{data }\OperatorTok{%>%}
+\StringTok{      }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ x }\OperatorTok{-}\StringTok{ }\NormalTok{vertex[}\DecValTok{1}\NormalTok{], }\DataTypeTok{y =}\NormalTok{  vertex[}\DecValTok{2}\NormalTok{] }\OperatorTok{-}\StringTok{ }\NormalTok{y , }\DataTypeTok{z =}\NormalTok{ z }\OperatorTok{-}\StringTok{ }\NormalTok{z_mean}\OperatorTok{$}\NormalTok{z_mean)}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{    data <-}\StringTok{ }\NormalTok{data}\OperatorTok{%>%}
+\StringTok{      }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ x }\OperatorTok{-}\StringTok{ }\NormalTok{vertex[}\DecValTok{1}\NormalTok{], }\DataTypeTok{y =}\NormalTok{ y }\OperatorTok{-}\StringTok{ }\NormalTok{vertex[}\DecValTok{2}\NormalTok{], }\DataTypeTok{z =}\NormalTok{ z }\OperatorTok{-}\StringTok{ }\NormalTok{z_mean}\OperatorTok{$}\NormalTok{z_mean)}
+\NormalTok{  \}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{check-for-error-b-is_errorb}{%
+\subsubsection{\texorpdfstring{Check for error B --
+\texttt{is\_errorB}}{Check for error B -- is\_errorB}}\label{check-for-error-b-is_errorb}}
+
+Error B is identified as having curvature in the xy-plane as shown in
+Figure 7. A correct PCA orientation will output a horizontal, flat
+linear line in xz-plane, meaning that the quadratic coefficient for the
+quadratic model in the xz-plane is zero. However, it is not practical to
+expect the quadratic coefficient to be perfectly zero with no variance.
+Therefore, we construct a normal range for the quadratic coefficient. We
+achieve good quadratic model fit for wild-type samples, having adjusted
+\(R^2 > 0.85\). Also, we do not observe an obvious curvature of the data
+points in the xz-plane. Thus, we use wild-type samples as our reference
+group to construct the normal range for the quadratic coefficient.
 
 \begin{figure}[H]
-\includegraphics[width=0.9\linewidth]{visualization_paper/range_for_is_errorB} \end{figure}
+\includegraphics[width=0.9\linewidth]{visualization_paper/range_for_is_errorB} \caption{Error B in 3-D}\label{fig:Figure7}
+\end{figure}
+
+To do this, we first identify the standard error of the quadratic
+coefficient for all of our wild-type samples. Then, we construct a
+range: (mean - standard error, mean + standard error) as the range of
+``acceptable'' curvature for wild-type samples. Then, we check whether
+the quadratic coefficient of each mutant sample is within that range. If
+it is, we would consider the curvature of that mutant sample acceptable,
+meaning that there is not an error B for that sample. If the quadratic
+coefficient of a mutant sample is not within the acceptable range, we
+would then consider that there exists an error B in the sample.
 
 \begin{figure}[H]
 \includegraphics[width=0.9\linewidth]{visualization_paper/diagram_2errors} \end{figure}
