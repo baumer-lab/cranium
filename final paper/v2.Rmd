@@ -1,13 +1,13 @@
 ---
 title: Cranium
 author:
-  - name: Ziwei Crystal Zang
+  - name: Ziwei Crystal Zang $^1$
     email: czang@smith.edu
     affiliation: Smith College
-  - name: Yujia Emma Ning
+  - name: Yujia Emma Ning $^1$
     email: ening@smith.edu
     affiliation: Smith College
-  - name: Kalynn Kosyka
+  - name: Kalynn Kosyka $^1$
     email: kkosyka@smith.edu
     affiliation: Smith College
 address:
@@ -22,7 +22,7 @@ csl: plos.csl
 header-includes:
  \usepackage{float}
 ---
-$\Delta$ 
+
 
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(fig.pos = 'H')
@@ -94,7 +94,7 @@ In a three-dimensional space, PCA assigns the axis with the most amount of varia
 
 
 
-```{r Figure3, echo=FALSE, fig.cap="2D plot of a wild-type sample", out.width='90%', fig.show='asis'}
+```{r Figure3, echo=FALSE, fig.cap="2D plot of a wild-type sample", out.width='100%', fig.show='asis'}
 knitr::include_graphics("visualization_paper/wt_04.png")
 ```
 
@@ -106,13 +106,13 @@ We built the Qmodel function to fit a quadratic model to the data in order to ca
 
 
 
-```{r Figure4, echo=FALSE, fig.cap="Model fit on a wild-type sample", out.width='90%', fig.show='asis'}
+```{r Figure4, echo=FALSE, fig.cap="Model fit on a wild-type sample", out.width='100%', fig.show='asis'}
 knitr::include_graphics("visualization_paper/wt_04_model.png")
 ```
  
 
 ### $R^2$ : 
-R^2 is also called the coefficient of determination or the coefficient of multiple determination for multiple regression. $R^2$ ranges from 0 to 1.  It is calculated from the variance explained by the model divided by total variance. Higher $R^2$ values represent smaller differences between the observed data and the fitted values, indicating a better fit of the model. Note that $R^2$ is a relative scale of model fit.
+$R^2$ is also called the coefficient of determination or the coefficient of multiple determination for multiple regression. $R^2$ ranges from 0 to 1.  It is calculated from the variance explained by the model divided by total variance. Higher $R^2$ values represent smaller differences between the observed data and the fitted values, indicating a better fit of the model. Note that $R^2$ is a relative scale of model fit.
 
 ### Adjusted $R^2$ : 
 Adjusted $R^2$ is a modification of $R^2$ and adjusts for the number of predictors in the model. 
@@ -228,7 +228,7 @@ We check whether the reoriented data has error B, if there is an error, we will 
 ### a. Number of signals
 Different thresholds will leave us with different number of signals per sample. Figure 12 shows us the boxplot of the average number of signals for wild- and mutant-type samples at each threshold. For each threshold, wild-type samples have a lot more number of signals than mutant-type samples. Note that at threshold 0.9, the average number of signals for mutant-type samples almost equal to zero. At threshold of 0.92, we find that some mutant-type samples do not have any signals left. In the following section, we will compare the model fit for wild-type samples and mutant samples at each threshold.    
 
-```{r Figure12, echo =FALSE, fig.cap="", out.width='80%', fig.show='asis'}
+```{r Figure12, echo =FALSE, fig.cap="", out.width='60%', fig.show='asis'}
 knitr::include_graphics("visualization_paper/thresh_numsig_boxplot.png")
 ```
 
@@ -251,11 +251,11 @@ We compare the adjusted $R^2$ of the model before and after PCA reorientation, a
 For Figures 14 and 15 each point represents a wild-type sample or a mutant-type sample. The x-axis gives the adjusted $R^2$ before PCA reorientation and the y-axis gives the adjusted $R^2$ after PCA reorientation. The red line $y=x$ is plotted in both figures, which informs whether the PCA improves the quadratic model fit: the samples below the red line perform worse after the PCA reorientation and the samples above the red line perform better after the PCA reorientation.
 
 
-```{r Figure14, echo =FALSE, fig.cap="PCA ", out.width='80%', fig.show='asis'}
+```{r Figure14, echo =FALSE, fig.cap="PCA ", out.width='60%', fig.show='asis'}
 knitr::include_graphics("visualization_paper/adj_r2_before_after_wt.png")
 ```
 
-```{r Figure15, echo =FALSE, fig.cap="", out.width='80%', fig.show='asis'}
+```{r Figure15, echo =FALSE, fig.cap="", out.width='60%', fig.show='asis'}
 knitr::include_graphics("visualization_paper/adj_r2_before_after_yt.png")
 ```
 
@@ -282,5 +282,14 @@ In recent years, more researchers aim to produce reproducible and open-source re
 
 ## Future research
 PCA alignment error detection and correction could be optimized in the future. After the correction A, which addresses the flipped y-axis error and correction B, which addresses the curvature in the xz-plane problem, we would like to see whether the quadratic model fit on our wild- and mutant-type samples would be improved from the model fit on the samples before our corrections.  
+
+
+
+# References {#references .unnumbered}
+
+
+
+
+
 
 

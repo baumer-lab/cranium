@@ -240,9 +240,9 @@
 \newline
 % Insert author names, affiliations and corresponding author email (do not include titles, positions, or degrees).
 \\
-Ziwei Crystal Zang\textsuperscript{\getAff{Smith College}},
-Yujia Emma Ning\textsuperscript{\getAff{Smith College}},
-Kalynn Kosyka\textsuperscript{\getAff{Smith College}}\\
+Ziwei Crystal Zang \(^1\)\textsuperscript{\getAff{Smith College}},
+Yujia Emma Ning \(^1\)\textsuperscript{\getAff{Smith College}},
+Kalynn Kosyka \(^1\)\textsuperscript{\getAff{Smith College}}\\
 \bigskip
 \textbf{\getAff{}}Statistical and Data Sciences, Northampton, MA\\
 \bigskip
@@ -267,8 +267,6 @@ computation process in order to minimizing user inputs.
 \linenumbers
 
 % Use "Eq" instead of "Equation" for equation citations.
-\(\Delta\)
-
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
 
@@ -279,7 +277,7 @@ bridge formed to connect the two hemispheres of the brain, to classify
 whether a certain zebrafish belongs to wild- or mutant-type group.
 
 The difference between wild- and mutant-type brain structure is shown in
-Fig.1. Wild-type zebrafish have a smooth parabolic-shaped commissure,
+Figure 1. Wild-type zebrafish have a smooth parabolic-shaped commissure,
 where as in mutant zebrafish, the commissure is either not fully
 developed or highly distorted.
 
@@ -347,7 +345,7 @@ thus having a need for readily accessible data. In order to share the
 data efficiently amongst users, the data is hosted on Amazon S3 with a
 read only link to each sample. In the \texttt{Cranium} package,
 functions were created that allows users to download an individual
-sample or a bundle of samples.. Each function downloads all existing
+sample or a bundle of samples. Each function downloads all existing
 files onto the user's machine in a designated folder the user decides in
 addition to outputting the list of samples of type brain class.
 
@@ -453,7 +451,7 @@ dorsal/ventral; anterior/posterior. We set x axis as the lateral, y axis
 as the anterior/posterior, and z as the dorsal/ventral.
 
 \begin{figure}[H]
-\includegraphics[width=0.9\linewidth]{visualization_paper/wt_04} \caption{2D plot of a wild-type sample}\label{fig:Figure3}
+\includegraphics[width=1\linewidth]{visualization_paper/wt_04} \caption{2D plot of a wild-type sample}\label{fig:Figure3}
 \end{figure}
 
 \hypertarget{qmodel}{%
@@ -468,13 +466,13 @@ model fit. Qmodel outputs model statistics including: \(R^2\), adjusted
 deviance, df.residual, num.signal, quad.coeff, RMSE.
 
 \begin{figure}[H]
-\includegraphics[width=0.9\linewidth]{visualization_paper/wt_04_model} \caption{Model fit on a wild-type sample}\label{fig:Figure4}
+\includegraphics[width=1\linewidth]{visualization_paper/wt_04_model} \caption{Model fit on a wild-type sample}\label{fig:Figure4}
 \end{figure}
 
 \hypertarget{r2}{%
 \subsubsection{\texorpdfstring{\(R^2\) :}{R\^{}2 :}}\label{r2}}
 
-R\^{}2 is also called the coefficient of determination or the
+\(R^2\) is also called the coefficient of determination or the
 coefficient of multiple determination for multiple regression. \(R^2\)
 ranges from 0 to 1. It is calculated from the variance explained by the
 model divided by total variance. Higher \(R^2\) values represent smaller
@@ -727,7 +725,7 @@ following section, we will compare the model fit for wild-type samples
 and mutant samples at each threshold.
 
 \begin{figure}[H]
-\includegraphics[width=0.8\linewidth]{visualization_paper/thresh_numsig_boxplot} \end{figure}
+\includegraphics[width=0.6\linewidth]{visualization_paper/thresh_numsig_boxplot} \end{figure}
 
 \hypertarget{b.-optimal-threshold-for-wild--and-mutant-type-samples}{%
 \subsubsection{b. Optimal threshold for wild- and mutant-type
@@ -794,11 +792,11 @@ below the red line perform worse after the PCA reorientation and the
 samples above the red line perform better after the PCA reorientation.
 
 \begin{figure}[H]
-\includegraphics[width=0.8\linewidth]{visualization_paper/adj_r2_before_after_wt} \caption{PCA }\label{fig:Figure14}
+\includegraphics[width=0.6\linewidth]{visualization_paper/adj_r2_before_after_wt} \caption{PCA }\label{fig:Figure14}
 \end{figure}
 
 \begin{figure}[H]
-\includegraphics[width=0.8\linewidth]{visualization_paper/adj_r2_before_after_yt} \end{figure}
+\includegraphics[width=0.6\linewidth]{visualization_paper/adj_r2_before_after_yt} \end{figure}
 
 In order to compare the difference in the model fit before and after PCA
 reorientation, we perform paired sample t-tests on wild- and mutant-type
@@ -860,6 +858,10 @@ and correction B, which addresses the curvature in the xz-plane problem,
 we would like to see whether the quadratic model fit on our wild- and
 mutant-type samples would be improved from the model fit on the samples
 before our corrections.
+
+\hypertarget{references}{%
+\section*{References}\label{references}}
+\addcontentsline{toc}{section}{References}
 
 \hypertarget{refs}{}
 \leavevmode\hypertarget{ref-Schwartz18}{}%
