@@ -345,13 +345,7 @@ reorient <- function(x, correctionA = FALSE, correctionB = FALSE,...) {
   if (correctionA == TRUE){
     out <- out %>%
       mutate(x = x - vertex[1], y =  vertex[2] - y , z = z - z_mean$z_mean)
-  }
-  if (correctionB == TRUE){
-    out <- out %>%
-      mutate(y.change = z, z=y)%>%
-      mutate(y=y.change)%>%
-      select(-y.change)
-  } else {
+  }else {
     out <- out %>%
       mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
   }
@@ -714,11 +708,67 @@ correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
 
   names(C) <- names(data)
 
-  class(data_rotate) <- append("tbl_brain", class(data_rotate))
+  class(C) <- append("tbl_brain", class(C))
 
-  return(data_rotate)
+  return(C)
 }
 
 
+#' @export
+#' @rdname is_errorB
+correct_errorA.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9) UseMethod("correct_errorA")
+
+#' @export
+#' @rdname is_errorB
+correct_errorA.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
+  # ro_tidy_brain <- data%>%
+  #   tidy(type, threshold = threshold.n)%>%
+  #  reorient()
+
+  #extract quadratic model coefficients from xy plane
+  ro_model <- attr(data, "quad_mod_xz")
+  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
+  x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
+  intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
+  # y intercept
+  y_intercept <- intercept
+  # x intercept
+  x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
+
+  #vertex (x)
+  #  vertex.x <- -x.coeff/(2*quad.coeff)
+  # vertex.y <- quad.coeff * (vertex.x ^ 2) + x.coeff * vertex.x + intercept
+  # vertex <- c(vertex.x, vertex.y)
+
+  #slope of the line connecting m and n
+  slope <- abs(y_intercept/x_intercept)
+  #slope to angle (radian)
+  rotation_angle_radian <- 3.14159
+  #radian to degree
+  rotation_angle_degree <- rad2deg(rotation_angle_radian)
+
+  matrix.x <- diag(3)
+  matrix.x[2,2] <- cos(rotation_angle_radian)
+  matrix.x[2,3] <- -sin(rotation_angle_radian)
+  matrix.x[3,2] <- sin(rotation_angle_radian)
+  matrix.x[3,3] <- cos(rotation_angle_radian)
+
+  data.matrix<-data%>%
+    select(x,y,z)%>%
+    as.matrix()
+
+  data_freq_gray<- data%>%
+    select(Freq,gray_val)
+
+  C <- data.matrix %*% matrix.x %>%
+    tibble::as_tibble() %>%
+    bind_cols(data_freq_gray)
+
+  names(C) <- names(data)
+
+  class(C) <- append("tbl_brain", class(C))
+
+  return(C)
+}
 
 

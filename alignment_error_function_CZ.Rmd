@@ -513,19 +513,55 @@ c
 ```
 
 
-
+## Error B
 ```{r}
-plot2d(brain,title="before PCA")
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_yt_1 <-read_h5(file_names[1])
+tidy_brain_yt_1<- tidy(brain_yt_1, threshold.n = 0.6)
+#is_errorA(tidy_brain_yt_1) #false
+ro_tidy_brain_yt_1 <- reorient(tidy_brain_yt_1)
 
-plot2d(data,title="before error B correction")
 
+#plot 1
+plot2d(ro_tidy_brain_yt_1, title = "After PCA-step 1")
 is_errorB(ro_tidy_brain_yt_1)
-data <- ro_tidy_brain_yt_1
 
-c.data <- correct_errorB.tbl_brain(data, threshold.n = 0.6)
-plot2d(c.data, title="after error B correction")
-plot2d(C)
 
-is_errorB(C)
+c.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6)
+plot2d(c.data, title = "rotate around x--1")
+
+
+c2.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6)
+
+plot2d(c2.data, title = "rotate around x--2")
+
+is_errorB(c2.data)
+
+
+c3.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6)
+
+plot2d(c2.data, title = "rotate around x--3")
+is_errorB(c3.data)
+
+
+```
+
+
+
+## Error A
+```{r}
+#read wildtype sample
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_wt_06 <-read_h5(file_names[6])
+
+tidy_brain_wt_06<- tidy(brain_wt_04, threshold.n = 0.6)
+ro_tidy_brain_wt_06 <- reorient(tidy_brain_wt_06)
+plot2d(ro_tidy_brain_wt_06, title = "error A correction example_original")
+
+c.data <- correct_errorA.tbl_brain(ro_tidy_brain_wt_06, threshold.n =  0.6)
+plot2d(c.data, title = "error A correction")
+
 ```
 
