@@ -5,7 +5,6 @@
 \alias{is_errorB.brain}
 \alias{is_errorB.tbl_brain}
 \alias{correct_errorB.tbl_brain}
-\alias{correct_errorA.tbl_brain}
 \title{Identify Error B: Curve in yz plane}
 \usage{
 is_errorB(data, type = "wildtype", threshold.n = 0.9,
@@ -17,15 +16,11 @@ is_errorB(data, type = "wildtype", threshold.n = 0.9,
 \method{is_errorB}{tbl_brain}(data, type = "wildtype",
   threshold.n = 0.9)
 
-correct_errorB.tbl_brain(data, type = "wildtype", threshold.n = 0.9)
+correct_errorB.tbl_brain(data, type = "wildtype", threshold.n = 0.9,
+  r_angle_mpt = 1)
 
-correct_errorB.tbl_brain(data, type = "wildtype", threshold.n = 0.9)
-
-\method{correct_errorA}{tbl_brain}(data, type = "wildtype",
-  threshold.n = 0.9)
-
-\method{correct_errorA}{tbl_brain}(data, type = "wildtype",
-  threshold.n = 0.9)
+correct_errorB.tbl_brain(data, type = "wildtype", threshold.n = 0.9,
+  r_angle_mpt = 1)
 }
 \arguments{
 \item{data}{a brain image}

@@ -444,40 +444,6 @@ ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04, correctionA = TRUE)
 ```
 
 
-## Error B (sample yt_01)
-```{r}
-path = "Sample/YouToo"
-file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-brain_yt_1 <-read_h5(file_names[1])
-tidy_brain_yt_1<- tidy(brain_yt_1, threshold.n = 0.6)
-ro_tidy_brain_yt_1 <- reorient(tidy_brain_yt_1)
-
-#is_errorA(tidy_brain_yt_1) #false
-
-
-#plot 1
-plot2d(ro_tidy_brain_yt_1, title = "After PCA-step 1")
-is_errorB(ro_tidy_brain_yt_1)
-
-
-c.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt)
-plot2d(c.data, title = "rotate around x--1")
-is_errorB(c.data)
-
-c2.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 2)
-
-plot2d(c2.data, title = "rotate around x--2")
-
-is_errorB(c2.data)
-
-
-c3.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 3)
-
-plot2d(c2.data, title = "rotate around x--3")
-is_errorB(c3.data)
-
-
-```
 
 
 
@@ -507,4 +473,7 @@ c.data <- correct_errorA.tbl_brain(ro_tidy_brain_wt_05, threshold.n =  0.6)
 plot2d(c.data, title = "Error A correction example_wildtype_05_corrected")
 
 ```
+
+
+
 

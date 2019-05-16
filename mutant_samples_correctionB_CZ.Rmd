@@ -27,60 +27,79 @@ library(spatstat.utils)
 library(REdaS)
 ```
 
-#correct errorB function
+#Sample by sample to see whether the correction method works
+
+## yt_01
 ```{r}
-correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9, a = 1){
- # ro_tidy_brain <- data%>%
- #   tidy(type, threshold = threshold.n)%>%
-  #  reorient()
-  
-  #extract quadratic model coefficients from xy plane 
-  ro_model <- attr(data, "quad_mod_xz")
-  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
-  x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
-  intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
-  # y intercept
-  y_intercept <- intercept
-  # x intercept
-  x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
-  
-  #vertex (x)
-#  vertex.x <- -x.coeff/(2*quad.coeff)
- # vertex.y <- quad.coeff * (vertex.x ^ 2) + x.coeff * vertex.x + intercept
- # vertex <- c(vertex.x, vertex.y)
-  
-  #slope of the line connecting m and n
-  slope <- abs(y_intercept/x_intercept)
-  #slope to angle (radian)
-  rotation_angle_radian <- a * atan(slope)
-  #radian to degree
-  rotation_angle_degree <- rad2deg(rotation_angle_radian)
-  
- 
-  matrix.x <- diag(3)
-  matrix.x[2,2] <- cos(rotation_angle_radian)
-  matrix.x[2,3] <- -sin(rotation_angle_radian)
-  matrix.x[3,2] <- sin(rotation_angle_radian)
-  matrix.x[3,3] <- cos(rotation_angle_radian)
-  
-  data.matrix<-data%>%
-    select(x,y,z)%>%
-    as.matrix()
-  
-  data_freq_gray<- data%>%
-    select(Freq,gray_val)
-  
-  C <- data.matrix %*% matrix.x %>%
-    tibble::as_tibble() %>%
-    bind_cols(data_freq_gray)
-  
-  names(C) <- names(data)
-  
-  class(C) <- append("tbl_brain", class(C)) 
-  
-  return(C)
-}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_yt_1 <-read_h5(file_names[1])
+tidy_brain_yt_1<- tidy(brain_yt_1, threshold.n = 0.6)
+ro_tidy_brain_yt_1 <- reorient(tidy_brain_yt_1)
+
+#is_errorA(tidy_brain_yt_1) #false
+
+
+#plot 1
+plot2d(ro_tidy_brain_yt_1, title = "After PCA-step 1")
+is_errorB(ro_tidy_brain_yt_1)
+
+
+c.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt)
+plot2d(c.data, title = "rotate around x--1")
+is_errorB(c.data)
+
+c2.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 2)
+
+plot2d(c2.data, title = "rotate around x--2")
+
+is_errorB(c2.data)
+
+
+c3.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 3)
+
+plot2d(c2.data, title = "rotate around x--3")
+is_errorB(c3.data)
 ```
+
+
+##yt_02
+```{r}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_yt_2 <-read_h5(file_names[2])
+tidy_brain_yt_2<- tidy(brain_yt_2, threshold.n = 0.6)
+ro_tidy_brain_yt_2 <- reorient(tidy_brain_yt_2)
+
+is_errorA(ro_tidy_brain_yt_2) 
+ro_tidy_brain_yt_2<- correct_errorA.tbl_brain(ro_tidy_brain_yt_2)
+
+
+#plot 1
+plot2d(ro_tidy_brain_yt_2, title = "After PCA-step 1")
+is_errorB(ro_tidy_brain_yt_1)
+
+
+c.data <- correct_errorB.tbl_brain(tidy_brain_yt_2, threshold.n = 0.6, r_angle_mpt)
+plot2d(c.data, title = "rotate around x--1")
+is_errorB(c.data)
+
+c2.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 2)
+
+plot2d(c2.data, title = "rotate around x--2")
+
+is_errorB(c2.data)
+
+
+c3.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 3)
+
+plot2d(c2.data, title = "rotate around x--3")
+is_errorB(c3.data)
+
+
+```
+
+
 
 
 # First, identify samples that have errorB
