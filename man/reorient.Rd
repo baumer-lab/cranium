@@ -4,14 +4,14 @@
 \alias{reorient}
 \title{Reorientation: applying PCA (Principal Component Analysis)}
 \usage{
-reorient(x, correctionA = FALSE, ...)
+reorient(x, ...)
 }
 \arguments{
 \item{x}{a \code{\link{tbl_brain}}}
 
-\item{correctionA}{identify PCA alignment error type A and make correction \link[cranium]{is_errorA}}
-
 \item{...}{arguments passed to \code{\link[stats]{prcomp}}}
+
+\item{correctionA}{identify PCA alignment error type A and make correction \link[cranium]{is_errorA}}
 }
 \description{
 Principal component analysis (PCA) is a statistical procedure that uses an
