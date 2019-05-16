@@ -172,21 +172,17 @@ mean <- data%>%
         pull(mean)
 
 
-is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9){
-  ro_tidy_brain <- data%>%
-    tidy(type, threshold = threshold.n)%>%
-    reorient()
-  ro_model <- attr(ro_tidy_brain, "linear_mod")  #model applied on reoriented data
-  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
+#check the function
 
-  if (quad.coeff < 0) {
-    message("Y Axis is flipped")
-    return(TRUE)
-  } else{
-    message("Correct alignment")
-    return(FALSE)
-  }
-}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_wt_05 <-read_h5(file_names[5])
+tidy_brain_wt_05 <- tidy(brain_wt_05, threshold.n = 0.6)
+
+
+is_errorB.tbl_brain(tidy_brain_wt_05, threshold.n = 0.6)
+
+
 
 ```
 
@@ -445,82 +441,18 @@ file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 brain_wt_04 <-read_h5(file_names[4])
 tidy_brain_wt_04<- tidy(brain_wt_04, threshold.n = 0.6)
 ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04, correctionA = TRUE)
-
-
-
-
-```
-
-# correction B: rotate all data points with a rotation angle about x-axis
-```{r}
-#xy plane
-correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
- # ro_tidy_brain <- data%>%
- #   tidy(type, threshold = threshold.n)%>%
-  #  reorient()
-  
-  #extract quadratic model coefficients from xy plane 
-  ro_model <- attr(data, "quad_mod_xy")
-  quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
-  x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
-  intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
-  # y intercept
-  y_intercept <- intercept
-  # x intercept
-  x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
-  
-  #vertex (x)
-#  vertex.x <- -x.coeff/(2*quad.coeff)
- # vertex.y <- quad.coeff * (vertex.x ^ 2) + x.coeff * vertex.x + intercept
- # vertex <- c(vertex.x, vertex.y)
-  
-  #slope of the line connecting m and n
-  slope <- abs(y_intercept/x_intercept)
-  #slope to angle (radian)
-  rotation_angle_radian <- atan(slope)
-  #radian to degree
-  rotation_angle_degree <- rad2deg(rotation_angle_radian)
-  
-  matrix.x <- diag(3)
-  matrix.x[2,2] <- cos(rotation_angle_radian)
-  matrix.x[2,3] <- -sin(rotation_angle_radian)
-  matrix.x[3,2] <- sin(rotation_angle_radian)
-  matrix.x[3,3] <- cos(rotation_angle_radian)
-  
-  data.matrix<-data%>%
-    select(x,y,z)%>%
-    as.matrix()
-  
-  data_freq_gray<- data%>%
-    select(Freq,gray_val)
-  
-  C <- data.matrix %*% matrix.x %>%
-    tibble::as_tibble() %>%
-    bind_cols(data_freq_gray)
-  
-  names(C) <- names(data)
-  
-  class(C) <- append("tbl_brain", class(C)) 
-  
-  return(C)
-}
-
-
-
-### xz plane
-c
-}
 ```
 
 
-## Error B
+## Error B (sample yt_01)
 ```{r}
 path = "Sample/YouToo"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
 brain_yt_1 <-read_h5(file_names[1])
 tidy_brain_yt_1<- tidy(brain_yt_1, threshold.n = 0.6)
-#is_errorA(tidy_brain_yt_1) #false
 ro_tidy_brain_yt_1 <- reorient(tidy_brain_yt_1)
+
+#is_errorA(tidy_brain_yt_1) #false
 
 
 #plot 1
@@ -528,18 +460,18 @@ plot2d(ro_tidy_brain_yt_1, title = "After PCA-step 1")
 is_errorB(ro_tidy_brain_yt_1)
 
 
-c.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6)
+c.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt)
 plot2d(c.data, title = "rotate around x--1")
+is_errorB(c.data)
 
-
-c2.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6)
+c2.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 2)
 
 plot2d(c2.data, title = "rotate around x--2")
 
 is_errorB(c2.data)
 
 
-c3.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6)
+c3.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 3)
 
 plot2d(c2.data, title = "rotate around x--3")
 is_errorB(c3.data)
@@ -549,19 +481,30 @@ is_errorB(c3.data)
 
 
 
-## Error A
+## Error A adjustment 
+rotation instead of flip y-axis
 ```{r}
 #read wildtype sample
 path = "Sample/WildType"
 file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-brain_wt_06 <-read_h5(file_names[6])
+brain_wt_05 <-read_h5(file_names[5])
 
-tidy_brain_wt_06<- tidy(brain_wt_04, threshold.n = 0.6)
-ro_tidy_brain_wt_06 <- reorient(tidy_brain_wt_06)
-plot2d(ro_tidy_brain_wt_06, title = "error A correction example_original")
 
-c.data <- correct_errorA.tbl_brain(ro_tidy_brain_wt_06, threshold.n =  0.6)
-plot2d(c.data, title = "error A correction")
+
+c.data <- correct_errorA.brain(brain_wt_05, threshold.n = 0.6)
+plot2d(c.data, title = "Error A correction example_wildtype_05_corrected")
+
+
+
+
+tidy_brain_wt_05<- tidy(brain_wt_05, threshold.n = 0.6)
+
+ro_tidy_brain_wt_05 <- reorient(tidy_brain_wt_05)
+plot2d(ro_tidy_brain_wt_05, title = "Error A correction example_wildtype_05_original")
+
+
+c.data <- correct_errorA.tbl_brain(ro_tidy_brain_wt_05, threshold.n =  0.6)
+plot2d(c.data, title = "Error A correction example_wildtype_05_corrected")
 
 ```
 
