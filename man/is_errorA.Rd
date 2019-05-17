@@ -6,6 +6,7 @@
 \alias{is_errorA.tbl_brain}
 \alias{correct_errorA}
 \alias{correct_errorA.brain}
+\alias{correct_errorA.tbl_brain}
 \title{PCA alignment error type A identification and correction}
 \usage{
 is_errorA(data, type = "wildtype", threshold.n = 0.9)
@@ -18,6 +19,14 @@ is_errorA(data, type = "wildtype", threshold.n = 0.9)
 correct_errorA(data, type = "wildtype", threshold.n = 0.9)
 
 \method{correct_errorA}{brain}(data, type = "wildtype",
+  threshold.n = 0.9)
+
+correct_errorA(data, type = "wildtype", threshold.n = 0.9)
+
+\method{correct_errorA}{brain}(data, type = "wildtype",
+  threshold.n = 0.9)
+
+\method{correct_errorA}{tbl_brain}(data, type = "wildtype",
   threshold.n = 0.9)
 }
 \arguments{
