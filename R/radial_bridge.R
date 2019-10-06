@@ -640,17 +640,21 @@ is_z_curve.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
 #' @param data a brain image
 #' @param type wild type or mutant type of zebrafish embryo brain
 #' @param threshold.n threshld for signal frequency. Any signal with frequency below threshold value is exluded
+#' @param range_ref error level.Options are 1. 95% Confidence Interval; 2.Inter-quatile range (IQR); 3. outlier range. Default to
+#' outlier, which could be interpreted as: if the quadratic coefficient of the youtoo type sample is within the normal range of
+#' wildtype's quadratic coeffcients, we say there is no error. Otherwise, if the quadratic coefficient is considered as an outlier
+#' in the wildtype quadratic coefficients, we say there is a an error B in the youtoo type sample.
 #' @export
 #' @examples
 
 
 #' @export
 #' @rdname is_errorB
-is_errorB <- function(data, type="wildtype", threshold.n=0.9, ref = "outlier") UseMethod("is_errorB")
+is_errorB <- function(ro_data, type="wildtype", threshold.n=0.9, ref = "outlier") UseMethod("is_errorB")
 
 #' @export
 #' @rdname is_errorB
-is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9, ref = "outlier"){
+is_errorB.brain <- function(ro_data, type="wildtype", threshold.n=0.9, ref = "outlier"){
   ro_tidy_brain <- data%>%
     tidy(type, threshold = threshold.n)%>%
     reorient()
@@ -660,24 +664,23 @@ is_errorB.brain <- function(data, type="wildtype", threshold.n=0.9, ref = "outli
 
 #' @export
 #' @rdname is_errorB
-is_errorB.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
-  ro_tidy_brain <- data%>%
-    reorient()
-  quad_model_xz <- attr(ro_tidy_brain, "quad_mod_xz") #quadratic model y = x^2 + x
+is_errorB.tbl_brain <- function(ro_data, type="wildtype", threshold.n=0.6, range_ref = "outlier"){
+  # ro_tidy_brain <- data%>%
+  #   reorient()
+  quad_model_xz <- attr(ro_data, "quad_mod_xz") #quadratic model y = x^2 + x
   quad.slope_xz = round((summary(quad_model_xz)$coefficients["I(x^2)", "Estimate"]), 5)
-  range <- c(-0.00202, 0.00182)
-  #  if (ref = "outlier"){
-  #    range <- c(-0.00202, 0.00182)
-  # }if (ref = "quantile"){
-  #    range <- c(-0.00058, 0.00038)
-  #  }if (ref= "ci"){
-  #    range <- c(-0.0003206473, 0.0001243682)
-  #  }
+   if (range_ref == "outlier"){
+     range <- c(-0.00202, 0.00182)
+    }else if (range_ref == "quantile"){
+     range <- c(-0.00058, 0.00038)
+    }else if (range_ref== "ci"){
+     range <- c(-0.0003206473, 0.0001243682)
+   }
   if (inside.range(quad.slope_xz, range) == TRUE) {
-    message("Correct alignment")
+    message("Alignment is correct")
     return(FALSE)
   } else {
-    message("Curve in xz plane")
+    message("There is a curvature in xz plane")
     return(TRUE)
   }
 }
@@ -686,18 +689,18 @@ is_errorB.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
 
 #' @export
 #' @rdname is_errorB
-correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9, r_angle_mpt=1) UseMethod("correct_errorB")
+correct_errorB.tbl_brain <- function(ro_data, type = "wildtype", threshold.n=0.6, r_angle_mpt=1) UseMethod("correct_errorB")
 
 #' @export
 #' @rdname is_errorB
-correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9, r_angle_mpt=1){
-  ro_tidy_brain <- data%>%
+correct_errorB.tbl_brain <- function(ro_data, type = "wildtype", threshold.n=0.6, r_angle_mpt=1){
+ # ro_tidy_brain <- data%>%
   #   tidy(type, threshold = threshold.n)%>%
-   reorient()
+ #  reorient()
 
 
   #extract quadratic model coefficients from xy plane
-  ro_model <- attr(ro_tidy_brain, "quad_mod_xz")
+  ro_model <- attr(ro_data, "quad_mod_xz")
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
 
   message("Beofre rotation, the quadratic coefficient is", " ", quad.coeff, ".")
@@ -757,6 +760,14 @@ correct_errorB.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9, r
   message("After rotation, the quadratic coefficient is", " ", r.quad.coeff, ".")
 
   return(r.data)
+}
+
+
+plot_all_sample <- function(type = "wildtype"){
+  wd <- getwd()
+  dir.create("plot")
+  setwd(paste(wd, "/plotAll", sep=""))
+  pdf("~/Desktop/metabolomics/results/model_fit/plot/model_RC12/train_RC12_test_RC18_z_edit.pdf")
 }
 
 
