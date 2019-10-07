@@ -1,0 +1,216 @@
+---
+title: "Paper_appendix"
+author: "CZ"
+date: "4/13/2019"
+output: html_document
+---
+
+# Test for optimal threshold
+```{r}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+threshold_df <- data.frame()
+threshold.list <- list(0.42, 0.46, 0.50, 0.54,  0.58)
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(threshold.list))){ 
+   #Change name for youtoo
+    for (j in (1:length(file_names))){
+       name <- sub("_Probabilities.h5", "", file_names[j])
+    name <- sub("Sample/WildType/", "WildType_", name) 
+      m <- file_names[j]%>%
+        read_h5()%>%
+        qmodel.brain(threshold.n = threshold.list[[i]])%>%
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = j)%>%
+        mutate(threshold=threshold.list[[i]])
+      threshold_df <- rbind(threshold_df, m) 
+  }
+}
+
+
+#find optimal threshold
+optimal_threshold <- data.frame()
+m <- list()
+for (i in (1: max(threshold_df$Sample_id))){
+  m <- threshold_df%>%
+  filter(Sample_id==i)%>%
+  filter(adj.r.squared == max(adj.r.squared))%>%
+    mutate(optimal_threshold = threshold)%>%
+    select(-threshold)
+  optimal_threshold <- rbind(optimal_threshold,m)
+}
+
+#optimal threhsold table
+table(optimal_threshold$optimal_threshold)
+
+```
+
+# Apply Error A to all wildtype
+```{r}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+correctionA_df <- data.frame()
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(file_names))){
+    name <- sub("_Probabilities.h5", "", file_names[i])
+    name <- sub("Sample/WildType/", "WildType_", name) 
+    m <- file_names[i]%>%
+        read_h5()%>%
+        correctionA.brain(type="wildtype", threshold.n=0.9)%>%
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = i)%>%
+        mutate(threshold=0.9)
+     correctionA_df <- rbind(correctionA_df, m) 
+}
+```
+
+
+# Archive
+```{r}
+#part 1: wildtype, threshold=0.6
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+errorA_df <- data.frame()
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(file_names))){
+    name <- sub("_Probabilities.h5", "", file_names[i])
+    name <- sub("Sample/WildType/", "WildType_", name) 
+    m <- file_names[i]%>%
+        read_h5()%>%
+        errorA.brain(type="wildtype", threshold.n=0.6)%>%
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = i)%>%
+        mutate(threshold=0.6)
+     errorA_df <- rbind(errorA_df, m) 
+}
+write.csv(errorA_df, file = "correction_results/correctionA_wt_0.6.csv")
+
+#part 2 plot wt threshold= 0.6
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+for (i in (1:length(file_names))){
+  name <- sub("_Probabilities.h5", "", file_names[i])
+  name <- sub("Sample/YouToo/", "YouToo_", name)
+  png(filename = paste("visualization_results/yt_plots_0.6/", name, ".png", sep= ""))
+    mytitle = paste("plot_",name)
+    file_names[i] %>%
+    read_h5()%>%
+    tidy(threshold.n = 0.6)%>%
+    reorient()%>%
+    plot2d(title=name)
+  dev.off()
+}
+
+
+#part 3: youtoo, threshold=0.6
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+errorA_df <- data.frame()
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(file_names))){
+    name <- sub("_Probabilities.h5", "", file_names[i])
+    name <- sub("Sample/YouToo/", "YouToo_", name) 
+    m <- file_names[i]%>%
+        read_h5()%>%
+        errorA.brain(threshold.n=0.6)%>%
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = i)%>%
+        mutate(threshold=0.6)
+     errorA_df <- rbind(errorA_df, m) 
+}
+#write.csv(errorA_df, file = "correction_results/correctionA_yt_0.6.csv")
+
+```
+
+
+# Apply Curve test to all wildtype
+
+# Emma, please run this tonight! (April.26)
+Please copy the following chunks to your own rmd. Please don't edit anything on this file.
+
+#steop1: open radial_bridge.R, copy all the code there are run in you console.
+
+#step2: run 1 sample to see if the new function works for you
+
+```{r}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+ro_tidy_brain_wt_05<-read_h5(file_names[5])%>%
+  tidy(threshold=0.6)%>%
+  reorient(correctionA = TRUE)
+
+class(brain)
+
+tb <- is_z_curve(brain)
+View(tb)
+plot2d(ro_tidy_brain_wt_05)
+is_errorB(ro_tidy_brain_wt_05)
+
+```
+
+#step3: run a loop 
+```{r}
+#wild type
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+curve_df_wt <- data.frame()
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(file_names))){
+    old <- Sys.time()
+    
+    name <- sub("_Probabilities.h5", "", file_names[i])
+    name <- sub("Sample/WildType/", "WildType_", name) 
+    m <- file_names[i]%>%
+        read_h5()%>%
+        tidy(type="wildtype", threshold.n=0.6)%>%
+        is_z_curve(type="wildtype", threshold.n=0.6)%>%
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = i)%>%
+        mutate(threshold= 0.6)
+     curve_df_wt <- rbind(curve_df_wt, m) 
+    
+    new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
+}
+
+#write.csv(curve_df_wt, file = "correction_results/curve_wt_0.6.csv")
+
+#youtoo
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+curve_df_yt <- data.frame()
+
+#apply qmodel to all sample, testing for each threshold
+for (i in (1:length(file_names))){
+    old <- Sys.time()
+
+    name <- sub("_Probabilities.h5", "", file_names[i])
+    name <- sub("Sample/YouToo/", "YouToo_", name) 
+    m <- file_names[i]%>%
+        read_h5()%>%
+        tidy(threshold.n=0.6)%>%
+        is_z_curve(threshold.n=0.6)%>%
+        mutate(Sample = name)%>% 
+        mutate(Sample_id = i)%>%
+        mutate(threshold= 0.6)
+     curve_df_yt <- rbind(curve_df_yt, m) 
+     
+    new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
+}
+
+#write.csv(curve_df_yt, file = "correction_results/curve_yt_0.6.csv")
+```
+

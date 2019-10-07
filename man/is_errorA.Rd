@@ -37,7 +37,9 @@ correct_errorA(data, type = "wildtype", threshold.n = 0.9)
 \item{threshold.n}{threshld for signal frequency. Any signal with frequency below threshold value is exluded}
 }
 \description{
-Identify Error Type A that the y-axis is flipped y-axis and make correction
+Identify Error Type A that the y-axis is flipped y-axis and make correction. If the object is brain type (raw data), will
+perform tidy and PCA reorient functions. If the object is a tbl_brain class (already performed PCA reorientation), will not
+perform PCA reorientation again.
 }
 \examples{
 brain <- read_h5(download_brains(tempdir(), pattern = "101"))
