@@ -25,6 +25,7 @@ Then, you can install `cranium` from GitHub using the following commands:
 ```{r, eval=FALSE}
 install.packages("devtools")
 devtools::install_github("beanumber/cranium")
+library(cranium)
 ```
 
 ## Download sample data

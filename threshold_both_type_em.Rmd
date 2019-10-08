@@ -1,0 +1,80 @@
+---
+title: "threshold_both_type_em"
+author: "Emma Ning"
+date: "4/16/2019"
+output: html_document
+---
+
+```{r, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(hdf5r)
+library(dplyr)
+library(rlang)
+library(BiocInstaller)
+library(rhdf5)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+library(sjstats)
+library(rowr)
+library(ggplot2)
+```
+
+
+```{r}
+threshold_wt <- read.csv("visualization_results/threshold_wt_all_final.csv")
+threshold_yt <- read.csv("visualization_results/threshold_yt_all_final.csv")
+```
+
+# selecting common threshold levels
+```{r}
+temp_wt <- threshold_wt %>% 
+  filter(threshold %in% c(0.75, 0.81, 0.84, 0.87, 0.9)) %>% 
+  select(threshold, num.signal, adj.r.squared) %>% 
+  rename(wt_threshold=threshold, wt_numsignal=num.signal,
+         wt_adjr2=adj.r.squared) 
+# mean for wt adjr2
+temp_wt <- temp_wt %>% 
+  group_by(wt_threshold) %>% 
+  mutate(wt_avg_adjr2=sum(wt_adjr2)/43) %>% 
+  mutate(wt_avg_numsignal=round(sum(wt_numsignal)/43, 2)) %>% 
+  select(wt_threshold, wt_avg_adjr2, wt_avg_numsignal) %>% 
+  unique()
+# reordering thresholds in ascd order
+temp_wt <- temp_wt[with(temp_wt, order(wt_threshold)), ]
+
+temp_yt <- threshold_yt %>% 
+  filter(threshold %in% c(0.75, 0.81, 0.84, 0.87, 0.9)) %>% 
+  select(threshold, num.signal, adj.r.squared) %>% 
+  rename(yt_threshold=threshold, yt_numsignal=num.signal, yt_adjr2=adj.r.squared)
+
+temp_yt <- temp_yt %>% 
+  group_by(yt_threshold) %>% 
+  mutate(yt_avg_adjr2=sum(yt_adjr2)/43) %>% 
+  mutate(yt_avg_numsignal=round(sum(yt_numsignal)/43, 2)) %>% 
+  select(yt_threshold, yt_avg_adjr2, yt_avg_numsignal) %>% 
+  unique()
+# reordering thresholds in ascd order
+temp_yt <- temp_yt[with(temp_yt, order(yt_threshold)), ]
+
+threshold_both <- cbind(temp_wt, temp_yt)
+# get rid of repeated cols
+threshold_both <- threshold_both %>% 
+  select(-yt_threshold) %>% 
+  rename(threshold=wt_threshold)
+
+
+ggplot(threshold_both, aes(x=wt_avg_adjr2, y=yt_avg_adjr2, color=threshold))+geom_point()
+
+
+```
+
+# plot
+```{r}
+threshold_both %>% 
+  filter(wt_threshold==yt_threshold) %>% 
+  ggplot2(aes(x=wt_adjr2, y=yt_adjr2))+geom_point()
+```
+

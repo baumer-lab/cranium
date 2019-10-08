@@ -1,0 +1,64 @@
+---
+title: "Presentation"
+author: "Crystal Zang"
+date: "4/29/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(cranium)
+library(rgl)
+library(rglwidget)
+library(htmltools)
+
+library(hdf5r)
+library(dplyr)
+library(readr)
+library(rlang)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+
+#new packages
+library(sjstats)
+library(grDevices)
+library(skimr)
+
+```
+
+```{r}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+#brain_yt_334 <-read_h5(file_names[29])
+brain_wt_04 <-read_h5(file_names[4])
+
+#tidy_brain_yt_334<- tidy(brain_yt_334, threshold.n = 0.6)
+tidy_brain_wt_04<- tidy(brain_wt_04, threshold.n = 0.9)
+
+
+#ro_tidy_brain_yt_334 <- reorient(tidy_brain_yt_334)
+ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04)
+
+plot<-plot3d(ro_tidy_brain_wt_04)
+browsable(objids= plot)
+
+rglwidget(x = scene3d(ro_tidy_brain_wt_04), width=figWidth, height=figHeight())
+```
+
+
+```{r}
+theta <- seq(0, 6*pi, len=100)
+xyz <- cbind(sin(theta), cos(theta), theta)
+lineid <- plot3d(xyz, type="l", alpha = 1:0, 
+                 lwd = 5, col = "blue")["data"]
+
+
+browsable(objids = lineid)
+
+
+```
+

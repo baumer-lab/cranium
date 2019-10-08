@@ -1,0 +1,248 @@
+---
+title: "Mutant sample correction B"
+author: "Crystal Zang"
+date: "5/1/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(hdf5r)
+library(dplyr)
+library(readr)
+library(rlang)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+
+#new packages
+library(sjstats)
+library(grDevices)
+library(skimr)
+library(gmodels)
+library(spatstat.utils)
+library(REdaS)
+```
+
+#Sample by sample to see whether the correction method works
+
+## yt_01
+```{r}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_yt_1 <-read_h5(file_names[1])
+tidy_brain_yt_1<- tidy(brain_yt_1, threshold.n = 0.6)
+ro_tidy_brain_yt_1 <- reorient(tidy_brain_yt_1)
+
+#is_errorA(tidy_brain_yt_1) #false
+
+
+#plot 1
+plot2d(ro_tidy_brain_yt_1, title = "After PCA-step 1")
+is_errorB(ro_tidy_brain_yt_1)
+
+
+c.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt)
+plot2d(c.data, title = "rotate around x--1")
+is_errorB(c.data)
+
+c2.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 2)
+
+plot2d(c2.data, title = "rotate around x--2")
+
+is_errorB(c2.data)
+
+
+c3.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 3)
+
+plot2d(c2.data, title = "rotate around x--3")
+is_errorB(c3.data)
+```
+
+
+##yt_02
+```{r}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_yt_2 <-read_h5(file_names[2])
+tidy_brain_yt_2<- tidy(brain_yt_2, threshold.n = 0.6)
+ro_tidy_brain_yt_2 <- reorient(tidy_brain_yt_2)
+
+is_errorA(ro_tidy_brain_yt_2) 
+ro_tidy_brain_yt_2<- correct_errorA.tbl_brain(ro_tidy_brain_yt_2)
+
+
+#plot 1
+plot2d(ro_tidy_brain_yt_2, title = "After PCA-step 1")
+is_errorB(ro_tidy_brain_yt_1)
+
+
+c.data <- correct_errorB.tbl_brain(tidy_brain_yt_2, threshold.n = 0.6, r_angle_mpt)
+plot2d(c.data, title = "rotate around x--1")
+is_errorB(c.data)
+
+c2.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 2)
+
+plot2d(c2.data, title = "rotate around x--2")
+
+is_errorB(c2.data)
+
+
+c3.data <- correct_errorB.tbl_brain(ro_tidy_brain_yt_1, threshold.n = 0.6, r_angle_mpt = 3)
+
+plot2d(c2.data, title = "rotate around x--3")
+is_errorB(c3.data)
+
+
+```
+
+
+
+
+# First, identify samples that have errorB
+```{r}
+curve_yt_0_6 <- read_csv("correction_results/curve_yt_0.6.csv")%>%
+  select(-X1)%>%
+  mutate(type = "Mutant")
+
+outlier_range <- c(-0.00202, 0.00182)
+curve_yt_0_6 <- curve_yt_0_6 %>%
+  mutate(is_errorB = if_else(inside.range(quad.slope_xz, outlier_range) == TRUE, "no errorB", "is error B"))
+
+errorB_sample <- curve_yt_0_6 %>%
+  filter(is_errorB == "is error B")
+
+vector_errorB_id <- errorB_sample %>%
+  pull(Sample_id)
+
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+correctionB_num <- numeric(nrow(errorB_sample))
+
+########## for loop: 
+for (i in (1: nrow(errorB_sample))){
+  id <- vector_errorB_id[i]
+  tidy_brain <- read_h5(file_names[id])%>%
+    tidy(threshold.n = 0.6)
+  if (is_errorA(tidy_brain) == TRUE){
+    ro_tidy_brain <- reorient(tidy_brain, correctionA = TRUE)
+  }else{
+    ro_tidy_brain <- reorient(tidy_brain)
+  }
+  
+  #first check
+  if (is_errorB(ro_tidy_brain) == TRUE){
+    c.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6)
+    
+      ##second check
+      if(is_errorB(c.B.ro_tidy_brain) == TRUE){
+          c2.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6, a = 2)
+             ##third check
+              if(is_errorB(c2.B.ro_tidy_brain) == TRUE){
+                  c3.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6, a = 3)                 
+                    ##forth check
+                    if(is_errorB(c3.B.ro_tidy_brain) == TRUE){
+                    c4.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6, a = 4)
+                    
+                        ##fifth check
+                        if(is_errorB(c4.B.ro_tidy_brain) == TRUE){
+                        c5.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6, a = 5)                     
+                              ##sixed check
+                               if(is_errorB(c5.B.ro_tidy_brain) == TRUE){
+                                 c6.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6, a = 6)
+                    
+                    
+                    
+          
+                    
+                    correctionB_num[i] <- 99  # 99 means upper limit, not performing mroe correction
+                               } 
+                              #end after the sixed correction
+                              else{ 
+                          correctionB_num[i]  <- 6
+                           }
+                        }
+                    
+                    
+                    #end after the fifth correction
+                    else{ 
+                        correctionB_num[i]  <- 5
+                    }
+                  }
+                    #end after the forth correction
+                   else{
+                        correctionB_num[i]  <- 4
+                    }
+                  
+                }
+             #end after the third correction
+              else{
+              correctionB_num[i]  <- 3
+                }
+          
+      }
+     #end after the second correction
+     else{
+          correctionB_num[i]  <- 2
+
+      }
+  }
+  #end after the first correction
+  else{ 
+    correctionB_num[i]  <- 1
+  }
+}
+  
+
+
+
+```
+
+```{r}
+for (i in (1: nrow(errorB_sample))){
+  id <- vector_errorB_id[i]
+  tidy_brain <- read_h5(file_names[id])%>%
+    tidy(threshold.n = 0.6)
+  if (is_errorA(tidy_brain) == TRUE){
+    ro_tidy_brain <- reorient(tidy_brain, correctionA = TRUE)
+  }else{
+    ro_tidy_brain <- reorient(tidy_brain)
+  }
+  
+  #first check
+  if (is_errorB(ro_tidy_brain) == TRUE){
+    c.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6)
+  }else{
+    out <- ro_tidy_brain
+  }
+  ##second check
+  if(is_errorB(c.B.ro_tidy_brain) == TRUE){
+    c2.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6, a = 2)
+  }else{
+    out<-c.B.ro_tidy_brain
+  }
+  
+  ##third check
+  if(is_errorB(c2.B.ro_tidy_brain) == TRUE){
+    c3.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6, a = 3)
+  }else{
+    out<-c2.B.ro_tidy_brain
+  }
+  
+  ##forth check
+  if(is_errorB(c3.B.ro_tidy_brain) == TRUE){
+    c4.B.ro_tidy_brain <- correct_errorB.tbl_brain(ro_tidy_brain, threshold.n = 0.6, a = 4)
+  }else{
+    out<-c3.B.ro_tidy_brain
+  }
+  
+}
+```
+
+
+
+

@@ -1,0 +1,426 @@
+---
+title: "model_eval_2CZ"
+author: "CZ"
+date: "4/13/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(hdf5r)
+library(dplyr)
+library(readr)
+library(rlang)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+
+#new packages
+library(sjstats)
+library(grDevices)
+```
+
+# Part I.
+```{r}
+threshold_yt <- read_csv("~/Desktop/cranium/visualization_results/threshold_yt_all_final.csv")%>%
+  select(-X1)%>%
+  mutate(type = "Mutant")
+
+threshold_wt <- read_csv("~/Desktop/cranium/visualization_results/threshold_wt_all_final.csv")%>%
+  select(-X1)%>%
+  mutate(type = "Wild Type")
+
+threshold_all <- rbind(threshold_wt, threshold_yt)
+#mplot(threshold_all)
+
+threshold_all$Sample_id <- as.character(threshold_all$Sample_id)
+threshold_all$threshold <- as.character(threshold_all$threshold )
+#wt yt comparison plot (in paper)
+ggplot(data =threshold_all, aes(x = threshold, y = adj.r.squared)) +
+  geom_boxplot()  +
+  facet_wrap(~type, ncol = 1)+
+  ylab("Adjusted R-Squared")+
+  scale_x_discrete(name ="Threshold", 
+                    breaks=c("0.4", "0.5", "0.6", "0.7", "0.8", "0.9"))+ 
+  coord_flip()
+
+
+# threshold wt yt (in presentation)
+ggplot(data = threshold_all, aes(x = threshold, y = num.signal)) + geom_boxplot()  + facet_wrap(~type, ncol = 2) + labs(title = "")+ 
+  scale_x_discrete(limits=c("0.4", "0.5", "0.6", "0.7", "0.8", "0.9"))
+```
+
+
+# old plots (not in the paper)
+```{r}
+#lineplot for each sample 
+ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared, group=Sample)) + 
+  geom_line()  + 
+  aes(colour = Sample) + theme(legend.position = "right") + labs(title = "Threshold trend sample -- Mutant")+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
+
+
+#Number of signals left in for each threshold 
+num_signal_tb <- threshold_yt%>%
+  group_by(threshold)%>%
+  summarize(min=min(num.signal),mean_num_signal = mean(num.signal), max=max(num.signal), sd=sd(num.signal))
+
+
+```
+
+#
+#
+#
+#
+#
+#
+#
+#
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+#Mode fit comparison: before PCA and after PCA (adj.r.square)
+
+```{r}
+c<- threshold_wt%>%
+  filter(threshold == 0.60)
+
+#t test
+tttest_pca <- t.test(c$adj.r.squared.original, c$adj.r.squared, paired = TRUE, alternative = "two.sided")
+
+tttest_pca
+
+# printing the p-value
+tttest_pca$p.value
+
+
+#Re orientation improved model fit
+ggplot(data = threshold_wt_0.6 , aes(x = adj.r.squared.original, y = adj.r.squared)) + geom_point()  + labs(title = "Adjusted R square before and after reorientation")+ 
+  scale_y_continuous(limits=c(0.2,1))+
+  geom_abline(intercept=0, slope=1, color = "red")
+
+  
+
+favstats(threshold_wt_all_0.9$adj.r.squared)
+favstats(threshold_wt_all_0.9$adj.r.squared.original)
+
+table(threshold_yt_all_final$threshold)
+```
+
+
+
+#Mode fit comparison: before PCA and after PCA (adj.r.square) -- Youtoo
+```{r}
+threshold_yt_0.6<- threshold_all%>%
+  filter(threshold == 0.60)
+
+#t test
+tttest_pca <- t.test(threshold_yt_all_0.8$adj.r.squared.original, threshold_yt_all_0.8$adj.r.squared, paired = TRUE, alternative = "two.sided")
+tttest_pca
+
+# printing the p-value
+tttest_pca$p.value
+
+#Re orientation improved model fit
+
+#Re orientation improved model fit
+ggplot(data = threshold_yt_0.6, aes(x = adj.r.squared.original, y = adj.r.squared)) + geom_point()  + labs(title = "Adjusted R square before and after reorientation for mutant type")+ 
+  scale_y_continuous(limits=c(0.2,1))+
+  geom_abline(intercept=0, slope=1, color = "red")
+
+
+
+favstats(threshold_yt_all_0.8$adj.r.squared)
+favstats(threshold_yt_all_0.8$adj.r.squared.original)
+```
+
+# Finding optimal threshold
+Wild Type
+```{r}
+#find optimal threshold
+optimal_threshold <- data.frame()
+m <- list()
+for (i in (1:43)){
+  m <- threshold_wt%>%
+  filter(Sample==i)%>%
+  filter(adj.r.squared == max(adj.r.squared))%>%
+    mutate(optimal_threshold = threshold)%>%
+    select(-threshold)
+  optimal_threshold <- rbind(optimal_threshold,m)
+}
+
+#optimal threhsold table
+table(optimal_threshold$optimal_threshold)
+
+threshold_0.92 <- threshold_yt%>%
+  filter(threshold==0.92)
+
+threshold_wt$threshold <- as.character(threshold_wt$threshold)
+#mplot(threshold_wt)
+ggplot(data = threshold_wt, aes(x = threshold, y = adj.r.squared)) + geom_boxplot()  + labs(title = "Optimal threshold--Adjusted R sqrae (Wildtype)")
+
+ggplot(data = threshold_wt, aes(x = threshold, y = RMSE)) + geom_boxplot()  + labs(title = "Optimal threshold--RMSE--Mutant (Wildtype)")
+
+
+ggplot(data = threshold_wt, aes(x = threshold, y = adj.r.squared)) + geom_point()  + facet_wrap(~Sample, ncol = 5) + labs(title = "Sample level optimal threshold--r^2--Wildtype")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+You Too
+```{r}
+#find optimal threshold
+optimal_threshold <- data.frame()
+m <- list()
+for (i in (1:35)){
+  m <- threshold_yt%>%
+  filter(Sample_id==i)%>%
+  filter(adj.r.squared == max(adj.r.squared))%>%
+    mutate(optimal_threshold = threshold)%>%
+    select(-threshold)
+  optimal_threshold <- rbind(optimal_threshold,m)
+}
+
+#optimal threhsold table
+table(optimal_threshold$optimal_threshold)
+
+#threshold_0.92 <- threshold_yt%>%
+#  filter(threshold==0.92)
+
+threshold_yt$threshold <- as.character(threshold_yt$threshold)
+#mplot(threshold_yt)
+ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared)) + geom_boxplot()  + 
+  labs(title = "Optimal threshold--Adjusted R sqrae--Mutant (YouToo)")+ 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(data = threshold_yt, aes(x = threshold, y = RMSE)) + geom_boxplot()  + labs(title = "Optimal threshold--RMSE--Mutant (YouToo)")
+
+
+ggplot(data = threshold_yt, aes(x = threshold, y = adj.r.squared)) + geom_point()  + facet_wrap(~Sample, ncol = 5) + labs(title = "Sample level optimal threshold--r^2--Mutate")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+```{r} 
+table(threshold_yt$threshold)
+
+yt_goodfit <- threshold_yt %>%
+  filter(threshold == 0.8)%>%
+  filter(adj.r.squared > 0.5 & RMSE< 6)
+
+
+yt_badfit <- threshold_yt %>%
+  filter(threshold == 0.8)%>%
+  filter(adj.r.squared < 0.5 | RMSE> 6)
+
+
+```
+
+
+# Plot: You Too.
+threshold = 0.5
+```{r eval=FALSE, include=FALSE}
+for (i in (1:length(file_names))){
+  name <- sub("_Probabilities.h5", "", file_names[i])
+  name <- sub("Sample/YouToo/", "Youtoo_", name)
+
+  png(filename = paste("visualization_results/youtoo_plots_0.5/", name, ".png", sep= ""))
+    mytitle = paste("plot_",name)
+    file_names[i] %>%
+    read_h5()%>%
+    tidy(type="youtoo", threshold.n = 0.5)%>%
+    reorient()%>%
+    plot2d(title=name)
+  dev.off()
+}
+```
+
+threshold = 0.6
+```{r eval=FALSE, include=FALSE}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+  
+for (i in (1:length(file_names))){
+  old <- Sys.time()
+  name <- sub("_Probabilities.h5", "", file_names[i])
+  name <- sub("Sample/YouToo/", "Youtoo_", name)
+
+  png(filename = paste("visualization_results/youtoo_plots_0.6/", name, ".png", sep= ""))
+    mytitle = paste("plot_",name)
+    file_names[i] %>%
+    read_h5()%>%
+    tidy(type="youtoo", threshold.n = 0.6)%>%
+    reorient()%>%
+    plot2d(title=name)
+  dev.off()
+  new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
+}
+```
+
+
+threshold = 0.8
+```{r eval=FALSE, include=FALSE}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+  
+for (i in (1:length(file_names))){
+  old <- Sys.time()
+  name <- sub("_Probabilities.h5", "", file_names[i])
+  name <- sub("Sample/YouToo/", "Youtoo_", name)
+
+  png(filename = paste("visualization_results/youtoo_plots_0.8/", name, ".png", sep= ""))
+    mytitle = paste("plot_",name)
+    file_names[i] %>%
+    read_h5()%>%
+    tidy(type="youtoo", threshold.n = 0.8)%>%
+    reorient()%>%
+    plot2d(title=name)
+  dev.off()
+  new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
+}
+```
+
+
+threshold = 0.92
+```{r eval=FALSE, include=FALSE}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+  
+for (i in (1:length(file_names))){
+  old <- Sys.time()
+  name <- sub("_Probabilities.h5", "", file_names[i])
+  name <- sub("Sample/YouToo/", "Youtoo_", name)
+
+  png(filename = paste("visualization_results/youtoo_plots_0.92/", name, ".png", sep= ""))
+    mytitle = paste("plot_",name)
+    file_names[i] %>%
+    read_h5()%>%
+    tidy(type="youtoo", threshold.n = 0.92)%>%
+    reorient()%>%
+    plot2d(title=name)
+  dev.off()
+  new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
+}
+```
+
+
+# Plot: Wild Type
+threshold = 0.9 (default)
+```{r eval=FALSE, include=FALSE}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+  
+for (i in (1:length(file_names))){
+  name <- sub("_Probabilities.h5", "", file_names[i])
+  name <- sub("Sample/WildType/", "WildType_", name)
+
+  png(filename = paste("visualization_results/wt_plots_0.9/", name, ".png", sep= ""))
+    mytitle = paste("plot_",name)
+    file_names[i] %>%
+    read_h5()%>%
+    tidy()%>%
+    reorient()%>%
+    plot2d(title=name)
+  dev.off()
+}
+
+```
+
+
+#Optimization
+# Generate threshold_both dataframe
+```{r}
+table(threshold_wt$threshold)
+table(threshold_yt$threshold)
+test <- threshold_yt%>%
+  filter(threshold == 0.9)
+mplot(test)
+
+favstats(test$num.signal)
+
+
+temp_wt <- threshold_wt %>% 
+  filter(threshold %in% c(0.4,0.42,0.44,0.46,0.48,0.5,0.52,0.54,0.56,0.58,0.6,0.62,0.64,0.66,0.7,0.75, 0.8,0.81,0.82,0.83, 0.84,0.85,0.86, 0.87,0.88,0.89, 0.9,0.91,0.92)) %>% 
+  select(threshold, num.signal, adj.r.squared) %>% 
+  rename(wt_threshold=threshold, wt_numsignal=num.signal,
+         wt_adjr2=adj.r.squared) 
+
+# mean for wt adjr2
+temp_wt <- temp_wt %>% 
+  group_by(wt_threshold) %>% 
+  mutate(wt_avg_adjr2=sum(wt_adjr2)/43) %>% 
+  mutate(wt_avg_numsignal=round(sum(wt_numsignal)/43, 2)) %>% 
+  select(wt_threshold, wt_avg_adjr2, wt_avg_numsignal) %>% 
+  unique()
+# reordering thresholds in ascd order
+temp_wt <- temp_wt[with(temp_wt, order(wt_threshold)), ]
+
+temp_yt <- threshold_yt %>% 
+ filter(threshold %in% c(0.4,0.42,0.44,0.46,0.48,0.5,0.52,0.54,0.56,0.58,0.6,0.62,0.64,0.66,0.7,0.75, 0.8,0.81,0.82,0.83, 0.84,0.85,0.86, 0.87,0.88,0.89, 0.9,0.91,0.92))%>% 
+  select(threshold, num.signal, adj.r.squared) %>% 
+  rename(yt_threshold=threshold, yt_numsignal=num.signal, yt_adjr2=adj.r.squared)
+
+temp_yt <- temp_yt %>% 
+  group_by(yt_threshold) %>% 
+  mutate(yt_avg_adjr2=sum(yt_adjr2)/43) %>% 
+  mutate(yt_avg_numsignal=round(sum(yt_numsignal)/43, 2)) %>% 
+  select(yt_threshold, yt_avg_adjr2, yt_avg_numsignal) %>% 
+  unique()
+# reordering thresholds in ascd order
+temp_yt <- temp_yt[with(temp_yt, order(yt_threshold)), ]
+
+threshold_both <- cbind(temp_wt, temp_yt)%>% 
+  select(-yt_threshold) %>%   # get rid of repeated cols
+  rename(threshold=wt_threshold)%>%
+  mutate(e_distance = sqrt((1-wt_avg_adjr2)^2 + (1-yt_avg_adjr2)^2))
+```
+
+# plots
+```{r}
+mplot(threshold_both)
+threshold_both$threshold <- as.character(threshold_both$threshold)
+
+threshold_both$threshold <- as.character(threshold_both$threshold)
+ggplot(threshold_both, aes(x=wt_avg_adjr2, y=yt_avg_adjr2, color=threshold, 
+                           size = yt_avg_numsignal))+
+  geom_point()+
+  scale_color_viridis_d(option="plasma") + 
+  coord_fixed() +
+  xlab("Wild Type Adjusted R-Squared")+
+  ylab("Mutant Adjusted R-Squared") +
+  scale_x_continuous(breaks=c(0.875,0.88, 0.885, 0.89, 0.895))+
+  scale_y_continuous(breaks=c(0.325,0.33,0.335,0.34,0.345,0.35))+ 
+  scale_size_continuous(name = "Number of Signals_Mutant", limits=c(10000,30000,40000))
+
+
+
+threshold_both$threshold <- as.character(threshold_both$threshold)
+ggplot(threshold_both, aes(x=wt_avg_adjr2, y=yt_avg_adjr2, color=threshold, 
+                           size = e_distance))+
+  geom_point()+
+  scale_color_cividis_d() + 
+  coord_fixed() +
+  xlab("wild type adjusted.r2")+
+  ylab("mutant adjusted.r2")+
+  ggtitle("Optimal Threshold")
+
+mplot(threshold_both)
+
+#e distance and yt num signals
+ggplot(data = threshold_both, aes(x = e_distance, y = yt_avg_numsignal)) + geom_point()  + aes(colour = threshold) + theme(legend.position = "right") + labs(title = "")
+```
+
+
+
+```{r}
+wildtype <- download_wildtype_data("data/folder") #where folder is the location you want to store the Wild Type data
+brain <- read_h5(wildtype[[1]])#first wildtype data sample
+class(wildtype)
+errorA(wildtype[[1]])
+```
+

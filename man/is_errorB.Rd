@@ -7,6 +7,7 @@
 \alias{correct_errorB.tbl_brain}
 \title{Identify Error B: Curve in yz plane}
 \usage{
+<<<<<<< HEAD
 is_errorB(ro_data, type = "wildtype", threshold.n = 0.9,
   ref = "outlier")
 
@@ -33,6 +34,29 @@ wildtype's quadratic coeffcients, we say there is no error. Otherwise, if the qu
 in the wildtype quadratic coefficients, we say there is a an error B in the youtoo type sample.}
 
 \item{data}{a brain image}
+=======
+is_errorB(data, type = "wildtype", threshold.n = 0.9,
+  ref = "outlier")
+
+\method{is_errorB}{brain}(data, type = "wildtype", threshold.n = 0.9,
+  ref = "outlier")
+
+\method{is_errorB}{tbl_brain}(data, type = "wildtype",
+  threshold.n = 0.9)
+
+correct_errorB.tbl_brain(data, type = "wildtype", threshold.n = 0.9,
+  r_angle_mpt = 1)
+
+correct_errorB.tbl_brain(data, type = "wildtype", threshold.n = 0.9,
+  r_angle_mpt = 1)
+}
+\arguments{
+\item{data}{a brain image}
+
+\item{type}{wild type or mutant type of zebrafish embryo brain}
+
+\item{threshold.n}{threshld for signal frequency. Any signal with frequency below threshold value is exluded}
+>>>>>>> d0f05cf54e19e371e2011ebac8051fd9276d9a5c
 }
 \description{
 Identify Curve in yz plane
