@@ -2,34 +2,34 @@
 % Please edit documentation in R/radial_bridge.R
 \name{process_all_sample}
 \alias{process_all_sample}
-\title{Read in and tidy all sample}
+\title{Read in and tidy all raw samples}
 \usage{
 process_all_sample(download = FALSE, local_directory = NA,
-  type = "youtoo", PCA_reorient = TRUE, threshold.n = 0.5)
+  type = "youtoo", threshold.n = 0.5, PCA_reorient = TRUE)
 }
 \arguments{
-\item{download}{TRUE or FALSE, user can choose whether they want to download the data or not. If download is TRUE, you will download the data
-from server to your local directory. You could enter the directory or we will automatically store to your current directory.}
+\item{download}{TRUE or FALSE, If TRUE, you will download data to your current directory. If FALSE, you will need to specify the directory
+where you keep you files locally by setting "local_directory".}
 
-\item{local_directory}{If you have data stored locally, you have to specify the directory of your local files. If not, we will download the files for you
-to a directory you specified.}
+\item{local_directory}{If you have samples in your locally, enter the directory. Note than this should be a folder that keeps the samples
+of the same sample type such as wild type. You should not keep both wild type and youtoo type in the same folder.}
 
 \item{type}{wild type or youtoo type of zebrafish embryo brain}
 
-\item{PCA_reorient}{TRUE or FALSE, defalt to TRUE. You can decide whether you want the sample data reoriented or not. If TRUE, your data will
-be tidied and PCA reorientation will be performed to your data. If FALSE, your data will be simply tidied for further analysis.}
+\item{threshold.n}{threshld for signal frequency. Any signal with frequency below threshold value is exluded.
+Default to 0.5}
 
-\item{threshold.n}{threshld for signal frequency. Any signal with frequency below threshold value is exluded. Default to 0.5.}
+\item{PCA_reorient}{TRUE or FALSE. If TRUE, we will tidy and then perform PCA reorientation to your data. If FALSE, we will only tidy your data.}
 }
 \description{
-Read in and tidy all sample. You can choose to process wildtype or youtoo
+Read in and tidy all samples. You can choose to perform PCA reorientation or not. Note that this function is only for raw data (untidied data).
 Function will output a list containing all samples in the type you decide (wildtype or youtoo), in
 the format of dataframes. Processed samples "ro_brain_ls_wt.rds" and "ro_brain_ls_yt.rds" are generated from the
 raw data using this function.
 }
 \examples{
-ro_brain_ls_wt <- process_all_sample(download = TRUE, type = "wildtype", PCA_reorient = TRUE, threshold.n = 0.5)
-ro_brain_ls_yt <- process_all_sample(download = TRUE, type = "youtoo", PCA_reorient = TRUE, threshold.n = 0.5)
+ro_brain_ls_wt <- process_all_sample(download = FALSE, local_directory = NA, type = "wildtype", threshold.n = 0.5, PCA_reorient = TRUE)
+ro_brain_ls_yt <- process_all_sample(download = FALSE, local_directory = NA, type = "youtoo", threshold.n = 0.5, PCA_reorient = TRUE)
 saveRDS(ro_brain_ls_wt , file = "ro_brain_ls_wt.rds")
 saveRDS(ro_brain_ls_yt , file = "ro_brain_ls_yt.rds")
 }

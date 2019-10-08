@@ -137,7 +137,7 @@ plot2d <- function(x, title="Sample", show_max = FALSE, ...) UseMethod("plot2d")
 #' @export
 #' @rdname plot2d
 
-plot2d.brain <- function(x, title="Sample", show_max = FALSE, ...) {
+plot2d.brain <- function(x, title="Sample", show_max = FALSE,  ...) {
   tidy_brain <- tidy(x)
   plot2d(tidy_brain, show_max = FALSE, ...)
 }
@@ -145,7 +145,7 @@ plot2d.brain <- function(x, title="Sample", show_max = FALSE, ...) {
 #' @export
 #' @importFrom gridExtra grid.arrange
 #' @rdname plot2d
-plot2d.tbl_brain <- function(x, title="Sample", show_max = FALSE, ...) {
+plot2d.tbl_brain <- function(x, title="Sample", show_max = FALSE,  ...) {
   gridExtra::grid.arrange(
     plot2d_plane(x, plane = c("x", "z"), show_max, ...),
     plot2d_plane(x, plane = c("x", "y"), show_max, ...),
@@ -171,32 +171,33 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
 
   if (show_max) {
     plot_var <- "max_depth"
-  } else
+  } else if (show_max == FALSE){
     plot_var <- "avg_depth"
-  labels <- data.frame(var = c("x", "y", "z"),
-                       label = c("Lateral (x, microns)",
-                                 "Anterior/Posterior (y, microns)",
-                                 "Dorsal/Ventral (z, microns)")) %>%
-    filter(var %in% plane)
-  titles <- data.frame(depth_var = c("x", "y", "z"),
-                       title = c("Side View", "Front View", "Top View"))
+    labels <- data.frame(var = c("x", "y", "z"),
+                         label = c("Lateral (x, microns)",
+                                   "Anterior/Posterior (y, microns)",
+                                   "Dorsal/Ventral (z, microns)")) %>%
+      filter(var %in% plane)
+    titles <- data.frame(depth_var = c("x", "y", "z"),
+                         title = c("Side View", "Front View", "Top View"))
 
 
-  plot <- ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
-    geom_point(alpha = 0.1, size = 0.5) +
-    annotate("text", x = 0, y = 0, label = "origin", size = 5) +
-    annotate("text", x = 0, y = 0,
-             label = paste0("min_prob: ", round(min(pull(ungroup(gg_data), "min_freq")), 2)))+
-    scale_color_continuous(guide = FALSE) +
-    scale_x_continuous(filter(labels, var == plane[1])$label) +
-    scale_y_continuous(filter(labels, var == plane[2])$label) +
-    ggtitle(filter(titles, depth_var == depth)$title)
-  #+ coord_fixed()
-
-  if (plane == c("x", "y")){
-   plot + geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red")
-  } else{
-   plot + geom_smooth(method = "lm", color = "red")
+    plot <- ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
+      geom_point(alpha = 0.1, size = 0.5) +
+      geom_point(aes( x= 0, y = 0), colour="blue", size = 3) +
+      #annotate("text", x = 0, y = 0, label = "origin", size = 3) +  #take out text because text is overlapped
+      #annotate("text", x = 0, y = min(gg_data$z) * 0.9,
+      #         label = paste0("min prob: ", round(min(pull(ungroup(gg_data), "min_freq")), 2)))+
+      scale_color_continuous(guide = FALSE) +
+      scale_x_continuous(filter(labels, var == plane[1])$label) +
+      scale_y_continuous(filter(labels, var == plane[2])$label) +
+      ggtitle(filter(titles, depth_var == depth)$title)
+    #+ coord_fixed()
+    if (plane == c("x", "y")){
+      plot + geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red")
+    } else{
+      plot + geom_smooth(method = "lm", color = "red")
+    }
   }
 }
 
@@ -308,6 +309,28 @@ get_jawbone <- function(xyz, ...) {
   return(list(bent_plane, flat_plane, f))
 }
 
+
+#' @title Add attribute of quadratic model
+#' @description This function add attribute to tbl_brain data on xy plane, yz plane and xz plane. This facilitate users to
+#' access the model information of the data.
+#' @param x a \code{\link{tbl_brain}}
+#' @export
+#' @examples
+#' ro_brain_att <- add_attr(ro_brain)
+#'
+add_attr <- function(x){
+  attr(x, "quad_mod_xy") <- stats::lm(y ~ x + I(x^2), data = x)
+  attr(x, "linear_mod_xy") <- stats::lm(y ~ x, data= x)
+  #xz plane
+  attr(x, "quad_mod_xz") <- stats::lm(z ~ x + I(x^2), data =x)
+  attr(x, "linear_mod_xz") <- stats::lm(z ~ x, data= x)
+  #yz plane
+  attr(x, "quad_mod_yz") <- stats::lm(z ~ y + I(y^2), data = x)
+  attr(x, "linear_mod_yz") <- stats::lm(z ~ y, data= x)
+  return(x)
+}
+
+
 #' @title Reorientation: applying PCA (Principal Component Analysis)
 #' @description Principal component analysis (PCA) is a statistical procedure that uses an
 #' orthogonal transformation to convert a set of observations of possibly correlated variables
@@ -343,20 +366,13 @@ reorient <- function(x,...) {
     filter(abs(x) < 50) %>%
     summarize(z_mean = mean(z))
   out <- out %>%
-      mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
+    mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
 
   out[, c("Freq", "gray_val")] <- x[, c("Freq", "gray_val")]
   class(out) <- append("tbl_brain", class(out))
+
   # recompute model after translation
-  #xz plane
-  attr(out, "quad_mod_xy") <- stats::lm(y ~ x + I(x^2), data = out)
-  attr(out, "linear_mod_xy") <- stats::lm(y ~ x, data=out)
-  #xz plane
-  attr(out, "quad_mod_xz") <- stats::lm(z ~ x + I(x^2), data = out)
-  attr(out, "linear_mod_xz") <- stats::lm(z ~ x, data=out)
-  #yz plane
-  attr(out, "quad_mod_yz") <- stats::lm(z ~ y + I(y^2), data = out)
-  attr(out, "linear_mod_yz") <- stats::lm(z ~ y, data=out)
+  out <- add_attr(out)
   return(out)
 }
 
@@ -448,7 +464,9 @@ qmodel.tbl_brain<- function(tidy_brain, type="wildtype", threshold.n=0.9){
 
 
 #' @title PCA alignment error type A identification and correction
-#' @description Identify Error Type A that the y-axis is flipped y-axis and make correction
+#' @description Identify Error Type A that the y-axis is flipped y-axis and make correction. If the object is brain type (raw data), will
+#' perform tidy and PCA reorient functions. If the object is a tbl_brain class (already performed PCA reorientation), will not
+#' perform PCA reorientation again.
 #' @param data a brain image
 #' @param type wild type or mutant type of zebrafish embryo brain
 #' @param threshold.n threshld for signal frequency. Any signal with frequency below threshold value is exluded
@@ -462,7 +480,7 @@ is_errorA <- function(data, type="wildtype", threshold.n=0.9) UseMethod("is_erro
 
 #' @export
 #' @rdname is_errorA
-is_errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
+is_errorA.brain<- function(data, type="wildtype", threshold.n = 0.9){
   ro_tidy_brain <- data%>%
     tidy(type, threshold = threshold.n)%>%
     reorient()
@@ -481,9 +499,10 @@ is_errorA.brain<- function(data, type="wildtype", threshold.n=0.9){
 #' @export
 #' @rdname is_errorA
 is_errorA.tbl_brain<- function(data, type="wildtype", threshold.n=0.9){
-  ro_tidy_brain <- data%>%
-    reorient()
-  ro_model <- attr(ro_tidy_brain, "quad_mod_xy")  #model applied on reoriented data
+  # fit quadratic model in the xy-plane, yz-plane, and xz-plane
+  data <- add_attr(data)
+
+  ro_model <- attr(data, "quad_mod_xy")  #model applied on reoriented data
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
 
   if (quad.coeff < 0) {
@@ -584,10 +603,10 @@ is_z_curve<- function(data, type="wildtype", threshold.n=0.9) UseMethod("is_z_cu
 # @rdname is_z_curve
 #'
 #is_z_curve.brain <- function(data, type="wildtype", threshold.n=0.9){
- # ro_tidy_brain <- data%>%
- #   tidy(threshold=threshold.n)
- # sum_tb <- is_z_curve(ro_tidy_brain, type = "wildtype", threshold = threshold.n)
- # return(sum_tb)
+# ro_tidy_brain <- data%>%
+#   tidy(threshold=threshold.n)
+# sum_tb <- is_z_curve(ro_tidy_brain, type = "wildtype", threshold = threshold.n)
+# return(sum_tb)
 #}
 
 #' @export
@@ -669,13 +688,13 @@ is_errorB.tbl_brain <- function(ro_data, type="wildtype", threshold.n=0.6, range
   #   reorient()
   quad_model_xz <- attr(ro_data, "quad_mod_xz") #quadratic model y = x^2 + x
   quad.slope_xz = round((summary(quad_model_xz)$coefficients["I(x^2)", "Estimate"]), 5)
-   if (range_ref == "outlier"){
-     range <- c(-0.00202, 0.00182)
-    }else if (range_ref == "quantile"){
-     range <- c(-0.00058, 0.00038)
-    }else if (range_ref== "ci"){
-     range <- c(-0.0003206473, 0.0001243682)
-   }
+  if (range_ref == "outlier"){
+    range <- c(-0.00202, 0.00182)
+  }else if (range_ref == "quantile"){
+    range <- c(-0.00058, 0.00038)
+  }else if (range_ref== "ci"){
+    range <- c(-0.0003206473, 0.0001243682)
+  }
   if (inside.range(quad.slope_xz, range) == TRUE) {
     message("Alignment is correct")
     return(FALSE)
@@ -694,18 +713,17 @@ correct_errorB.tbl_brain <- function(ro_data, type = "wildtype", threshold.n=0.6
 #' @export
 #' @rdname is_errorB
 correct_errorB.tbl_brain <- function(ro_data, type = "wildtype", threshold.n=0.6, r_angle_mpt=1){
- # ro_tidy_brain <- data%>%
-  #   tidy(type, threshold = threshold.n)%>%
- #  reorient()
-
+  ro_data <- add_attr(ro_data)
 
   #extract quadratic model coefficients from xy plane
   ro_model <- attr(ro_data, "quad_mod_xz")
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
 
   message("Beofre rotation, the quadratic coefficient is", " ", quad.coeff, ".")
+
   x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
   intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
+
   # y intercept
   y_intercept <- intercept
   # x intercept
@@ -729,30 +747,22 @@ correct_errorB.tbl_brain <- function(ro_data, type = "wildtype", threshold.n=0.6
   matrix.x[3,2] <- sin(rotation_angle_radian)
   matrix.x[3,3] <- cos(rotation_angle_radian)
 
-  data.matrix<-data%>%
+  data.matrix<- ro_data %>%
     select(x,y,z)%>%
     as.matrix()
 
-  data_freq_gray<- data%>%
+  data_freq_gray<- ro_data%>%
     select(Freq,gray_val)
 
   r.data <- data.matrix %*% matrix.x %>%
     tibble::as_tibble() %>%
     bind_cols(data_freq_gray)
 
-  names(r.data) <- names(data)
+  names(r.data) <- names(ro_data)
 
   class(r.data) <- append("tbl_brain", class(r.data))
 
-  attr(r.data, "quad_mod_xy") <- stats::lm(y ~ x + I(x^2), data =r.data)
-  attr(r.data, "linear_mod_xy") <- stats::lm(y ~ x, data=r.data)
-  #xz plane
-  attr(r.data, "quad_mod_xz") <- stats::lm(z ~ x + I(x^2), data = r.data)
-  attr(r.data, "linear_mod_xz") <- stats::lm(z ~ x, data=r.data)
-  #yz plane
-  attr(r.data, "quad_mod_yz") <- stats::lm(z ~ y + I(y^2), data = r.data)
-  attr(r.data, "linear_mod_yz") <- stats::lm(z ~ y, data=r.data)
-
+  r.data <- add_attr(r.data)
 
   #check the quadratic coefficient after rotation
   r.ro_model <- attr(r.data, "quad_mod_xz")
@@ -763,11 +773,97 @@ correct_errorB.tbl_brain <- function(ro_data, type = "wildtype", threshold.n=0.6
 }
 
 
-plot_all_sample <- function(type = "wildtype"){
-  wd <- getwd()
-  dir.create("plot")
-  setwd(paste(wd, "/plotAll", sep=""))
-  pdf("~/Desktop/metabolomics/results/model_fit/plot/model_RC12/train_RC12_test_RC18_z_edit.pdf")
+
+#' @title Read in and tidy all raw samples
+#' @description Read in and tidy all samples. You can choose to perform PCA reorientation or not. Note that this function is only for raw data (untidied data).
+#' Function will output a list containing all samples in the type you decide (wildtype or youtoo), in
+#' the format of dataframes. Processed samples "ro_brain_ls_wt.rds" and "ro_brain_ls_yt.rds" are generated from the
+#' raw data using this function.
+#' @param download TRUE or FALSE, If TRUE, you will download data to your current directory. If FALSE, you will need to specify the directory
+#' where you keep you files locally by setting "local_directory".
+#' @param local_directory If you have samples in your locally, enter the directory. Note than this should be a folder that keeps the samples
+#' of the same sample type such as wild type. You should not keep both wild type and youtoo type in the same folder.
+#' @param type wild type or youtoo type of zebrafish embryo brain
+#' @param threshold.n threshld for signal frequency. Any signal with frequency below threshold value is exluded.
+#' Default to 0.5
+#' @param PCA_reorient TRUE or FALSE. If TRUE, we will tidy and then perform PCA reorientation to your data. If FALSE, we will only tidy your data.
+#' @export
+#' @examples
+#' ro_brain_ls_wt <- process_all_sample(download = FALSE, local_directory = NA, type = "wildtype", threshold.n = 0.5, PCA_reorient = TRUE)
+#' ro_brain_ls_yt <- process_all_sample(download = FALSE, local_directory = NA, type = "youtoo", threshold.n = 0.5, PCA_reorient = TRUE)
+#' saveRDS(ro_brain_ls_wt , file = "ro_brain_ls_wt.rds")
+#' saveRDS(ro_brain_ls_yt , file = "ro_brain_ls_yt.rds")
+process_all_sample <- function(download = FALSE, local_directory = NA, type = "youtoo", threshold.n = 0.5, PCA_reorient = TRUE){
+  #read in files
+    if (download == TRUE){
+      local_directory <- paste("./sample_download_", type, sep= "")
+      dir.create(local_directory)
+     # setwd(local_directory)
+
+      if (type == "wildtype"){
+        wildtype_files <- download_brains(path = local_directory, pattern = "wildtype")
+      }else if (type == "youtoo") {
+        message("We have not hosted any youtoo sample yet. Please try download wildtype samples.")
+      }
+    }else {
+      message("We will read in files from your local directory")
+    }
+    message(paste("Read in and tidy data--", type, sep = ""))
+    file_names <- list.files(local_directory, pattern=".h5", full.names=TRUE)
+    tidy_brain_ls<- list()
+    for (i in (1:length(file_names))) {
+      tidy_brain_ls[[i]] <- file_names[i] %>%
+        read_h5() %>%
+        tidy.brain(threshold.n = threshold.n)     ##note that we should be able to call the global function tidy
+    }
+    if (PCA_reorient == FALSE){
+      return(tidy_brain_ls)  #if do not perform PCA reorientation, return tidy data
+    }else{
+      print(paste("Process PCA reorientation--", type, sep = ""))
+      #PCA reorientation
+      ro_brain_ls <- tidy_brain_ls %>%
+        lapply(reorient)
+      return(ro_brain_ls)
+  }
 }
 
 
+
+#' @title Plot all samples
+#' @description Plot all samples together and output as pdf
+#' @param x the list of samples you want to plot
+#' @param type wild type or youtoo type of zebrafish embryo brain
+#' @param file_directory samples' local directory, we will need this to extract the name of each of your sample. This should correspond to the list
+#' of sampels.
+#' @param save_directory Set a directory for the plots, otherwise, the plot will be saved at the current directory.
+#' @export
+#' @examples
+#' plot_all_sample(tidy_brain_ls, type = "wildtype", file_directory = NA, save_directory = NA)
+#' plot_all_sample(tidy_brain_ls, type = "youtoo", file_directory = NA, save_directory = NA)
+#'
+plot_all_sample <- function(x = tidy_brain_ls, type = "wildtype", file_directory = NA, save_directory = NA){
+  #open sample_plot folder in cranium
+  if (is.na(file_directory)){
+    message("Data unfound. If you not have sample data locally, please download the data first.")
+  }else {
+    message(paste("Data found in directory:", file_directory))
+  }
+
+  #create another folder in sample_plot folder with timestamp
+  #everytime runing this function will create a folder to store the plots
+  time <- Sys.time()
+  if (is.na(save_directory)){
+    new_directory <- paste("./plot_",type, "_", time, sep="")
+  }else{
+    new_directory <- paste(save_directory, "/plot_",type, "_", time, sep="")
+  }
+  dir.create(new_directory)
+
+  file_names <- list.files(file_directory, pattern=".h5", full.names=FALSE)
+
+  pdf(paste(new_directory, "/",type, ".pdf", sep=""), height = 4, width = 15.5)
+    for (i in (1:length(file_names))){
+      plot2d(x[[i]], title=paste("Sample ",type, " ", file_names[i], sep=""))
+    }
+  dev.off()
+}
