@@ -4,16 +4,17 @@
 \alias{plot_all_sample}
 \title{Plot all samples}
 \usage{
-plot_all_sample(type = "na", wd = "/Users/czang/Documents/cranium/")
+plot_all_sample(x, type = "wildtype", save_directory = NA,
+  file_directory = NA)
 }
 \arguments{
 \item{type}{wild type or youtoo type of zebrafish embryo brain}
 }
 \description{
-Plot all samples together and output as pdf
+Plot all samples together and output as pdf. You need to have data stored in your local directory.
+#' @param x object should be a list of dataframe that you want to plot
 }
 \examples{
-plot_all_sample(type = "wildtype", wd = "/Users/czang/Documents/cranium/")
-plot_all_sample(type = "youtoo", wd = "/Users/czang/Documents/cranium/")
+plot_all_sample(tidy_brain_ls, type = "wildtype", save_directory = ".", file_directory = "./Sample/WildType")
 
 }

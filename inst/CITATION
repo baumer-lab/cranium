@@ -1,11 +1,8 @@
-citHeader("To cite the package `cranium` in publications, please use:")
+citHeader("To cite cranium in publications, please use:")
 
 citEntry(entry = "Manual",
-  title = {"Cranium: Quantifying Radial Bridge Structures"}
-  author = personList(as.person("Benjamin Baumer"),
-                      as.person("Ziwei Crystal Zang"),
-                      as.person("Emma Ning"),
-                      as.person("Kalynn Kosyka")),
+  title = {Cranium: Quantifying Radial Bridge Structures}
+  author = "Benjamin Baumer, Ziwei Crystal Zang, Emma Ning, Kalynn Kosyka",
   year = "2019",
   note = {R package version 0.0.1.9007}
 )

@@ -1,0 +1,69 @@
+---
+title: "Presentation"
+author: "Crystal Zang"
+date: "5/3/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(hdf5r)
+library(dplyr)
+library(readr)
+library(rlang)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+
+#new packages
+library(sjstats)
+library(grDevices)
+library(skimr)
+library(gmodels)
+library(spatstat.utils)
+library(REdaS)
+```
+
+```{r}
+brain<-download_brains(path = "./Sample", type = "wildtype", pattern =101)
+read_brains(brain)
+```
+
+
+
+
+```{r}
+ro_tidy_brain<-read_h5(brain)%>%
+  tidy(threshold.n=0.6)%>%
+  reorient()
+
+plot2d(ro_tidy_brain)
+
+rgl::plot3d(ro_tidy_brain)
+```
+
+
+
+```{r}
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+file_names[22]
+
+ro_tidy_brain_yt<-read_h5(file_names[22])%>%
+  tidy(threshold.n=0.6)%>%
+  reorient()
+
+plot2d(ro_tidy_brain_yt)
+
+#after correction A
+ca_ro_tidy_brain_yt<-read_h5(file_names[22])%>%
+  tidy(threshold.n=0.6)%>%
+  reorient(correctionA = TRUE)
+
+plot2d(ca_ro_tidy_brain_yt)
+```
+

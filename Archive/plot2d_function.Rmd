@@ -1,0 +1,124 @@
+---
+title: "pca_mdoel_CZ"
+author: "CZ"
+date: "4/16/2019"
+output: html_document
+---
+
+```{r}
+library(hdf5r)
+library(dplyr)
+library(readr)
+library(rlang)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+
+#new packages
+library(sjstats)
+library(grDevices)
+```
+
+
+
+```{r}
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+tidy_wt_sample <- file_names[1]%>%
+  read_h5()%>%
+  tidy()
+model_original <- stats::lm(y ~ x + I(x^2), data = tidy_wt_sample)
+
+ro_tidy_wt_sample<-tidy_wt_sample%>%
+  reorient()
+
+plot2d(ro_tidy_wt_sample)
+
+class(ro_tidy_wt_sample)
+
+model <- attr(ro_tidy_wt_sample, "quad_mod")
+
+
+x <- seq(-50, 50, by=0.1)
+
+y_hat <- predict(model)
+
+plot(x, y_hat)
+```
+
+
+```{r}
+plot2d <- function(x, title="Sample", show_max = FALSE, ...) UseMethod("plot2d")
+
+#' @export
+#' @rdname plot2d
+
+plot2d.brain <- function(x, title="Sample", show_max = FALSE, ...) {
+  tidy_brain <- tidy(x)
+  plot2d(tidy_brain, show_max = FALSE, ...)
+}
+
+#' @export
+#' @importFrom gridExtra grid.arrange
+#' @rdname plot2d
+plot2d.tbl_brain <- function(x, title="Sample", show_max = FALSE, ...) {
+  gridExtra::grid.arrange(
+    plot2d_plane(x, plane = c("x", "z"), show_max, ...),
+    plot2d_plane(x, plane = c("x", "y"), show_max, ...),
+    plot2d_plane(x, plane = c("y", "z"), show_max, ...),
+    nrow = 1,
+    top = title
+  )
+}
+
+#' @export
+#' @importFrom rlang !!
+#' @import ggplot2
+#' @rdname plot2d
+plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
+  depth <- setdiff(c("x", "y", "z"), plane)
+  depth_var <- rlang::sym(depth)
+
+  gg_data <- x %>%
+    group_by(.dots = plane) %>%
+    summarize(N = n(), min_freq = min(Freq),
+              avg_depth = mean(!! depth_var, na.rm = TRUE),
+              max_depth = max(!! depth_var, na.rm = TRUE))
+
+  if (show_max) {
+    plot_var <- "max_depth"
+  } else
+    plot_var <- "avg_depth"
+  labels <- data.frame(var = c("x", "y", "z"),
+                       label = c("Lateral (x, microns)",
+                                 "Anterior/Posterior (y, microns)",
+                                 "Dorsal/Ventral (z, microns)")) %>%
+    filter(var %in% plane)
+  titles <- data.frame(depth_var = c("x", "y", "z"),
+                       title = c("Side View", "Front View", "Top View"))
+  
+  
+    plot <- ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
+    geom_point(alpha = 0.1, size = 0.5) +
+    annotate("text", x = 0, y = 0, label = "origin", size = 5) +
+    annotate("text", x = 0, y = 0,
+             label = paste0("min_prob: ", round(min(pull(ungroup(gg_data), "min_freq")), 2)))+
+    scale_color_continuous(guide = FALSE) +
+    scale_x_continuous(filter(labels, var == plane[1])$label) +
+    scale_y_continuous(filter(labels, var == plane[2])$label) +
+    ggtitle(filter(titles, depth_var == depth)$title)
+    
+    if (plane == c("x", "y")){
+      plot + geom_smooth(method = "lm", formula = y ~ I(x^2) + x, color = "red")
+    } else {
+      plot + geom_smooth(method = "lm", color = "red") 
+    }
+    
+    
+  }
+```
+
+

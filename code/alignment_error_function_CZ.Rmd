@@ -1,0 +1,479 @@
+---
+title: "alignment_error_function_CZ"
+author: "Crystal Zang"
+date: "4/22/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(hdf5r)
+library(dplyr)
+library(readr)
+library(rlang)
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+
+#new packages
+library(sjstats)
+library(grDevices)
+library(skimr)
+library(gmodels)
+library(spatstat.utils)
+library(REdaS)
+```
+
+
+# Compare error A for two wt thresholds:
+0.9: #error = 6
+0.6: #error = 5
+```{r}
+correctionA_wt_0.9 <- read_csv("correction_results/correctionA_wt_0.9.csv")%>%
+  select(-X1)
+correctionA_wt_0.6 <- read_csv("correction_results/correctionA_wt_0.6.csv")%>%
+  select(-X1)
+
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+
+correctionA_wt_0.9_y <- correctionA_wt_0.9 %>%
+  filter(y_flipped == 1)
+for (i in (1:length(correctionA_wt_0.9_y))){
+  j=Sample_id
+  c_ro_tidy_brain <- file_names[j]%>%
+    read_h5()%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient(correctionA=TRUE)
+}
+
+ro_tidy_brain<-file_names[j]%>%
+    read_h5()%>%
+    tidy(type, threshold = threshold.n)%>%
+    reorient()
+
+data<-read_h5(file_names[20])
+
+errorA.brain(data)
+class(data)
+```
+
+
+# Error B 
+```{r}
+path = "Sample/YouToo"
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+#youtoo sample
+data<-read_h5(file_names[5])%>%
+  tidy(threshold=0.9)%>%
+  reorient()
+
+brain<-read_h5(file_names[5])
+
+tidy_brain <- brain%>%
+  tidy(threshold=0.6)
+
+ro_tidy_brain<-tidy_brain%>%
+  reorient()
+attr(ro_tidy_brain, "linear_mod_yz")
+
+
+##wt
+brain_wt_2<-read_h5(file_names[2])
+
+tidy_brain_wt_2 <- brain_wt_2%>%
+  tidy(threshold=0.9)
+
+ro_tidy_brain_wt_2 <- tidy_brain_wt_2%>%
+  reorient()
+
+att_lm<-attr(ro_tidy_brain_wt_2, "linear_mod")
+att_quad<-attr(ro_tidy_brain_wt_2, "quad_mod")
+
+
+summary(att_lm)
+summary(att_quad)
+lm.intercept = round((summary(att_lm)$coefficients["(Intercept)", "Estimate"]), 4)
+lm.slope = round((summary(att_lm)$coefficients["x", "Estimate"]), 10)
+quad.slope = round((summary(att_quad)$coefficients["I(x^2)", "Estimate"]), 5)
+
+plot2d(data)
+
+z_statistics<-ro_tidy_brain%>%
+  skim(z)%>%
+  select(stat, formatted)%>%
+  spread(stat, formatted)
+
+y_statistics<-data%>%
+  skim(y)%>%
+  select(stat, formatted)%>%
+  spread(stat, formatted)
+
+#LOOP
+
+errorB_df <- data.frame()
+
+#function
+#########start of function
+#apply qmodel to all sample, testing for each threshold
+is.z.curve<- function(data, type="wildtype", threshold.n=0.9) UseMethod("is.z.curve")
+
+
+is.z.curve.brain <- function(data, type="wildtype", threshold.n=0.9){
+    ro_tidy_brain <- data%>%
+        tidy(threshold=threshold.n)
+    is_errorB(ro_tidy_brain, type = "wildtype", threshold=0.9)
+    return(sum_tb)
+}
+
+is.z.curve.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
+    ro_tidy_brain <- data %>%
+        reorient()
+    z_mean <- ro_tidy_brain %>%
+        skim(z)%>%
+        select(stat, formatted)%>%
+        spread(stat, formatted)%>%
+        pull(mean)
+    
+    #Fit models after reorient
+    lm_model <- attr(ro_tidy_brain, "linear_mod") #linear model y = x
+    quad_model <- attr(ro_tidy_brain, "quad_mod") #quadratic model y = x^2 + x
+    
+    sum_tb <- data.frame(threshold = threshold.n)%>%
+          mutate(z_mean = z_mean)%>%
+          #linear model: intercept and slope
+          mutate(lm.intercept = round((summary(lm_model)$coefficients["(Intercept)", "Estimate"]), 4)) %>%
+          mutate(lm.slope = round((summary(lm_model)$coefficients["x", "Estimate"]), 10))%>%
+          #quad model: slope
+          mutate(quad.slope = round((summary(quad_model)$coefficients["I(x^2)", "Estimate"]), 5))
+    return(sum_tb)
+}
+
+is.z.curve.tbl_brain(ro_tidy_brain)
+#########end of function
+
+mean <- mean%>%
+  as.numeric()
+
+is_errorB.tbl_brain(tidy_brain)
+
+mean <- data%>%
+        reorient()%>%
+        skim(z)%>%
+        select(stat, formatted)%>%
+        spread(stat, formatted)%>%
+        pull(mean)
+
+
+#check the function
+
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_wt_05 <-read_h5(file_names[5])
+tidy_brain_wt_05 <- tidy(brain_wt_05, threshold.n = 0.6)
+
+
+is_errorB.tbl_brain(tidy_brain_wt_05, threshold.n = 0.6)
+
+
+
+```
+
+
+# Correction Result
+```{r}
+curve_wt_0_6 <- read_csv("correction_results/curve_wt_0.6.csv")%>%
+  select(-X1) %>%
+   mutate(type = "Wild Type")
+curve_yt_0_6 <- read_csv("correction_results/curve_yt_0.6.csv")%>%
+  select(-X1)%>%
+  mutate(type = "Mutant")
+
+curve_all_0.6 <- rbind(curve_wt_0_6, curve_yt_0_6)
+
+#mplot(curve_all_0.6)
+```
+
+```{r}
+ci <- ci(curve_wt_0_6$quad.slope_xz, confidence=0.95)
+
+ci_ub <- ci["CI upper"]
+ci_ub 
+ci_lb <- ci["CI lower"]
+ci_lb
+ci_range <- c(ci_lb, ci_ub)
+ci_range
+
+ci_range<-c(-0.0003206473, 0.0001243682)
+
+Q3 <- quantile(curve_wt_0_6$quad.slope_xz, 0.75) 
+Q1 <- quantile(curve_wt_0_6$quad.slope_xz, 0.25)
+quantil_range <- c(Q1, Q3)
+quantil_range
+
+
+IQR = Q3-Q1
+outlier_lb = Q1-1.5*IQR
+outlier_ub = Q3+1.5*IQR
+outlier_range<-c(outlier_lb, outlier_ub)
+outlier_range
+
+range <- rbind(ci_range, quantil_range, outlier_range)
+range
+```
+
+#curve at xz plane
+```{r}
+#identify curve at xz plot
+ggplot( data = curve_all_0.6, aes(x = quad.slope_xz)) + geom_histogram(binwidth = 0.001) + facet_wrap(~type, ncol = 1) + 
+  xlab("Quadratic Coefficient in x-z plane")+
+  scale_x_continuous(breaks=c(-0.02, -0.015,-0.01,-0.005, 0, 0.005))+
+  geom_vline(xintercept = ci_lb, color= "green")+
+  geom_vline(xintercept = ci_ub, color="green") +
+   geom_vline(xintercept = Q1, color= "red")+
+  geom_vline(xintercept = Q3, color="red") +
+   geom_vline(xintercept = outlier_lb , color= "blue")+
+  geom_vline(xintercept = outlier_ub , color="blue") 
+
+favstats(curve_wt_0_6$quad.slope_xz)
+favstats(curve_yt_0_6$quad.slope_xz)
+
+#mplot(curve_all_0.6)
+
+#calculate 95% CI interval
+ci <- ci(curve_wt_0_6$quad.slope_xz, confidence=0.95)
+ci_lb<-ci["CI lower"]
+ci_ub<-ci["CI upper"]
+
+curve_wt_0_6_error <- curve_wt_0_6%>%
+  mutate(is_errorB = if_else(quad.slope_xz < ci_lb, "is_errorB",
+                        if_else(quad.slope_xz > ci_ub, "is_errorB", "no_errorB")))
+
+table(curve_wt_0_6_error$is_errorB)
+
+#wt normal range for quadratic slope in xz plane
+Q3 <- quantile(curve_wt_0_6$quad.slope_xz, 0.75) 
+Q1 <- quantile(curve_wt_0_6$quad.slope_xz, 0.25)
+IQR = Q3-Q1
+outlier_lb = Q1-1.5*IQR
+outlier_ub = Q3+1.5*IQR
+class(normal_range_ub)
+normal_range<-c(normal_range_lb,normal_range_ub)
+normal_range
+
+curve_wt_0.6_curve <- curve_wt_0.6 %>%
+  mutate(is_curve = if_else(quad.slope_xz < -0.000337671 | quad.slope_xz > 0.000141392, "curve", "not curve"))
+
+mplot(curve_all_0.6_curve)
+
+tb<-curve_all_0.6_curve%>%
+  group_by(type, is_curve)%>%
+  summarize(N=n())
+
+yt_curve<- curve_all_0.6_curve%>%
+  filter(is_curve=="curve")
+yt_not_curve<- curve_all_0.6_curve%>%
+  filter(type=="youtoo" & is_curve=="not curve")
+
+
+# test is_errorB function
+is_errorB
+
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+
+#youtoo sample
+brain_wt_1<-read_h5(file_names[1])
+tidy_brain_wt_1 <- tidy(brain_wt_1, threshold.n=0.6)
+plot3d(tidy_brain_wt_1)
+
+if (is_errorB(data, threshold.n=0.6)==FALSE){
+  message("you are right")
+}else{
+  message("bye")
+}
+
+```
+
+# Correction for errorB
+```{r}
+#read youtoo sample
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_yt_24 <-read_h5(file_names[12])
+
+#read wildtype sample
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_wt_04 <-read_h5(file_names[4])
+
+#tidy both samples
+tidy_brain_yt_24<- tidy(brain_yt_24, threshold.n = 0.6)
+tidy_brain_wt_04<- tidy(brain_wt_04, threshold.n = 0.6)
+
+#reorient both samples
+ro_tidy_brain_yt_24 <- reorient(tidy_brain_yt_24, correctionA = TRUE, correctionB=TRUE)
+ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04, correctionA = TRUE)
+
+#plot 2d
+plot2d(ro_tidy_brain_wt_04)
+plot2d(ro_tidy_brain_yt_24)
+
+#plot 3d
+rgl::plot3d(ro_tidy_brain_wt_04)
+rgl::plot3d(ro_tidy_brain_yt_24)
+
+
+
+favstats(ro_tidy_brain_yt_334$x)
+is_errorA(brain_yt_01, threshold.n = 0.6)
+#FALSE
+
+rgl::plot3d(ro_tidy_brain_yt_334)
+rgl::plot3d(ro_tidy_brain_wt_04)
+
+
+degree_input = 90
+
+matrix <- matrix(0, nrow=3, ncol=3)
+matrix[3,3] = 1
+matrix[1,1] <- cos(degrees.to.radians(degrees=degree_input))
+matrix[1,2] <- -sin(degrees.to.radians(degrees=degree_input))
+matrix[2,1] <- sin(degrees.to.radians(degrees=degree_input))
+matrix[2,2] <- cos(degrees.to.radians(degrees=degree_input))
+
+matrix_original <- matrix(1, nrow=1, ncol=3)
+
+
+degree_input = 180
+matrix.x <- matrix(0, nrow=3, ncol=3)
+matrix.x[1,1] = 1
+matrix.x[2,2] <- cos(degrees.to.radians(degrees=degree_input))
+matrix.x[2,3] <- -sin(degrees.to.radians(degrees=degree_input))
+matrix.x[3,2] <- sin(degrees.to.radians(degrees=degree_input))
+matrix.x[3,3] <- cos(degrees.to.radians(degrees=degree_input))
+matrix.x
+
+matrix.after <- matrix_original %*% matrix.x
+matrix.after
+
+ro_tidy_brain_wt_04_xyz<-ro_tidy_brain_wt_04%>%
+  select(x,y,z)
+
+
+yt_334_freq <- ro_tidy_brain_yt_334%>%
+  select(Freq,gray_val)
+  
+
+yt_334_xyz <- as.matrix(ro_tidy_brain_yt_334_xyz)
+
+C <- yt_334_xyz %*% matrix 
+C <- ro_tidy_brain_wt_04_xyz %*% matrix 
+
+
+D <- t(C)
+dim(D)
+class(D)
+D <- as.data.frame(D)
+
+D_freq <- cbind(D, yt_334_freq)
+
+#colnames(D)[colnames(D) == "D"] <- "x"
+
+class(D_freq) <- append("tbl_brain", class(D_freq)) 
+mean(D_freq$x)
+
+plot2d(D_freq)
+
+
+rgl::plot3d(D_freq)
+
+is_z_curve(D,type = "youtoo", threshold.n = 0.6)
+
+
+class(ro_tidy_brain_wt_03)
+plot2d(ro_tidy_brain_yt_01)
+
+```
+
+
+
+# Sample
+```{r}
+#read youtoo sample #24
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_yt_24 <-read_h5(file_names[12])
+tidy_brain_yt_24<- tidy(brain_yt_24, threshold.n = 0.6)
+ro_tidy_brain_yt_24 <- reorient(tidy_brain_yt_24)
+#plot2d(ro_tidy_brain_yt_24)
+ro_tidy_brain_yt_24 <- reorient(tidy_brain_yt_24, correctionA = TRUE)
+plot2d(ro_tidy_brain_yt_24)
+
+#read youtoo sample #1
+path = "Sample/YouToo"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_yt_1 <-read_h5(file_names[1])
+tidy_brain_yt_1<- tidy(brain_yt_1, threshold.n = 0.6)
+#is_errorA(tidy_brain_yt_1) #false
+ro_tidy_brain_yt_1 <- reorient(tidy_brain_yt_1)
+#plot2d(ro_tidy_brain_yt_24)
+plot2d(ro_tidy_brain_yt_1)
+
+#read youtoo sample #2
+brain_yt_2 <-read_h5(file_names[2])
+tidy_brain_yt_2<- tidy(brain_yt_2, threshold.n = 0.6)
+#is_errorA(tidy_brain_yt_1) #false
+ro_tidy_brain_yt_2 <- reorient(tidy_brain_yt_2)
+#plot2d(ro_tidy_brain_yt_24)
+plot2d(ro_tidy_brain_yt_1)
+
+#read wildtype sample
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_wt_04 <-read_h5(file_names[4])
+tidy_brain_wt_04<- tidy(brain_wt_04, threshold.n = 0.6)
+ro_tidy_brain_wt_04 <- reorient(tidy_brain_wt_04, correctionA = TRUE)
+```
+
+
+
+
+
+## Error A adjustment 
+rotation instead of flip y-axis
+```{r}
+#read wildtype sample
+path = "Sample/WildType"
+file_names <- list.files(path, pattern=".h5", full.names=TRUE)
+brain_wt_05 <-read_h5(file_names[5])
+
+
+
+c.data <- correct_errorA.brain(brain_wt_05, threshold.n = 0.6)
+plot2d(c.data, title = "Error A correction example_wildtype_05_corrected")
+
+
+
+
+tidy_brain_wt_05<- tidy(brain_wt_05, threshold.n = 0.6)
+
+ro_tidy_brain_wt_05 <- reorient(tidy_brain_wt_05)
+plot2d(ro_tidy_brain_wt_05, title = "Error A correction example_wildtype_05_original")
+
+
+c.data <- correct_errorA.tbl_brain(ro_tidy_brain_wt_05, threshold.n =  0.6)
+plot2d(c.data, title = "Error A correction example_wildtype_05_corrected")
+
+```
+
+
+
+

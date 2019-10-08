@@ -1,0 +1,180 @@
+---
+title: "ErrorB Correction"
+author: "Ziwei Crystal Zang"
+date: "9/30/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(spatstat.utils)
+library(mosaic)
+library(cranium)
+
+library(dplyr)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+```
+
+# new functions
+```{r}
+print_one_plot <- function(x = ro_brain_yt_1, title = "Sample Plot"){
+    setwd("/Users/czang/Documents/cranium/sample_plot/correctionB")
+    wd <- getwd()
+    png(paste(wd, "/",title, ".png", sep=""), width = 900, height = 300)
+    plot2d(x , title = title) #output image with dimension: 900*300
+    dev.off()
+}   
+```
+
+
+```{r}
+#access PCA reoriented data for youtoo and wildtype
+ro_brain_ls_yt <- readRDS(file = "/Users/czang/Documents/cranium/Sample/processed_sample/ro_brain_ls_yt.rds")
+
+ro_brain_ls_wt <- readRDS(file = "/Users/czang/Documents/cranium/Sample/processed_sample/ro_brain_ls_wt.rds")
+
+#plot all samples 
+#plot_all_sample(x=ro_brain_ls_wt ,type = "wildtype", wd = "/Users/czang/Documents/cranium/")
+#plot_all_sample(x=ro_brain_ls_yt , type = "youtoo", wd = "/Users/czang/Documents/cranium/")
+```
+
+# start with one sample: youtoo 3
+```{r}
+#selecting sample from the list
+ro_brain_yt_3 <- ro_brain_ls_yt[[3]]
+
+plot2d(ro_brain_yt_3 , title = "Youtoo Sample #3 - After PCA-step 1") #output image with dimension: 900*300
+
+print_one_plot(x = ro_brain_yt_3, title = "Youtoo Sample #3 - After PCA-step 1")
+```
+
+#check for error A and make correction
+```{r}
+is_errorA(ro_brain_yt_3)
+
+cA_ro_brain_yt_3 <- correct_errorA(ro_brain_yt_3, threshold.n=0.5)
+
+is_errorA(cA_ro_brain_yt_3)
+
+plot2d(cA_ro_brain_yt_3 , title = "Youtoo Sample #3 - After correction for errorA-step 2") #output image with dimension: 900*300
+
+print_one_plot(x = cA_ro_brain_yt_3,  title = "Youtoo Sample #3 - After correction for errorA-step 2")
+```
+
+# Function: is_errorB
+```{r}
+data <- tidy_brain_yt_3
+type="wildtype"
+threshold.n=0.6
+range_ref = "outlier"
+
+
+ro_tidy_brain <- data%>%
+  reorient()
+
+quad_model_xz <- attr(ro_tidy_brain, "quad_mod_xz") #quadratic model y = x^2 + x
+  
+quad.slope_xz = round((summary(quad_model_xz)$coefficients["I(x^2)", "Estimate"]), 5)
+
+quad.slope_xz
+
+if (range_ref == "outlier"){
+     range <- c(-0.00202, 0.00182)
+}else if (range_ref == "quantile"){
+     range <- c(-0.00058, 0.00038)
+}else if (range_ref== "ci"){
+     range <- c(-0.0003206473, 0.0001243682)
+}
+
+range 
+inside.range(quad.slope_xz, range)
+
+```
+
+# Function: correct_errorB
+```{r}
+ro_data <- cA_ro_brain_yt_3
+type = "youtoo"
+threshold.n=0.5
+r_angle_mpt=1
+
+ro_data <- add_attr(ro_data)
+
+#extract quadratic model coefficients from xy plane
+ro_model <- attr(ro_data, "quad_mod_xz")
+quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
+
+message("Beofre rotation, the quadratic coefficient is", " ", quad.coeff, ".")
+
+x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
+intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
+
+# y intercept
+y_intercept <- intercept
+# x intercept
+x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
+
+  #vertex (x)
+  #  vertex.x <- -x.coeff/(2*quad.coeff)
+  # vertex.y <- quad.coeff * (vertex.x ^ 2) + x.coeff * vertex.x + intercept
+  # vertex <- c(vertex.x, vertex.y)
+
+  #slope of the line connecting m and n
+  slope <- abs(y_intercept/x_intercept)
+  #slope to angle (radian)
+  rotation_angle_radian <- r_angle_mpt * atan(slope)
+  #radian to degree
+  rotation_angle_degree <- rad2deg(rotation_angle_radian)
+
+  matrix.x <- diag(3)
+  matrix.x[2,2] <- cos(rotation_angle_radian)
+  matrix.x[2,3] <- -sin(rotation_angle_radian)
+  matrix.x[3,2] <- sin(rotation_angle_radian)
+  matrix.x[3,3] <- cos(rotation_angle_radian)
+
+  data.matrix<- ro_data %>%
+    select(x,y,z)%>%
+    as.matrix()
+
+  data_freq_gray<- ro_data%>%
+    select(Freq,gray_val)
+
+  r.data <- data.matrix %*% matrix.x %>%
+    tibble::as_tibble() %>%
+    bind_cols(data_freq_gray)
+
+  names(r.data) <- names(ro_data)
+
+  class(r.data) <- append("tbl_brain", class(r.data))
+
+  r.data <- add_attr(r.data)
+
+  #check the quadratic coefficient after rotation
+  r.ro_model <- attr(r.data, "quad_mod_xz")
+  r.quad.coeff = round((summary(r.ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
+  message("After rotation, the quadratic coefficient is", " ", r.quad.coeff, ".")
+
+  return(r.data)
+
+  
+cB_cA_ro_brain_yt_3 <- r.data
+
+cB2_cA_ro_brain_yt_3 <- correct_errorB.tbl_brain(cB_cA_ro_brain_yt_3)
+
+cB3_cA_ro_brain_yt_3 <- correct_errorB.tbl_brain(cB2_cA_ro_brain_yt_3)
+
+cB4_cA_ro_brain_yt_3 <- correct_errorB.tbl_brain(cB3_cA_ro_brain_yt_3)
+
+
+plot2d(cB_cA_ro_brain_yt_3 , title = "Youtoo Sample #3 - After correction for errorB-step 3") #output image with dimension: 900*300
+
+print_one_plot(x = cB_cA_ro_brain_yt_3,  title = "Youtoo Sample #3 - After correction for errorB-step 3")
+```
+
+

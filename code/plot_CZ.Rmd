@@ -1,0 +1,193 @@
+---
+title: "Plot"
+author: "CZ"
+date: "4/1/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#hdf5
+```
+
+
+#hdf5r
+```{r}
+library(hdf5r)
+library(dplyr)
+library(rlang)
+library(BiocInstaller)
+#biocLite("rhdf5")
+library(rhdf5)
+#devtools::install_github("beanumber/cranium")
+library(cranium)
+library(broom)
+library(tidyverse)
+library(gridExtra)
+library(mosaic)
+```
+
+# Edited functions (OLD)
+```{r}
+tidy.brain <- function(x, threshold = 0.9, ...) {
+  res <- x %>%
+    as.data.frame.table() %>%
+    mutate(x = as.integer(Var1) * 0.13,
+           y = as.integer(Var2) * 0.13,
+           z = as.integer(Var3) * 0.21) %>%
+    select(x, y, z, Freq) %>%
+    tibble::as_tibble() %>%
+    mutate(gray_val = grDevices::gray(1 - Freq)) %>%
+    #    filter(Freq > 0) %>%
+    filter(Freq > threshold)
+  class(res) <- append("tbl_brain", class(res))
+  return(res)
+}
+
+
+```
+
+# Wild Type (OLD)
+```{r}
+ls_wt <- c("Wild Type_101", "Wild Type_102")
+ls_wt
+
+file_ls_wt =c("0")
+file_ls_wt
+
+for (i in (1:length(ls_wt))) {
+  file_ls_wt[i] = paste("file", ls_wt[i])
+}
+
+file_ls_wt
+
+file_ls_wt[1]<- "Sample/AT_wildtype_101_Probabilities.h5"
+file_ls_wt[2] <-  "Sample/AT_wildtype_102_Probabilities.h5"
+#file_ls[3] <-  "Sample/AT_wildtype_104_Probabilities.h5"
+
+
+
+file_ls_wt
+
+#defalt threshol = 0.9
+tidy_brain_ls_wt <- list()
+for (i in (1:length(ls_wt))) {
+  tidy_brain_ls_wt[[i]] <- file_ls_wt[i] %>%
+  read_h5() %>%
+  tidy()
+}
+```
+
+
+#You too (OLD)
+```{r}
+#ls <- c("W_101", "W_102", "W_104", "You_Too_01", "You_Too_02", "You_Too_03", "You_Too_04","You_Too_06", "You_Too_21")
+
+ls_youtoo <- c("You_Too_01", "You_Too_02")
+
+file_ls_youtoo =c("0")
+file_ls_youtoo
+
+for (i in (1:length(ls_youtoo))) {
+  file_ls_youtoo[i] = paste("file", ls_youtoo[i])
+}
+
+file_ls_youtoo
+
+file_ls_youtoo[1] <- "Sample/AT_01_Probabilities.h5"
+file_ls_youtoo[2] <- "Sample/AT_02_Probabilities.h5"
+#file_ls[6] <- "Sample/AT_03_Probabilities.h5"
+#file_ls[7] <- "Sample/AT_04_Probabilities.h5"
+#file_ls[8] <- "Sample/AT_06_Probabilities.h5"
+#file_ls[9] <- "Sample/AT_21_Probabilities.h5"
+
+
+file_ls_youtoo
+#threshold = 0.7
+tidy_brain_ls_youtoo <- list()
+for (i in (1:length(file_ls_youtoo))) {
+  tidy_brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
+  read_h5() %>%
+  tidy(threshold=0.5)
+}
+
+```
+
+
+# Investigate thresholds (OLD)
+```{r eval=FALSE, include=FALSE}
+#Wild type threshold = 0
+brain_ls_wt <- list()
+for (i in (1:length(ls_wt))) {
+  brain_ls_wt[[i]] <- file_ls_wt[i] %>%
+  read_h5() %>%
+  tidy(threshold=0)
+}
+
+#You too threshold = 0
+brain_ls_youtoo <- list()
+for (i in (1:length(file_ls_youtoo))) {
+  brain_ls_youtoo[[i]] <- file_ls_youtoo[i] %>%
+  read_h5() %>%
+  tidy(threshold=0)
+}
+
+
+sample1<- brain_ls_wt[[1]]
+sample3<- brain_ls_youtoo[[1]]
+
+p1<-ggplot( data = sample1, aes(x = Freq)) + geom_density(adjust = 0.4) + labs(title = "Wild type sample 101") 
+p2<-ggplot( data = sample3, aes(x = Freq)) + geom_density(adjust = 0.4) + labs(title = "You too sample 01") 
+grid.arrange(p1,p2,ncol=1)
+```
+
+
+# Reorient
+```{r}
+#Wild Type
+ro_brain_ls_wt<-tidy_brain_ls_wt%>%
+lapply(reorient)
+
+#You Too
+ro_brain_ls_youtoo<-tidy_brain_ls_youtoo%>%
+lapply(reorient)
+```
+
+
+
+
+# Test one plot (OLD)
+```{r}
+plotlist <- list()
+for (i in (4:4)){
+  plotlist[[i]] <- plot2d(tidy_brain_ls[[i]], title=paste("Sample", ls[i]))
+   # plot(plotlist[[i]])
+   # dev.off
+ # decorate3d
+}
+
+```
+
+# All plots  
+```{r}
+plotlist_wt <- list()
+for (i in (1:length(ls_wt))){
+  plotlist_wt[[i]] <- plot2d(ro_brain_ls_wt[[i]], title=paste("Sample", ls_wt[i]))
+   # plot(plotlist[[i]])
+   # dev.off
+}
+
+plotlist_youtoo <- list()
+for (i in (1:length(ls_youtoo))){
+  plotlist_youtoo[[i]] <- plot2d(ro_brain_ls_youtoo[[i]], title=paste("Sample", ls_youtoo[i]))
+   # plot(plotlist[[i]])
+   # dev.off
+}
+#do.call(grid.arrange, c(plotlist, ncol = 3))
+
+```
+
+
+
