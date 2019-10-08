@@ -4,16 +4,24 @@
 \alias{plot_all_sample}
 \title{Plot all samples}
 \usage{
-plot_all_sample(type = "na", wd = "/Users/czang/Documents/cranium/")
+plot_all_sample(x = tidy_brain_ls, type = "wildtype",
+  file_directory = NA, save_directory = NA)
 }
 \arguments{
+\item{x}{the list of samples you want to plot}
+
 \item{type}{wild type or youtoo type of zebrafish embryo brain}
+
+\item{file_directory}{samples' local directory, we will need this to extract the name of each of your sample. This should correspond to the list
+of sampels.}
+
+\item{save_directory}{Set a directory for the plots, otherwise, the plot will be saved at the current directory.}
 }
 \description{
 Plot all samples together and output as pdf
 }
 \examples{
-plot_all_sample(type = "wildtype", wd = "/Users/czang/Documents/cranium/")
-plot_all_sample(type = "youtoo", wd = "/Users/czang/Documents/cranium/")
+plot_all_sample(tidy_brain_ls, type = "wildtype", file_directory = NA, save_directory = NA)
+plot_all_sample(tidy_brain_ls, type = "youtoo", file_directory = NA, save_directory = NA)
 
 }

@@ -22,11 +22,11 @@ read_h5 <- function(file, name = NULL, ...) {
       # take the second image
       out <- x[2,,,]
     }
-    
+
     class(out) <- append("brain", class(out))
     return(out)
   }
-  
+
   if (requireNamespace("rhdf5", quietly = TRUE)) {
     objs <- rhdf5::h5ls(file) %>%
       dplyr::filter(otype == "H5I_DATASET")
@@ -39,11 +39,11 @@ read_h5 <- function(file, name = NULL, ...) {
       # take the second image
       out <- x[2,,,]
     }
-    
+
     class(out) <- append("brain", class(out))
     return(out)
   }
-  
+
   stop("Could not read file. Do you have a HDF5 library available?")
 }
 
@@ -162,13 +162,13 @@ plot2d.tbl_brain <- function(x, title="Sample", show_max = FALSE,  ...) {
 plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
   depth <- setdiff(c("x", "y", "z"), plane)
   depth_var <- rlang::sym(depth)
-  
+
   gg_data <- x %>%
     group_by(.dots = plane) %>%
     summarize(N = n(), min_freq = min(Freq),
               avg_depth = mean(!! depth_var, na.rm = TRUE),
               max_depth = max(!! depth_var, na.rm = TRUE))
-  
+
   if (show_max) {
     plot_var <- "max_depth"
   } else if (show_max == FALSE){
@@ -180,8 +180,8 @@ plot2d_plane <- function(x, plane = c("x", "z"), show_max = FALSE, ...) {
       filter(var %in% plane)
     titles <- data.frame(depth_var = c("x", "y", "z"),
                          title = c("Side View", "Front View", "Top View"))
-    
-    
+
+
     plot <- ggplot(gg_data, aes_string(x = plane[1], y = plane[2], color = plot_var), ...) +
       geom_point(alpha = 0.1, size = 0.5) +
       geom_point(aes( x= 0, y = 0), colour="blue", size = 3) +
@@ -255,12 +255,12 @@ plot3d_model <- function(xyz, ...) {
   plot3d(mod_list[[1]], alpha = 0.5, col = "dodgerblue",
          xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
          add = TRUE)
-  
+
   # flat plane
   plot3d(mod_list[[2]], alpha = 0.5, col = "green",
          xlim = range(xyz$x), ylim = range(xyz$y), zlim = range(xyz$z),
          add = TRUE)
-  
+
   # their intersection
   t <- seq(0, max(xyz$x))
   plot3d(mod_list[[3]](t), alpha = 0.5, col = "red", size = 5,
@@ -284,11 +284,11 @@ get_jawbone <- function(xyz, ...) {
   # quadratic plane
   mod1 <- stats::lm(z ~ x + y + I(x^2), data = xyz)
   bent_plane <- mosaic::makeFun(mod1)
-  
+
   # flat plane
   mod2 <- stats::lm(y ~ x + z, data = xyz)
   flat_plane <- mosaic::makeFun(mod2)
-  
+
   # their intersection
   a <- coef(mod1)["I(x^2)"]
   b <- coef(mod1)["x"]
@@ -367,10 +367,10 @@ reorient <- function(x,...) {
     summarize(z_mean = mean(z))
   out <- out %>%
     mutate(x = x - vertex[1], y = y - vertex[2], z = z - z_mean$z_mean)
-  
+
   out[, c("Freq", "gray_val")] <- x[, c("Freq", "gray_val")]
   class(out) <- append("tbl_brain", class(out))
-  
+
   # recompute model after translation
   out <- add_attr(out)
   return(out)
@@ -402,7 +402,7 @@ change_coordinates <- function(obj, ...) {
   alpha <- lapply(obj$x, stats::integrate, f = integrand, lower = 0, a = a) %>%
     unlist()
   obj$alpha <- alpha[seq(from = 1, to = length(alpha), by = 5)]
-  
+
 }
 
 #' @title Quadratic model evaluation
@@ -486,7 +486,7 @@ is_errorA.brain<- function(data, type="wildtype", threshold.n = 0.9){
     reorient()
   ro_model <- attr(ro_tidy_brain, "quad_mod_xy")  #model applied on reoriented data
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
-  
+
   if (quad.coeff < 0) {
     message("Y Axis is flipped")
     return(TRUE)
@@ -501,10 +501,10 @@ is_errorA.brain<- function(data, type="wildtype", threshold.n = 0.9){
 is_errorA.tbl_brain<- function(data, type="wildtype", threshold.n=0.9){
   # fit quadratic model in the xy-plane, yz-plane, and xz-plane
   data <- add_attr(data)
-  
+
   ro_model <- attr(data, "quad_mod_xy")  #model applied on reoriented data
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)
-  
+
   if (quad.coeff < 0) {
     message("Y Axis is flipped")
     return(TRUE)
@@ -545,7 +545,7 @@ correct_errorA.brain <- function(data, type = "wildtype", threshold.n=0.9){
   ro_tidy_brain <- data%>%
     tidy(type, threshold.n)%>%
     reorient()
-  
+
   r.data <- correct_errorA.tbl_brain(ro_tidy_brain)
   return(r.data)
 }
@@ -557,30 +557,30 @@ correct_errorA.tbl_brain <- function(data, type = "wildtype", threshold.n=0.9){
   rotation_angle_radian <- pi
   #radian to degree
   rotation_angle_degree <- 180
-  
+
   matrix.x <- diag(3)
   matrix.x[2,2] <- cos(rotation_angle_radian)
   matrix.x[2,3] <- -sin(rotation_angle_radian)
   matrix.x[3,2] <- sin(rotation_angle_radian)
   matrix.x[3,3] <- cos(rotation_angle_radian)
-  
+
   #prepare data for matrix multiplication
   data.matrix<-data%>%
     select(x,y,z)%>%
     as.matrix()
-  
+
   #keep information other than coordinates in seperate dataset
   data_freq_gray<- data%>%
     select(Freq, gray_val)
-  
+
   r.data <- data.matrix %*% matrix.x %>%
     tibble::as_tibble() %>%
     bind_cols(data_freq_gray)
-  
+
   names(r.data) <- names(data)
-  
+
   class(r.data) <- append("tbl_brain", class(r.data))
-  
+
   return(r.data)
 }
 
@@ -619,7 +619,7 @@ is_z_curve.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
     select(stat, formatted)%>%
     spread(stat, formatted)%>%
     pull(mean)
-  
+
   #Fit models after reorient
   #xz plane
   lm_model_xz <- attr(ro_tidy_brain, "linear_mod_xz") #linear model y = x
@@ -630,25 +630,25 @@ is_z_curve.tbl_brain <- function(data, type="wildtype", threshold.n=0.9){
   #yz plane
   lm_model_yz <- attr(ro_tidy_brain, "linear_mod_yz")
   quad_model_yz <- attr(ro_tidy_brain, "quad_mod_yz")
-  
-  
+
+
   sum_tb <- data.frame(threshold = threshold.n)%>%
     mutate(z_mean = z_mean)%>%
     #xz plane
     mutate(lm.intercept_xz = round((summary(lm_model_xz)$coefficients["(Intercept)", "Estimate"]), 4)) %>%
     mutate(lm.slope_xz = round((summary(lm_model_xz)$coefficients["x", "Estimate"]), 10))%>%
     mutate(quad.slope_xz = round((summary(quad_model_xz)$coefficients["I(x^2)", "Estimate"]), 5)) %>%
-    
+
     #xy plane
     mutate(lm.intercept_xy= round((summary(lm_model_xy)$coefficients["(Intercept)", "Estimate"]), 4)) %>%
     mutate(lm.slope_xy = round((summary(lm_model_xy)$coefficients["x", "Estimate"]), 10))%>%
     mutate(quad.slope_xy = round((summary(quad_model_xy)$coefficients["I(x^2)", "Estimate"]), 5)) %>%
-    
+
     #yz plane
     mutate(lm.intercept_yz = round((summary(lm_model_yz)$coefficients["(Intercept)", "Estimate"]), 4)) %>%
     mutate(lm.slope_yz = round((summary(lm_model_yz)$coefficients["y", "Estimate"]), 10))%>%
     mutate(quad.slope_yz = round((summary(quad_model_yz)$coefficients["I(y^2)", "Estimate"]), 5))
-  
+
   return(sum_tb)
 }
 
@@ -714,143 +714,116 @@ correct_errorB.tbl_brain <- function(ro_data, type = "wildtype", threshold.n=0.6
 #' @rdname is_errorB
 correct_errorB.tbl_brain <- function(ro_data, type = "wildtype", threshold.n=0.6, r_angle_mpt=1){
   ro_data <- add_attr(ro_data)
-  
+
   #extract quadratic model coefficients from xy plane
   ro_model <- attr(ro_data, "quad_mod_xz")
   quad.coeff = round((summary(ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
-  
+
   message("Beofre rotation, the quadratic coefficient is", " ", quad.coeff, ".")
-  
+
   x.coeff = round((summary(ro_model)$coefficients["x", "Estimate"]), 4)#b
   intercept = round((summary(ro_model)$coefficients["(Intercept)", "Estimate"]), 4) #c
-  
+
   # y intercept
   y_intercept <- intercept
   # x intercept
   x_intercept <- (-x.coeff + sqrt(x.coeff^2 - 4* quad.coeff * intercept))/ (2*quad.coeff)
-  
+
   #vertex (x)
   #  vertex.x <- -x.coeff/(2*quad.coeff)
   # vertex.y <- quad.coeff * (vertex.x ^ 2) + x.coeff * vertex.x + intercept
   # vertex <- c(vertex.x, vertex.y)
-  
+
   #slope of the line connecting m and n
   slope <- abs(y_intercept/x_intercept)
   #slope to angle (radian)
   rotation_angle_radian <- r_angle_mpt * atan(slope)
   #radian to degree
   rotation_angle_degree <- rad2deg(rotation_angle_radian)
-  
+
   matrix.x <- diag(3)
   matrix.x[2,2] <- cos(rotation_angle_radian)
   matrix.x[2,3] <- -sin(rotation_angle_radian)
   matrix.x[3,2] <- sin(rotation_angle_radian)
   matrix.x[3,3] <- cos(rotation_angle_radian)
-  
+
   data.matrix<- ro_data %>%
     select(x,y,z)%>%
     as.matrix()
-  
+
   data_freq_gray<- ro_data%>%
     select(Freq,gray_val)
-  
+
   r.data <- data.matrix %*% matrix.x %>%
     tibble::as_tibble() %>%
     bind_cols(data_freq_gray)
-  
+
   names(r.data) <- names(ro_data)
-  
+
   class(r.data) <- append("tbl_brain", class(r.data))
-  
+
   r.data <- add_attr(r.data)
-  
+
   #check the quadratic coefficient after rotation
   r.ro_model <- attr(r.data, "quad_mod_xz")
   r.quad.coeff = round((summary(r.ro_model)$coefficients["I(x^2)", "Estimate"]), 4)  #a
   message("After rotation, the quadratic coefficient is", " ", r.quad.coeff, ".")
-  
+
   return(r.data)
 }
 
 
 
-#' @title Read in and tidy all sample
-#' @description Read in and tidy all sample. You can choose to process wildtype or youtoo
+#' @title Read in and tidy all raw samples
+#' @description Read in and tidy all samples. You can choose to perform PCA reorientation or not. Note that this function is only for raw data (untidied data).
 #' Function will output a list containing all samples in the type you decide (wildtype or youtoo), in
 #' the format of dataframes. Processed samples "ro_brain_ls_wt.rds" and "ro_brain_ls_yt.rds" are generated from the
 #' raw data using this function.
+#' @param download TRUE or FALSE, If TRUE, you will download data to your current directory. If FALSE, you will need to specify the directory
+#' where you keep you files locally by setting "local_directory".
+#' @param local_directory If you have samples in your locally, enter the directory. Note than this should be a folder that keeps the samples
+#' of the same sample type such as wild type. You should not keep both wild type and youtoo type in the same folder.
 #' @param type wild type or youtoo type of zebrafish embryo brain
 #' @param threshold.n threshld for signal frequency. Any signal with frequency below threshold value is exluded.
 #' Default to 0.5
+#' @param PCA_reorient TRUE or FALSE. If TRUE, we will tidy and then perform PCA reorientation to your data. If FALSE, we will only tidy your data.
 #' @export
 #' @examples
-#' ro_brain_ls_wt <- process_all_sample(type = "wildtype", threshold.n = 0.5, PCA_reorient = TRUE)
-#' ro_brain_ls_yt <- process_all_sample(type = "youtoo", threshold.n = 0.5, PCA_reorient = TRUE)
+#' ro_brain_ls_wt <- process_all_sample(download = FALSE, local_directory = NA, type = "wildtype", threshold.n = 0.5, PCA_reorient = TRUE)
+#' ro_brain_ls_yt <- process_all_sample(download = FALSE, local_directory = NA, type = "youtoo", threshold.n = 0.5, PCA_reorient = TRUE)
 #' saveRDS(ro_brain_ls_wt , file = "ro_brain_ls_wt.rds")
 #' saveRDS(ro_brain_ls_yt , file = "ro_brain_ls_yt.rds")
-process_all_sample <- function(type = "youtoo", threshold.n = 0.5, PCA_reorient = TRUE){
+process_all_sample <- function(download = FALSE, local_directory = NA, type = "youtoo", threshold.n = 0.5, PCA_reorient = TRUE){
   #read in files
-  if (type == "youtoo" & PCA_reorient == TRUE){
-    print("Read in and tidy data--Youtoo type")
-    print("Process PCA reorientation--Youtoo type")
-    
-    path = "/Users/czang/Documents/cranium/Sample/YouToo"
-    file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-    
-    tidy_brain_ls_yt <- list()
-    for (i in (1:length(file_names))) {
-      tidy_brain_ls_yt[[i]] <- file_names[i] %>%
-        read_h5() %>%
-        tidy(threshold.n = threshold.n)
+    if (download == TRUE){
+      local_directory <- paste("./sample_download_", type, sep= "")
+      dir.create(local_directory)
+     # setwd(local_directory)
+
+      if (type == "wildtype"){
+        wildtype_files <- download_brains(path = local_directory, pattern = "wildtype")
+      }else if (type == "youtoo") {
+        message("We have not hosted any youtoo sample yet. Please try download wildtype samples.")
+      }
+    }else {
+      message("We will read in files from your local directory")
     }
-    #PCA reorientation
-    ro_brain_ls_yt <- tidy_brain_ls_yt %>%
-      lapply(reorient)
-    return(ro_brain_ls_yt)
-  } else if (type == "youtoo" & PCA_reorient == FALSE){
-    print("Read in and tidy data--Youtoo type")
-    
-    path = "/Users/czang/Documents/cranium/Sample/YouToo"
-    file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-    
-    tidy_brain_ls_yt <- list()
+    message(paste("Read in and tidy data--", type, sep = ""))
+    file_names <- list.files(local_directory, pattern=".h5", full.names=TRUE)
+    tidy_brain_ls<- list()
     for (i in (1:length(file_names))) {
-      tidy_brain_ls_yt[[i]] <- file_names[i] %>%
+      tidy_brain_ls[[i]] <- file_names[i] %>%
         read_h5() %>%
-        tidy(threshold.n = threshold.n)
+        tidy.brain(threshold.n = threshold.n)     ##note that we should be able to call the global function tidy
     }
-    return(tidy_brain_ls_yt)  #if do not perform PCA reorientation, return tidy data
-  }
-  else if (type == "wildtype" & PCA_reorient == TRUE){
-    print("Read in and tidy data--Wild type type")
-    print("Process PCA reorientation--Wild type type")
-    
-    path = "/Users/czang/Documents/cranium/Sample/WildType"
-    file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-    
-    tidy_brain_ls_wt <- list()
-    for (i in (1:length(file_names))) {
-      tidy_brain_ls_wt[[i]] <- file_names[i] %>%
-        read_h5() %>%
-        tidy(threshold.n = threshold.n)
-    }
-    #PCA reorientation
-    ro_brain_ls_wt <- tidy_brain_ls_wt %>%
-      lapply(reorient)
-    return(ro_brain_ls_wt)
-  } else if (type == "wildtype" & PCA_reorient == FALSE){
-    print("Read in and tidy data--Wild type type")
-    
-    path = "/Users/czang/Documents/cranium/Sample/WildType"
-    file_names <- list.files(path, pattern=".h5", full.names=TRUE)
-    
-    tidy_brain_ls_wt <- list()
-    for (i in (1:length(file_names))) {
-      tidy_brain_ls_wt[[i]] <- file_names[i] %>%
-        read_h5() %>%
-        tidy(threshold.n = threshold.n)
-    }
-    return(tidy_brain_ls_wt)  #if do not perform PCA reorientation, return tidy data
+    if (PCA_reorient == FALSE){
+      return(tidy_brain_ls)  #if do not perform PCA reorientation, return tidy data
+    }else{
+      print(paste("Process PCA reorientation--", type, sep = ""))
+      #PCA reorientation
+      ro_brain_ls <- tidy_brain_ls %>%
+        lapply(reorient)
+      return(ro_brain_ls)
   }
 }
 
@@ -858,59 +831,39 @@ process_all_sample <- function(type = "youtoo", threshold.n = 0.5, PCA_reorient 
 
 #' @title Plot all samples
 #' @description Plot all samples together and output as pdf
+#' @param x the list of samples you want to plot
 #' @param type wild type or youtoo type of zebrafish embryo brain
+#' @param file_directory samples' local directory, we will need this to extract the name of each of your sample. This should correspond to the list
+#' of sampels.
+#' @param save_directory Set a directory for the plots, otherwise, the plot will be saved at the current directory.
 #' @export
 #' @examples
-#' plot_all_sample(type = "wildtype", wd = "/Users/czang/Documents/cranium/")
-#' plot_all_sample(type = "youtoo", wd = "/Users/czang/Documents/cranium/")
+#' plot_all_sample(tidy_brain_ls, type = "wildtype", file_directory = NA, save_directory = NA)
+#' plot_all_sample(tidy_brain_ls, type = "youtoo", file_directory = NA, save_directory = NA)
 #'
-plot_all_sample <- function(type = "na", wd = "/Users/czang/Documents/cranium/"){
+plot_all_sample <- function(x = tidy_brain_ls, type = "wildtype", file_directory = NA, save_directory = NA){
   #open sample_plot folder in cranium
-  
-  if(wd != "/Users/czang/Documents/cranium/"){
-    wd <- getwd()
-    print("Current directory: ", wd)
-  } else {
-    print("Current directory: Users/czang/Documents/cranium/")
-  }
-  
-  grepl("sample_plot", wd)
-  if (grepl("sample_plot", wd)){
-    print("Already in the sample_plot folder. Ready to print plots.")
+  if (is.na(file_directory)){
+    message("Data unfound. If you not have sample data locally, please download the data first.")
   }else {
-    setwd(paste(wd,"/sample_plot", sep=""))
-    print("Set directory to sample_plot. Plots will be saved in this folder.")
+    message(paste("Data found in directory:", file_directory))
   }
-  
+
   #create another folder in sample_plot folder with timestamp
   #everytime runing this function will create a folder to store the plots
   time <- Sys.time()
-  new_directory <- paste("plot_",type, "_", time, sep="")
+  if (is.na(save_directory)){
+    new_directory <- paste("./plot_",type, "_", time, sep="")
+  }else{
+    new_directory <- paste(save_directory, "/plot_",type, "_", time, sep="")
+  }
   dir.create(new_directory)
-  setwd(paste(wd, "/sample_plot/",new_directory, sep=""))
-  
-  wd<- getwd()
-  
-  if (type == "wildtype"){
-    path = "/Users/czang/Documents/cranium/Sample/WildType"
-    file_names_wt <- list.files(path, pattern=".h5", full.names=FALSE)
-    
-    pdf(paste(wd, "/",type, ".pdf", sep=""), height = 4, width = 15.5)
-    for (i in (1:length(file_names_wt))){
-      plot2d(tidy_brain_ls_wt[[i]], title=paste("Sample", file_names_wt[i]))
-    }
-    dev.off()
-  }
-  else if (type == "youtoo"){
-    path = "/Users/czang/Documents/cranium/Sample/YouToo"
-    file_names_yt <- list.files(path, pattern=".h5", full.names=FALSE)
-    file_names_yt <- paste("Youtoo ", file_names_yt, sep="")
-    
-    pdf(paste(wd, "/",type, ".pdf", sep=""), height =4, width = 15.5)
-    for (i in (1:length(file_names_yt))){
-      plot2d(tidy_brain_ls_yt[[i]], title=paste("Sample", file_names_yt[i]))
-    }
-    dev.off()
-  }
-}
 
+  file_names <- list.files(file_directory, pattern=".h5", full.names=FALSE)
+
+  pdf(paste(new_directory, "/",type, ".pdf", sep=""), height = 4, width = 15.5)
+    for (i in (1:length(file_names))){
+      plot2d(x[[i]], title=paste("Sample ",type, " ", file_names[i], sep=""))
+    }
+  dev.off()
+}
