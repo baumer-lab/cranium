@@ -7,33 +7,33 @@
 \alias{correct_errorB.tbl_brain}
 \title{Identify Error B: Curve in yz plane}
 \usage{
-is_errorB(ro_data, type = "wildtype", threshold.n = 0.9,
-  ref = "outlier")
+is_errorB(ro_data, type = "wildtype", threshold.n = 0.9)
 
 \method{is_errorB}{brain}(ro_data, type = "wildtype",
-  threshold.n = 0.9, ref = "outlier")
+  threshold.n = 0.9)
 
 \method{is_errorB}{tbl_brain}(ro_data, type = "wildtype",
-  threshold.n = 0.6, range_ref = "outlier")
+  threshold.n = 0.9)
 
-correct_errorB.tbl_brain(ro_data, type = "wildtype", threshold.n = 0.6,
-  r_angle_mpt = 1)
+correct_errorB.tbl_brain(ro_data, r_angle_mpt = 1)
 
-correct_errorB.tbl_brain(ro_data, type = "wildtype", threshold.n = 0.6,
-  r_angle_mpt = 1)
+correct_errorB.tbl_brain(ro_data, r_angle_mpt = 1)
 }
 \arguments{
 \item{type}{wild type or mutant type of zebrafish embryo brain}
 
 \item{threshold.n}{threshld for signal frequency. Any signal with frequency below threshold value is exluded}
 
+\item{data}{a brain image}
+
 \item{range_ref}{error level.Options are 1. 95% Confidence Interval; 2.Inter-quatile range (IQR); 3. outlier range. Default to
 outlier, which could be interpreted as: if the quadratic coefficient of the youtoo type sample is within the normal range of
 wildtype's quadratic coeffcients, we say there is no error. Otherwise, if the quadratic coefficient is considered as an outlier
 in the wildtype quadratic coefficients, we say there is a an error B in the youtoo type sample.}
-
-\item{data}{a brain image}
 }
 \description{
 Identify Curve in yz plane
+}
+\examples{
+is_errorB(data)
 }
